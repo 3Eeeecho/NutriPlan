@@ -1,0 +1,20 @@
+server:
+  # 应用运行端口
+  port: 8080
+  # 运行环境 (dev/prod/test)
+  env: "development"
+  # JWT 密钥
+  jwt_secret: "Your-NutriPlan-Secret-Key" 
+
+# 数据库配置 (MySQL)
+database:
+  # 驱动类型
+  driver: "mysql"
+  # 用户名
+  user: "root"
+  # 密码
+  password: "root"
+  # 地址:端口
+  host: "127.0.0.1:3306"
+  # 数据库名
+  name: "nutri_plan_db"
