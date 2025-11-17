@@ -21,14 +21,11 @@ type ServerConfig struct {
 
 // DatabaseConfig 包含了数据库连接相关的配置
 type DatabaseConfig struct {
-	Driver    string `mapstructure:"driver"`
-	User      string `mapstructure:"user"`
-	Password  string `mapstructure:"password"`
-	Host      string `mapstructure:"host"`
-	Name      string `mapstructure:"name"`
-	Charset   string `mapstructure:"charset"`
-	ParseTime string `mapstructure:"parse_time"`
-	Loc       string `mapstructure:"loc"`
+	Driver   string `mapstructure:"driver"`
+	User     string `mapstructure:"user"`
+	Password string `mapstructure:"password"`
+	Host     string `mapstructure:"host"`
+	Name     string `mapstructure:"name"`
 }
 
 // 全局配置实例
@@ -43,7 +40,7 @@ func LoadConfig() error {
 	// 设置配置文件的类型
 	v.SetConfigType("yaml")
 	// 设置查找配置文件的路径
-	v.AddConfigPath("./config")
+	v.AddConfigPath(".")
 
 	// 读取配置
 	if err := v.ReadInConfig(); err != nil {

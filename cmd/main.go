@@ -1,7 +1,7 @@
 package main
 
 import (
-	"NutriPlan/config"
+	"NutriPlan/internal/config"
 	"log"
 	"net/http"
 
