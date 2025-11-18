@@ -35,3 +35,11 @@ export const updateUserProfile = (data) => {
   })
 }
 
+// 获取营养需求
+export const getNutritionRequirements = () => {
+  return request({
+    url: '/user/nutrition',
+    method: 'get'
+  })
+}
+

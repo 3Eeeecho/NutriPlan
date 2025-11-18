@@ -47,7 +47,8 @@ request.interceptors.response.use(
           ElMessage.error(response.data?.error || '请求参数错误')
           break
         case 404:
-          ElMessage.error('请求的资源不存在')
+          // 404错误可能是路由不存在，但某些情况下是正常的（如营养需求接口在档案不完整时）
+          // 不显示通用错误，让调用方自己处理
           break
         case 500:
           ElMessage.error('服务器错误，请稍后重试')
