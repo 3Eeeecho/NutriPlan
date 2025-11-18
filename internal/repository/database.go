@@ -54,14 +54,12 @@ func InitDatabase(cfg config.DatabaseConfig) error {
 	// 数据库模型迁移
 	err = db.AutoMigrate(
 		&domain.User{},
-		&domain.Category{},
-		&domain.Ingredient{},
 	)
 	if err != nil {
 		log.Fatalf("数据库模型迁移失败: %v", err)
 		return err
 	}
-	log.Println("数据库模型迁移完成 (User, Category, Ingredient)。")
+	log.Println("数据库模型迁移完成 (User)。")
 
 	return nil
 }

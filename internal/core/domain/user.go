@@ -28,14 +28,14 @@ type User struct {
 	Email    string `gorm:"type:varchar(100);uniqueIndex" json:"email"`            // 邮箱（唯一索引，可选）
 
 	// --- 基础生理数据 (用于 BMR/TDEE 计算) ---
-	Gender string  `gorm:"type:varchar(10);not null" json:"gender"`  // 性别 (Male/Female)
-	Age    int     `gorm:"not null" json:"age"`                      // 年龄 (Years)
-	Height float64 `gorm:"type:decimal(5,2);not null" json:"height"` // 身高 (cm)
-	Weight float64 `gorm:"type:decimal(5,2);not null" json:"weight"` // 当前体重 (kg)
+	Gender string  `gorm:"type:varchar(10)" json:"gender"`  // 性别 (Male/Female)
+	Age    int     `gorm:"default:0" json:"age"`            // 年龄 (Years)
+	Height float64 `gorm:"type:decimal(5,2)" json:"height"` // 身高 (cm)
+	Weight float64 `gorm:"type:decimal(5,2)" json:"weight"` // 当前体重 (kg)
 
 	// --- 健康与目标数据 ---
-	HealthGoal   HealthGoal `gorm:"type:varchar(20);not null" json:"health_goal"` // 健康目标 (减脂/增肌/控糖等)
-	TargetWeight float64    `gorm:"type:decimal(5,2)" json:"target_weight"`       // 目标体重 (kg)
+	HealthGoal   HealthGoal `gorm:"type:varchar(20)" json:"health_goal"`    // 健康目标 (减脂/增肌/控糖等)
+	TargetWeight float64    `gorm:"type:decimal(5,2)" json:"target_weight"` // 目标体重 (kg)
 
 	// BMI 和 TDEE 为计算结果，可以缓存到数据库，或在Service层实时计算
 	BMI  float64 `gorm:"type:decimal(4,2)" json:"bmi"`  // 身体质量指数
@@ -43,7 +43,7 @@ type User struct {
 	BMR  float64 `gorm:"type:decimal(6,2)" json:"bmr"`  // 基础代谢率 (kcal/day)
 
 	// 活动水平（用于TDEE计算）
-	ActivityLevel string `gorm:"type:varchar(20);not null" json:"activity_level"` // 活动水平 (如: 久坐, 轻度活动)
+	ActivityLevel string `gorm:"type:varchar(20)" json:"activity_level"` // 活动水平 (如: 久坐, 轻度活动)
 
 	// --- 个性化偏好与禁忌 ---
 	// 存储过敏、忌口和特殊健康问题的 JSON 字符串或用分隔符连接的字符串

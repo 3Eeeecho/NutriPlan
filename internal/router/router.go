@@ -3,6 +3,7 @@ package router
 import (
 	"NutriPlan/internal/api/handler"
 	"NutriPlan/internal/core/service"
+	"NutriPlan/internal/pkg/jwt"
 
 	"github.com/gin-gonic/gin"
 )
@@ -36,7 +37,7 @@ func NewRouter(deps RouterDeps) *gin.Engine {
 
 		// 受保护的路由：需要 JWT 认证
 		auth := v1.Group("/user")
-		auth.Use(AuthMiddleware()) // 认证中间件 (下一步实现)
+		auth.Use(jwt.AuthMiddleware()) // 认证中间件
 		{
 			// 更新健康档案 (PUT /api/v1/user/profile)
 			auth.PUT("/profile", userHandler.UpdateProfile)

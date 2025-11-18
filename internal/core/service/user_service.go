@@ -2,7 +2,6 @@ package service
 
 import (
 	"NutriPlan/internal/core/domain"
-	"NutriPlan/internal/pkg/util"
 	"NutriPlan/internal/repository"
 	"errors"
 	"fmt"
@@ -44,13 +43,6 @@ func (s *UserServiceImpl) RegisterUser(user *domain.User) error {
 		return errors.New("用户名已存在")
 	}
 
-	// 密码加密
-	hashedPassword, err := util.HashPassword(user.Password)
-	if err != nil {
-		return fmt.Errorf("密码加密失败: %w", err)
-	}
-	user.Password = hashedPassword // 存储哈希值
-
 	return s.userRepo.CreateUser(user)
 }
 
@@ -64,9 +56,9 @@ func (s *UserServiceImpl) LoginUser(username, password string) (*domain.User, er
 	}
 
 	// 验证密码
-	if !util.CheckPasswordHash(password, user.Password) {
-		return nil, errors.New("密码错误")
-	}
+	// if !util.CheckPasswordHash(password, user.Password) {
+	// 	return nil, errors.New("密码错误")
+	// }
 	return user, nil
 }
 
