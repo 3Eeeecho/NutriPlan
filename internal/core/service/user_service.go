@@ -80,7 +80,7 @@ func (s *UserServiceImpl) UpdateUserProfile(id uint, profile *domain.User) error
 	profile.TDEE = tdee
 	profile.BMI = bmi
 
-	return s.userRepo.UpdateUser(profile)
+	return s.userRepo.UpdateHealthProfile(id, profile)
 }
 
 func (s *UserServiceImpl) GetUserByID(id uint) (*domain.User, error) {
