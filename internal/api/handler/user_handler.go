@@ -280,3 +280,79 @@ func (h *UserHandler) GetProfile(c *gin.Context) {
 		"user": user,
 	})
 }
+
+// NutritionRequirementsResponse 营养需求响应结构体
+type NutritionRequirementsResponse struct {
+	TargetCalorie float64 `json:"target_calorie"` // 目标热量 (kcal)
+	ProteinGram   float64 `json:"protein_gram"`   // 蛋白质 (g)
+	CarbGram      float64 `json:"carb_gram"`      // 碳水化合物 (g)
+	FatGram       float64 `json:"fat_gram"`       // 脂肪 (g)
+	ProteinRatio  float64 `json:"protein_ratio"`  // 蛋白质比例 (%)
+	CarbRatio     float64 `json:"carb_ratio"`     // 碳水化合物比例 (%)
+	FatRatio      float64 `json:"fat_ratio"`      // 脂肪比例 (%)
+}
+
+// GetNutritionRequirements 获取用户营养需求
+// @Summary 获取营养需求
+// @Description 根据用户档案计算目标热量和宏量营养素分配
+// @Tags 用户
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} NutritionRequirementsResponse "营养需求"
+// @Failure 401 {object} map[string]interface{} "未授权"
+// @Failure 404 {object} map[string]interface{} "用户不存在或档案不完整"
+// @Router /api/v1/user/nutrition [get]
+func (h *UserHandler) GetNutritionRequirements(c *gin.Context) {
+	// 从JWT中间件获取用户ID
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "未授权访问",
+		})
+		return
+	}
+
+	// 类型断言
+	id, ok := userID.(uint)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "用户ID格式错误",
+		})
+		return
+	}
+
+	// 获取用户信息
+	user, err := h.userService.GetUserByID(id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "获取用户信息失败: " + err.Error(),
+		})
+		return
+	}
+
+	if user == nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"error": "用户不存在",
+		})
+		return
+	}
+
+	// 获取营养需求
+	targetCalorie, proteinGram, carbGram, fatGram, proteinRatio, carbRatio, fatRatio, err := h.userService.GetNutritionRequirements(user)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, NutritionRequirementsResponse{
+		TargetCalorie: targetCalorie,
+		ProteinGram:   proteinGram,
+		CarbGram:      carbGram,
+		FatGram:       fatGram,
+		ProteinRatio:  proteinRatio,
+		CarbRatio:     carbRatio,
+		FatRatio:      fatRatio,
+	})
+}

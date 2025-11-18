@@ -1,6 +1,7 @@
 package service
 
 import (
+	"NutriPlan/internal/config"
 	"NutriPlan/internal/core/domain"
 	"math"
 	"strings"
@@ -14,13 +15,19 @@ type NutriService interface {
 	// DetermineTargetCalorie 根据用户的 TDEE 和 HealthGoal 确定每日目标热量摄入
 	DetermineTargetCalorie(tdee float64, goal domain.HealthGoal) float64
 
-	// 其他宏量营养素分配、营养素缺口分析等方法
+	// AllocateMacros 根据目标热量和健康目标分配宏量营养素的克数
+	// 返回 P_g, C_g, F_g (蛋白质克数, 碳水克数, 脂肪克数)
+	AllocateMacros(targetCalorie float64, goal domain.HealthGoal) (pGram float64, cGram float64, fGram float64)
 }
 
-type NutriServiceImpl struct{}
+type NutriServiceImpl struct {
+	nutriCfg config.NutrientsConfig
+}
 
 func NewNutriService() NutriService {
-	return &NutriServiceImpl{}
+	return &NutriServiceImpl{
+		nutriCfg: config.AppConfig.Nutrients,
+	}
 }
 
 func (s *NutriServiceImpl) CalculateTDEE(user *domain.User) (bmr float64, tdee float64, bmi float64) {
@@ -54,17 +61,17 @@ func (s *NutriServiceImpl) CalculateTDEE(user *domain.User) (bmr float64, tdee f
 func (s *NutriServiceImpl) DetermineTargetCalorie(tdee float64, goal domain.HealthGoal) float64 {
 	var targetCalorie float64
 
-	// 根据健康目标调整 TDEE
+	// 根据健康目标调整 TDEE（使用配置中的值）
 	switch goal {
 	case domain.GoalWeightLoss:
-		// 减脂
-		targetCalorie = tdee - 400
+		// 减脂：TDEE - 热量赤字
+		targetCalorie = tdee - s.nutriCfg.LossCalorieDeficit
 	case domain.GoalMuscleGain:
-		// 增肌
-		targetCalorie = tdee + 300
+		// 增肌：TDEE + 热量盈余
+		targetCalorie = tdee + s.nutriCfg.GainCalorieSurplus
 	case domain.GoalSugarControl:
-		// 控糖：通常是轻微的热量赤字或维持，但宏量营养素比例要求严格
-		targetCalorie = tdee - 200
+		// 控糖：TDEE - 轻微热量赤字
+		targetCalorie = tdee - s.nutriCfg.ControlCalorieDeficit
 	case domain.GoalMaintain:
 		// 维持健康：保持 TDEE 不变
 		targetCalorie = tdee
@@ -72,8 +79,9 @@ func (s *NutriServiceImpl) DetermineTargetCalorie(tdee float64, goal domain.Heal
 		targetCalorie = tdee
 	}
 
-	if targetCalorie < 1200 {
-		return 1200 // 设定一个安全底线
+	// 确保不低于最低安全热量
+	if targetCalorie < s.nutriCfg.MinCalorie {
+		return s.nutriCfg.MinCalorie
 	}
 
 	return math.Round(targetCalorie)
@@ -97,4 +105,46 @@ func (s *NutriServiceImpl) getActivityFactor(level string) float64 {
 		// 默认值，防止因输入错误导致 TDEE 异常
 		return 1.2
 	}
+}
+
+// getMacroRatios 根据健康目标返回 [蛋白质%, 碳水%, 脂肪%] 比例
+func (s *NutriServiceImpl) getMacroRatios(goal domain.HealthGoal) (pRatio, cRatio, fRatio float64) {
+	switch goal {
+	case domain.GoalWeightLoss:
+		// 减脂：25% 蛋白质, 40% 碳水, 35% 脂肪
+		return 0.25, 0.40, 0.35
+	case domain.GoalMuscleGain:
+		// 增肌：30% 蛋白质, 50% 碳水, 20% 脂肪
+		return 0.30, 0.50, 0.20
+	case domain.GoalSugarControl:
+		// 控糖：25% 蛋白质, 35% 碳水, 40% 脂肪
+		return 0.25, 0.35, 0.40
+	case domain.GoalMaintain:
+		// 维持健康：20% 蛋白质, 55% 碳水, 25% 脂肪
+		return 0.20, 0.55, 0.25
+	default:
+		// 默认使用维持健康的比例
+		return 0.20, 0.55, 0.25
+	}
+}
+
+// AllocateMacros 根据目标热量和健康目标分配宏量营养素的克数
+// 返回 P_g, C_g, F_g (蛋白质克数, 碳水克数, 脂肪克数)
+func (s *NutriServiceImpl) AllocateMacros(targetCalorie float64, goal domain.HealthGoal) (pGram float64, cGram float64, fGram float64) {
+	// 1. 获取宏量营养素比例
+	pRatio, cRatio, fRatio := s.getMacroRatios(goal)
+
+	// 2. 计算每种营养素的总热量 (kcal)
+	pCalorie := targetCalorie * pRatio
+	cCalorie := targetCalorie * cRatio
+	fCalorie := targetCalorie * fRatio
+
+	// 3. 转换为克数 (g)
+	// 使用配置中的热量因子
+	pGram = pCalorie / s.nutriCfg.ProteinFactor
+	cGram = cCalorie / s.nutriCfg.CarbFactor
+	fGram = fCalorie / s.nutriCfg.FatFactor
+
+	// 返回四舍五入的克数
+	return math.Round(pGram), math.Round(cGram), math.Round(fGram)
 }

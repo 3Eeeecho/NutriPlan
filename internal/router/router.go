@@ -44,6 +44,9 @@ func NewRouter(deps RouterDeps) *gin.Engine {
 
 			// 获取用户档案 (GET /api/v1/user/profile)
 			auth.GET("/profile", userHandler.GetProfile)
+
+			// 获取营养需求 (GET /api/v1/user/nutrition)
+			auth.GET("/nutrition", userHandler.GetNutritionRequirements)
 		}
 
 		// --- 食谱/营养路由 (未来) ---

@@ -18,3 +18,16 @@ database:
   host: "127.0.0.1:3306"
   # 数据库名
   name: "nutri_plan_db"
+
+# 营养计算配置
+nutrients:
+  # 宏量营养素热量因子 (kcal/g)
+  protein_factor: 4.0  # 蛋白质每克热量
+  carb_factor: 4.0     # 碳水化合物每克热量
+  fat_factor: 9.0      # 脂肪每克热量
+  
+  # 目标热量调整值
+  loss_calorie_deficit: 400    # 减脂热量赤字 (kcal)
+  gain_calorie_surplus: 300    # 增肌热量盈余 (kcal)
+  control_calorie_deficit: 200 # 控糖热量赤字 (kcal)
+  min_calorie: 1200            # 最低安全热量 (kcal)

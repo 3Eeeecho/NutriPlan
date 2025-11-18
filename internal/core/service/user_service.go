@@ -20,6 +20,9 @@ type UserService interface {
 
 	// GetUserByID 获取用户信息
 	GetUserByID(id uint) (*domain.User, error)
+
+	// GetNutritionRequirements 获取用户营养需求
+	GetNutritionRequirements(user *domain.User) (targetCalorie, proteinGram, carbGram, fatGram, proteinRatio, carbRatio, fatRatio float64, err error)
 }
 
 // UserServiceImpl 是 UserService 接口的具体实现
@@ -85,4 +88,25 @@ func (s *UserServiceImpl) UpdateUserProfile(id uint, profile *domain.User) error
 
 func (s *UserServiceImpl) GetUserByID(id uint) (*domain.User, error) {
 	return s.userRepo.GetUserByID(id)
+}
+
+// GetNutritionRequirements 获取用户营养需求
+func (s *UserServiceImpl) GetNutritionRequirements(user *domain.User) (targetCalorie, proteinGram, carbGram, fatGram, proteinRatio, carbRatio, fatRatio float64, err error) {
+	// 检查档案是否完整
+	if user.TDEE == 0 || user.HealthGoal == "" {
+		return 0, 0, 0, 0, 0, 0, 0, fmt.Errorf("用户档案不完整，请先完善健康档案")
+	}
+
+	// 计算目标热量
+	targetCalorie = s.nutriService.DetermineTargetCalorie(user.TDEE, user.HealthGoal)
+
+	// 计算宏量营养素分配
+	proteinGram, carbGram, fatGram = s.nutriService.AllocateMacros(targetCalorie, user.HealthGoal)
+
+	// 计算比例
+	proteinRatio = (proteinGram * 4.0 / targetCalorie) * 100
+	carbRatio = (carbGram * 4.0 / targetCalorie) * 100
+	fatRatio = (fatGram * 9.0 / targetCalorie) * 100
+
+	return targetCalorie, proteinGram, carbGram, fatGram, proteinRatio, carbRatio, fatRatio, nil
 }
