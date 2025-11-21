@@ -35,6 +35,12 @@ const routes = [
     name: 'ProfileView',
     component: () => import('@/views/ProfileView.vue'),
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/recipes',
+    name: 'RecipeRecommend',
+    component: () => import('@/views/RecipeRecommend.vue'),
+    meta: { requiresAuth: true }
   }
 ]
 

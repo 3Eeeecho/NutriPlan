@@ -26,14 +26,18 @@ func main() {
 
 	// 创建 Repository 实例
 	userRepo := repository.NewGormUserRepository(repository.DB)
+	recipeRepo := repository.NewGormRecipeRepository(repository.DB)
 
 	// 创建 Service 实例
 	nutriService := service.NewNutriService()
 	userService := service.NewUserService(userRepo, nutriService)
+	recipeService := service.NewRecipeService(recipeRepo, nutriService)
 
 	// 创建 Router 并注入依赖
 	r := router.NewRouter(router.RouterDeps{
-		UserService: userService,
+		UserService:   userService,
+		RecipeService: recipeService,
+		UserRepo:      userRepo,
 	})
 
 	// 根据环境设置 Gin 模式

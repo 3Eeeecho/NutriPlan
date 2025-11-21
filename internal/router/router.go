@@ -4,13 +4,16 @@ import (
 	"NutriPlan/internal/api/handler"
 	"NutriPlan/internal/core/service"
 	"NutriPlan/internal/pkg/jwt"
+	"NutriPlan/internal/repository"
 
 	"github.com/gin-gonic/gin"
 )
 
 // RouterDeps 结构体用于接收所有需要的依赖服务
 type RouterDeps struct {
-	UserService service.UserService
+	UserService   service.UserService
+	RecipeService service.RecipeService
+	UserRepo      repository.UserRepository
 }
 
 // NewRouter 初始化并配置 Gin 路由
@@ -23,6 +26,7 @@ func NewRouter(deps RouterDeps) *gin.Engine {
 
 	// 实例化 Handler
 	userHandler := handler.NewUserHandler(deps.UserService)
+	recipeHandler := handler.NewRecipeHandler(deps.RecipeService, deps.UserRepo)
 
 	// 基础路由组
 	v1 := r.Group("/api/v1")
@@ -49,8 +53,19 @@ func NewRouter(deps RouterDeps) *gin.Engine {
 			auth.GET("/nutrition", userHandler.GetNutritionRequirements)
 		}
 
-		// --- 食谱/营养路由 (未来) ---
-		// v1.GET("/recipe/recommend", ...)
+		// --- 食谱推荐路由 ---
+		recipes := v1.Group("/recipes")
+		recipes.Use(jwt.AuthMiddleware()) // 需要认证
+		{
+			// 获取食谱推荐 (GET /api/v1/recipes/recommend)
+			recipes.GET("/recommend", recipeHandler.GetRecommendations)
+
+			// 选择食谱计划 (POST /api/v1/recipes/plan/:planId/select)
+			recipes.POST("/plan/:planId/select", recipeHandler.SelectPlan)
+
+			// 保存推荐结果 (POST /api/v1/recipes/recommend)
+			recipes.POST("/recommend", recipeHandler.SaveRecommendations)
+		}
 	}
 
 	return r

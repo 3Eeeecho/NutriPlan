@@ -47,7 +47,7 @@
                     <div class="macro-info">
                       <div class="macro-name">蛋白质</div>
                       <div class="macro-value">{{ nutritionData.protein_gram }}g</div>
-                      <div class="macro-ratio">{{ nutritionData.protein_ratio.toFixed(1) }}%</div>
+                      <div class="macro-ratio">{{ nutritionData.protein_ratio.toFixed(0) }}%</div>
                     </div>
                   </div>
                   <div class="macro-item carb">
@@ -55,7 +55,7 @@
                     <div class="macro-info">
                       <div class="macro-name">碳水化合物</div>
                       <div class="macro-value">{{ nutritionData.carb_gram }}g</div>
-                      <div class="macro-ratio">{{ nutritionData.carb_ratio.toFixed(1) }}%</div>
+                      <div class="macro-ratio">{{ nutritionData.carb_ratio.toFixed(0) }}%</div>
                     </div>
                   </div>
                   <div class="macro-item fat">
@@ -63,7 +63,7 @@
                     <div class="macro-info">
                       <div class="macro-name">脂肪</div>
                       <div class="macro-value">{{ nutritionData.fat_gram }}g</div>
-                      <div class="macro-ratio">{{ nutritionData.fat_ratio.toFixed(1) }}%</div>
+                      <div class="macro-ratio">{{ nutritionData.fat_ratio.toFixed(0) }}%</div>
                     </div>
                   </div>
                 </div>

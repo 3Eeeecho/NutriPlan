@@ -1,0 +1,308 @@
+package service
+
+import (
+	"NutriPlan/internal/core/domain"
+	"NutriPlan/internal/repository"
+	"encoding/json"
+	"math"
+	"strings"
+)
+
+// RecipeService 食谱推荐服务接口
+type RecipeService interface {
+	// RecommendRecipes 为用户推荐每日食谱计划
+	// count: 推荐方案数量（默认3-5套）
+	RecommendRecipes(user *domain.User, count int) ([]*domain.DailyRecipePlan, error)
+
+	// GetRecipesByMealType 根据餐次类型获取食谱
+	GetRecipesByMealType(mealType domain.MealType) ([]domain.Recipe, error)
+
+	// SaveDailyPlan 保存每日食谱计划
+	SaveDailyPlan(plan *domain.DailyRecipePlan) error
+}
+
+// RecipeServiceImpl 食谱推荐服务实现
+type RecipeServiceImpl struct {
+	recipeRepo   repository.RecipeRepository
+	nutriService NutriService
+}
+
+// NewRecipeService 创建食谱推荐服务实例
+func NewRecipeService(recipeRepo repository.RecipeRepository, nutriService NutriService) RecipeService {
+	return &RecipeServiceImpl{
+		recipeRepo:   recipeRepo,
+		nutriService: nutriService,
+	}
+}
+
+// RecommendRecipes 为用户推荐每日食谱计划
+func (s *RecipeServiceImpl) RecommendRecipes(user *domain.User, count int) ([]*domain.DailyRecipePlan, error) {
+	// 1. 计算用户目标营养需求
+	targetCalorie := s.nutriService.DetermineTargetCalorie(user.TDEE, user.HealthGoal)
+	targetProtein, targetCarb, targetFat := s.nutriService.AllocateMacros(targetCalorie, user.HealthGoal)
+
+	// 2. 获取所有餐次的食谱
+	breakfastRecipes, err := s.recipeRepo.FindByMealType(domain.MealTypeBreakfast)
+	if err != nil {
+		return nil, err
+	}
+	lunchRecipes, err := s.recipeRepo.FindByMealType(domain.MealTypeLunch)
+	if err != nil {
+		return nil, err
+	}
+	dinnerRecipes, err := s.recipeRepo.FindByMealType(domain.MealTypeDinner)
+	if err != nil {
+		return nil, err
+	}
+	snackRecipes, err := s.recipeRepo.FindByMealType(domain.MealTypeSnack)
+	if err != nil {
+		return nil, err
+	}
+
+	// 3. 过滤禁忌食材
+	forbiddenIngredients := s.parseForbiddenIngredients(user)
+	breakfastRecipes = s.filterForbiddenRecipes(breakfastRecipes, forbiddenIngredients)
+	lunchRecipes = s.filterForbiddenRecipes(lunchRecipes, forbiddenIngredients)
+	dinnerRecipes = s.filterForbiddenRecipes(dinnerRecipes, forbiddenIngredients)
+	snackRecipes = s.filterForbiddenRecipes(snackRecipes, forbiddenIngredients)
+
+	// 4. 生成每日食谱计划
+	plans := make([]*domain.DailyRecipePlan, 0)
+	targetNutrition := NutritionTarget{
+		Energy:       targetCalorie,
+		Protein:      targetProtein,
+		Carbohydrate: targetCarb,
+		Fat:          targetFat,
+	}
+
+	// 尝试生成多套方案
+	maxAttempts := count * 10 // 增加尝试次数以确保找到足够的方案
+	for i := 0; i < maxAttempts && len(plans) < count; i++ {
+		plan := s.generateOneDailyPlan(
+			user.ID,
+			breakfastRecipes,
+			lunchRecipes,
+			dinnerRecipes,
+			snackRecipes,
+			targetNutrition,
+		)
+
+		// 只保留匹配度>=80%的方案
+		if plan != nil && plan.MatchScore >= 80 {
+			// 检查是否与已有方案重复
+			if !s.isDuplicatePlan(plans, plan) {
+				plans = append(plans, plan)
+			}
+		}
+	}
+
+	return plans, nil
+}
+
+// NutritionTarget 营养目标
+type NutritionTarget struct {
+	Energy       float64
+	Protein      float64
+	Carbohydrate float64
+	Fat          float64
+}
+
+// generateOneDailyPlan 生成一套每日食谱计划
+func (s *RecipeServiceImpl) generateOneDailyPlan(
+	userID uint,
+	breakfastRecipes, lunchRecipes, dinnerRecipes, snackRecipes []domain.Recipe,
+	target NutritionTarget,
+) *domain.DailyRecipePlan {
+	if len(breakfastRecipes) == 0 || len(lunchRecipes) == 0 || len(dinnerRecipes) == 0 {
+		return nil
+	}
+
+	// 随机选择各餐次的食谱（实际应用中可以使用更智能的选择算法）
+	breakfast := s.selectBestRecipe(breakfastRecipes, target.Energy*0.25, target)
+	lunch := s.selectBestRecipe(lunchRecipes, target.Energy*0.35, target)
+	dinner := s.selectBestRecipe(dinnerRecipes, target.Energy*0.30, target)
+
+	var snack *domain.Recipe
+	if len(snackRecipes) > 0 {
+		selectedSnack := s.selectBestRecipe(snackRecipes, target.Energy*0.10, target)
+		snack = &selectedSnack
+	}
+
+	// 计算总营养
+	totalEnergy := breakfast.Energy + lunch.Energy + dinner.Energy
+	totalProtein := breakfast.Protein + lunch.Protein + dinner.Protein
+	totalCarb := breakfast.Carbohydrate + lunch.Carbohydrate + dinner.Carbohydrate
+	totalFat := breakfast.Fat + lunch.Fat + dinner.Fat
+
+	var snackRecipeID *uint
+	if snack != nil {
+		snackRecipeID = &snack.ID
+		totalEnergy += snack.Energy
+		totalProtein += snack.Protein
+		totalCarb += snack.Carbohydrate
+		totalFat += snack.Fat
+	}
+
+	// 计算匹配度
+	matchScore := s.calculateMatchScore(
+		totalEnergy, totalProtein, totalCarb, totalFat,
+		target.Energy, target.Protein, target.Carbohydrate, target.Fat,
+	)
+
+	plan := &domain.DailyRecipePlan{
+		UserID:             userID,
+		BreakfastRecipeID:  breakfast.ID,
+		BreakfastRecipe:    breakfast, // Populate full recipe
+		LunchRecipeID:      lunch.ID,
+		LunchRecipe:        lunch, // Populate full recipe
+		DinnerRecipeID:     dinner.ID,
+		DinnerRecipe:       dinner, // Populate full recipe
+		SnackRecipeID:      snackRecipeID,
+		TotalEnergy:        totalEnergy,
+		TotalProtein:       totalProtein,
+		TotalCarbohydrate:  totalCarb,
+		TotalFat:           totalFat,
+		TargetEnergy:       target.Energy,
+		TargetProtein:      target.Protein,
+		TargetCarbohydrate: target.Carbohydrate,
+		TargetFat:          target.Fat,
+		MatchScore:         matchScore,
+		IsSelected:         false,
+	}
+
+	if snack != nil {
+		plan.SnackRecipe = snack // Populate full snack recipe
+	}
+
+	return plan
+}
+
+// selectBestRecipe 从食谱列表中选择最佳食谱
+func (s *RecipeServiceImpl) selectBestRecipe(recipes []domain.Recipe, targetEnergy float64, target NutritionTarget) domain.Recipe {
+	if len(recipes) == 0 {
+		return domain.Recipe{}
+	}
+
+	// 简单实现：根据能量接近度选择
+	bestIndex := 0
+	bestScore := 0.0
+
+	for i, recipe := range recipes {
+		// 计算能量接近度
+		energyMatch := 1 - math.Abs(recipe.Energy-targetEnergy)/targetEnergy
+		if energyMatch < 0 {
+			energyMatch = 0
+		}
+
+		if energyMatch > bestScore {
+			bestScore = energyMatch
+			bestIndex = i
+		}
+	}
+
+	return recipes[bestIndex]
+}
+
+// calculateMatchScore 计算营养匹配度（0-100）
+func (s *RecipeServiceImpl) calculateMatchScore(
+	actualE, actualP, actualC, actualF,
+	targetE, targetP, targetC, targetF float64,
+) float64 {
+	// 避免除以零
+	if targetE == 0 || targetP == 0 || targetC == 0 || targetF == 0 {
+		return 0
+	}
+
+	// 计算各营养素的匹配度
+	energyMatch := 1 - math.Abs(actualE-targetE)/targetE
+	proteinMatch := 1 - math.Abs(actualP-targetP)/targetP
+	carbMatch := 1 - math.Abs(actualC-targetC)/targetC
+	fatMatch := 1 - math.Abs(actualF-targetF)/targetF
+
+	// 确保匹配度在0-1之间
+	energyMatch = math.Max(0, math.Min(1, energyMatch))
+	proteinMatch = math.Max(0, math.Min(1, proteinMatch))
+	carbMatch = math.Max(0, math.Min(1, carbMatch))
+	fatMatch = math.Max(0, math.Min(1, fatMatch))
+
+	// 加权计算总匹配度（能量占40%，其他各占20%）
+	totalMatch := energyMatch*0.4 + proteinMatch*0.2 + carbMatch*0.2 + fatMatch*0.2
+
+	// 转换为百分比
+	return math.Round(totalMatch * 100)
+}
+
+// parseForbiddenIngredients 解析用户禁忌食材
+func (s *RecipeServiceImpl) parseForbiddenIngredients(user *domain.User) []string {
+	forbidden := make([]string, 0)
+
+	// 解析过敏源
+	if user.Allergies != "" {
+		allergies := strings.Split(user.Allergies, ",")
+		for _, a := range allergies {
+			forbidden = append(forbidden, strings.TrimSpace(a))
+		}
+	}
+
+	return forbidden
+}
+
+// filterForbiddenRecipes 过滤包含禁忌食材的食谱
+func (s *RecipeServiceImpl) filterForbiddenRecipes(recipes []domain.Recipe, forbidden []string) []domain.Recipe {
+	if len(forbidden) == 0 {
+		return recipes
+	}
+
+	filtered := make([]domain.Recipe, 0)
+	for _, recipe := range recipes {
+		// 解析食谱的食材列表
+		var ingredients []string
+		if err := json.Unmarshal([]byte(recipe.Ingredients), &ingredients); err != nil {
+			// 如果解析失败，尝试按逗号分隔
+			ingredients = strings.Split(recipe.Ingredients, ",")
+		}
+
+		// 检查是否包含禁忌食材
+		hasForbidden := false
+		for _, ingredient := range ingredients {
+			ingredientLower := strings.ToLower(strings.TrimSpace(ingredient))
+			for _, f := range forbidden {
+				if strings.Contains(ingredientLower, strings.ToLower(f)) {
+					hasForbidden = true
+					break
+				}
+			}
+			if hasForbidden {
+				break
+			}
+		}
+
+		if !hasForbidden {
+			filtered = append(filtered, recipe)
+		}
+	}
+
+	return filtered
+}
+
+// isDuplicatePlan 检查是否为重复方案
+func (s *RecipeServiceImpl) isDuplicatePlan(plans []*domain.DailyRecipePlan, newPlan *domain.DailyRecipePlan) bool {
+	for _, plan := range plans {
+		if plan.BreakfastRecipeID == newPlan.BreakfastRecipeID &&
+			plan.LunchRecipeID == newPlan.LunchRecipeID &&
+			plan.DinnerRecipeID == newPlan.DinnerRecipeID {
+			return true
+		}
+	}
+	return false
+}
+
+// GetRecipesByMealType 根据餐次类型获取食谱
+func (s *RecipeServiceImpl) GetRecipesByMealType(mealType domain.MealType) ([]domain.Recipe, error) {
+	return s.recipeRepo.FindByMealType(mealType)
+}
+
+// SaveDailyPlan 保存每日食谱计划
+func (s *RecipeServiceImpl) SaveDailyPlan(plan *domain.DailyRecipePlan) error {
+	return s.recipeRepo.CreateDailyPlan(plan)
+}

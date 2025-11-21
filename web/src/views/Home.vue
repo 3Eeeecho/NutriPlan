@@ -3,7 +3,7 @@
     <el-container>
       <el-header class="header">
         <div class="header-content">
-          <h1 class="logo">NutriPlan</h1>
+          <h1 class="logo">🍽️ NutriPlan</h1>
           <div class="header-right">
             <el-dropdown @command="handleCommand">
               <span class="user-info">
@@ -29,40 +29,100 @@
       </el-header>
 
       <el-main class="main-content">
-        <div class="welcome-card">
-          <el-card shadow="hover" class="profile-card">
-            <template #header>
-              <div class="card-header">
-                <el-icon class="card-icon"><Document /></el-icon>
-                <span>健康档案</span>
-              </div>
-            </template>
-            
-            <div v-if="!authStore.hasProfile" class="empty-profile">
-              <el-icon class="empty-icon"><Warning /></el-icon>
-              <h3>您还没有完善健康档案</h3>
-              <p>完善档案后，我们将为您提供个性化的营养计划</p>
-              <el-button type="primary" size="large" @click="goToProfile">
-                <el-icon><Edit /></el-icon>
-                立即完善档案
-              </el-button>
-            </div>
+        <!-- Welcome Section -->
+        <div class="welcome-section" v-if="authStore.user">
+          <h2 class="welcome-title">欢迎回来，{{ authStore.user.username }}！</h2>
+          <p class="welcome-subtitle">开启您的健康营养之旅</p>
+        </div>
 
-            <div v-else class="profile-summary">
-              <el-descriptions :column="2" border>
-                <el-descriptions-item label="年龄">{{ authStore.profile?.age }} 岁</el-descriptions-item>
-                <el-descriptions-item label="性别">{{ authStore.profile?.gender }}</el-descriptions-item>
-                <el-descriptions-item label="身高">{{ authStore.profile?.height }} cm</el-descriptions-item>
-                <el-descriptions-item label="体重">{{ authStore.profile?.weight }} kg</el-descriptions-item>
-                <el-descriptions-item label="BMI">{{ authStore.profile?.bmi || '--' }}</el-descriptions-item>
-                <el-descriptions-item label="健康目标">{{ authStore.profile?.health_goal || '--' }}</el-descriptions-item>
-              </el-descriptions>
-              <el-button type="primary" class="update-btn" @click="goToProfile">
-                <el-icon><Edit /></el-icon>
-                更新档案
-              </el-button>
+        <!-- Feature Cards Grid -->
+        <div class="features-grid">
+          <!-- My Profile Card -->
+          <div class="feature-card profile-card" @click="goToProfile">
+            <div class="card-icon-wrapper profile">
+              <el-icon class="card-icon"><User /></el-icon>
             </div>
-          </el-card>
+            <h3 class="card-title">我的档案</h3>
+            <p class="card-description">
+              {{ authStore.hasProfile ? '管理健康数据与营养目标' : '完善档案以获取个性化推荐' }}
+            </p>
+            <div class="nutrition-preview" v-if="authStore.profile">
+              <div class="preview-item">
+                <span class="preview-label">每日热量目标</span>
+                <span class="preview-value">{{ authStore.profile.tdee || '--' }} kcal</span>
+              </div>
+            </div>
+            <div class="card-status" v-if="!authStore.hasProfile">
+              <el-tag type="warning" effect="plain">待完善</el-tag>
+            </div>
+            <div class="card-arrow">
+              <el-icon><ArrowRight /></el-icon>
+            </div>
+          </div>
+
+          <!-- Recipe Recommendation Card -->
+          <div 
+            class="feature-card recipe-card" 
+            @click="goToRecipes"
+            :class="{ disabled: !authStore.hasProfile }"
+          >
+            <div class="card-icon-wrapper recipe">
+              <el-icon class="card-icon"><KnifeFork /></el-icon>
+            </div>
+            <h3 class="card-title">智能食谱推荐</h3>
+            <p class="card-description">
+              {{ authStore.hasProfile ? '获取个性化的每日食谱方案' : '请先完善健康档案' }}
+            </p>
+            <div class="card-badge" v-if="authStore.hasProfile">
+              <span class="badge-text">AI 推荐</span>
+            </div>
+            <div class="card-arrow">
+              <el-icon><ArrowRight /></el-icon>
+            </div>
+          </div>
+
+          <!-- Coming Soon Cards -->
+          <div class="feature-card coming-soon-card disabled">
+            <div class="card-icon-wrapper coming">
+              <el-icon class="card-icon"><DataLine /></el-icon>
+            </div>
+            <h3 class="card-title">饮食记录</h3>
+            <p class="card-description">记录每日饮食摄入</p>
+            <el-tag type="info" size="small">即将推出</el-tag>
+          </div>
+
+          <div class="feature-card coming-soon-card disabled">
+            <div class="card-icon-wrapper coming">
+              <el-icon class="card-icon"><Medal /></el-icon>
+            </div>
+            <h3 class="card-title">健康目标</h3>
+            <p class="card-description">设定和追踪您的目标</p>
+            <el-tag type="info" size="small">即将推出</el-tag>
+          </div>
+
+          <div class="feature-card coming-soon-card disabled">
+            <div class="card-icon-wrapper coming">
+              <el-icon class="card-icon"><PieChart /></el-icon>
+            </div>
+            <h3 class="card-title">数据分析</h3>
+            <p class="card-description">可视化您的营养数据</p>
+            <el-tag type="info" size="small">即将推出</el-tag>
+          </div>
+        </div>
+
+        <!-- Quick Tips -->
+        <div class="tips-section" v-if="!authStore.hasProfile">
+          <el-alert
+            title="温馨提示"
+            type="info"
+            :closable="false"
+            show-icon
+          >
+            <p>请先完善您的健康档案，以便我们为您提供个性化的营养推荐服务。</p>
+            <el-button type="primary" size="small" @click="goToProfile" style="margin-top: 10px;">
+              立即完善
+            </el-button>
+          </el-alert>
         </div>
       </el-main>
     </el-container>
@@ -77,10 +137,14 @@ import {
   UserFilled,
   User,
   ArrowDown,
+  ArrowRight,
   SwitchButton,
   Document,
-  Warning,
-  Edit
+  KnifeFork,
+  TrendCharts,
+  DataLine,
+  Medal,
+  PieChart
 } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/store/auth'
 
@@ -89,14 +153,7 @@ const authStore = useAuthStore()
 
 onMounted(async () => {
   if (authStore.isAuthenticated) {
-    // 如果没有 user 信息，尝试加载 profile（会同时更新 user）
-    if (!authStore.user) {
-      try {
-        await authStore.loadProfile()
-      } catch (error) {
-        console.error('加载档案失败:', error)
-      }
-    } else if (!authStore.profile) {
+    if (!authStore.user || !authStore.profile) {
       try {
         await authStore.loadProfile()
       } catch (error) {
@@ -107,7 +164,24 @@ onMounted(async () => {
 })
 
 const goToProfile = () => {
-  router.push('/profile')
+  router.push('/profile/view')
+}
+
+const goToRecipes = () => {
+  if (!authStore.hasProfile) {
+    ElMessage.warning('请先完善健康档案')
+    return
+  }
+  router.push('/recipes')
+}
+
+const goToNutrition = () => {
+  if (!authStore.hasProfile) {
+    ElMessage.warning('请先完善健康档案')
+    return
+  }
+  // 可以创建一个专门的营养需求展示页面
+  router.push('/profile/view')
 }
 
 const handleCommand = async (command) => {
@@ -133,13 +207,13 @@ const handleCommand = async (command) => {
 <style scoped>
 .home-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
 .header {
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.98);
   backdrop-filter: blur(10px);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
   padding: 0;
 }
 
@@ -152,7 +226,7 @@ const handleCommand = async (command) => {
 }
 
 .logo {
-  font-size: 24px;
+  font-size: 26px;
   font-weight: 700;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   -webkit-background-clip: text;
@@ -186,19 +260,233 @@ const handleCommand = async (command) => {
 }
 
 .main-content {
-  padding: 30px;
-  max-width: 1200px;
+  padding: 40px 30px;
+  max-width: 1400px;
   margin: 0 auto;
 }
 
-.welcome-card {
-  animation: fadeIn 0.5s ease-out;
+.welcome-section {
+  text-align: center;
+  color: white;
+  margin-bottom: 50px;
+  animation: fadeIn 0.6s ease-out;
+}
+
+.welcome-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin: 0 0 10px 0;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.welcome-subtitle {
+  font-size: 1.2rem;
+  opacity: 0.9;
+  margin: 0;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-auto-rows: minmax(180px, auto);
+  gap: 24px;
+  animation: fadeInUp 0.8s ease-out;
+}
+
+.feature-card {
+  background: white;
+  border-radius: 24px;
+  padding: 30px;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* Bento Grid Layout */
+.recipe-card {
+  grid-column: span 2;
+  grid-row: span 2;
+  background: linear-gradient(135deg, #fff 0%, #fff5f5 100%);
+  border: 1px solid rgba(245, 87, 108, 0.1);
+}
+
+.profile-card {
+  grid-column: span 1;
+  grid-row: span 1;
+}
+
+.nutrition-card {
+  grid-column: span 1;
+  grid-row: span 1;
+}
+
+.coming-soon-card {
+  grid-column: span 1;
+  grid-row: span 1;
+}
+
+/* Special styling for the large recipe card */
+.recipe-card .card-icon-wrapper {
+  width: 80px;
+  height: 80px;
+  margin-bottom: 30px;
+}
+
+.recipe-card .card-title {
+  font-size: 2rem;
+  margin-bottom: 15px;
+}
+
+.recipe-card .card-description {
+  font-size: 1.1rem;
+  max-width: 80%;
+}
+
+.feature-card:hover:not(.disabled) {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+  z-index: 1;
+}
+
+.feature-card.disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+  background: #f8f9fa;
+}
+
+.card-icon-wrapper {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.feature-card:hover:not(.disabled) .card-icon-wrapper {
+  transform: scale(1.1) rotate(5deg);
+}
+
+.card-icon-wrapper.profile {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  box-shadow: 0 8px 16px rgba(118, 75, 162, 0.2);
+}
+
+.card-icon-wrapper.recipe {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  box-shadow: 0 8px 16px rgba(245, 87, 108, 0.3);
+}
+
+.card-icon-wrapper.nutrition {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  box-shadow: 0 8px 16px rgba(0, 242, 254, 0.2);
+}
+
+.card-icon-wrapper.coming {
+  background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+}
+
+.card-icon {
+  font-size: 28px;
+  color: white;
+}
+
+.recipe-card .card-icon {
+  font-size: 40px;
+}
+
+.card-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #2d3748;
+  margin: 0 0 8px 0;
+}
+
+.card-description {
+  color: #718096;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  margin: 0;
+  flex-grow: 1;
+}
+
+.card-status {
+  margin-top: 15px;
+}
+
+.card-badge {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  box-shadow: 0 4px 10px rgba(245, 87, 108, 0.3);
+}
+
+.nutrition-preview {
+  background: #f7fafc;
+  padding: 12px;
+  border-radius: 12px;
+  margin-top: 15px;
+}
+
+.preview-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.preview-label {
+  font-size: 0.85rem;
+  color: #718096;
+  font-weight: 500;
+}
+
+.preview-value {
+  font-size: 1rem;
+  color: #2d3748;
+  font-weight: 700;
+}
+
+.card-arrow {
+  position: absolute;
+  right: 24px;
+  bottom: 24px;
+  font-size: 24px;
+  color: #cbd5e0;
+  transition: all 0.3s;
+}
+
+.feature-card:hover:not(.disabled) .card-arrow {
+  color: #667eea;
+  transform: translateX(5px);
+}
+
+.tips-section {
+  margin-top: 40px;
+  animation: fadeIn 1s ease-out;
 }
 
 @keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(30px);
   }
   to {
     opacity: 1;
@@ -206,56 +494,33 @@ const handleCommand = async (command) => {
   }
 }
 
-.profile-card {
-  border-radius: 12px;
-  overflow: hidden;
+/* Responsive Breakpoints */
+@media (max-width: 1200px) {
+  .features-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .recipe-card {
+    grid-column: span 2;
+    grid-row: span 2;
+  }
 }
 
-.card-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 18px;
-  font-weight: 600;
+@media (max-width: 900px) {
+  .features-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .recipe-card {
+    grid-column: span 2;
+    grid-row: auto; /* Reset row span on smaller screens */
+  }
 }
 
-.card-icon {
-  font-size: 20px;
-  color: #667eea;
-}
-
-.empty-profile {
-  text-align: center;
-  padding: 60px 20px;
-}
-
-.empty-icon {
-  font-size: 64px;
-  color: #c0c4cc;
-  margin-bottom: 20px;
-}
-
-.empty-profile h3 {
-  color: #333;
-  margin-bottom: 10px;
-}
-
-.empty-profile p {
-  color: #666;
-  margin-bottom: 30px;
-}
-
-.profile-summary {
-  padding: 20px 0;
-}
-
-.update-btn {
-  margin-top: 20px;
-  width: 100%;
-}
-
-:deep(.el-descriptions__label) {
-  font-weight: 600;
+@media (max-width: 600px) {
+  .features-grid {
+    grid-template-columns: 1fr;
+  }
+  .recipe-card {
+    grid-column: auto;
+  }
 }
 </style>
-
