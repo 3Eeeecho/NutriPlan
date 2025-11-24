@@ -65,6 +65,9 @@ func NewRouter(deps RouterDeps) *gin.Engine {
 
 			// 保存推荐结果 (POST /api/v1/recipes/recommend)
 			recipes.POST("/recommend", recipeHandler.SaveRecommendations)
+
+			// 获取已选食谱计划 (GET /api/v1/recipes/selected)
+			recipes.GET("/selected", recipeHandler.GetSelectedPlan)
 		}
 	}
 

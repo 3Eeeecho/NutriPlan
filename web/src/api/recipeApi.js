@@ -25,3 +25,11 @@ export const saveRecommendations = (plans) => {
     data: plans
   });
 };
+
+// 获取已选食谱计划
+export const getSelectedRecipePlan = () => {
+  return request({
+    url: '/recipes/selected',
+    method: 'get'
+  });
+};

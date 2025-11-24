@@ -49,7 +49,7 @@
             <div class="nutrition-preview" v-if="authStore.profile">
               <div class="preview-item">
                 <span class="preview-label">每日热量目标</span>
-                <span class="preview-value">{{ authStore.profile.tdee || '--' }} kcal</span>
+                <span class="preview-value">{{ authStore.profile.tdee ? Math.floor(authStore.profile.tdee) : '--' }} kcal</span>
               </div>
             </div>
             <div class="card-status" v-if="!authStore.hasProfile">

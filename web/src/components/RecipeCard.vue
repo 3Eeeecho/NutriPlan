@@ -11,19 +11,19 @@
       <div class="nutrition-info">
         <div class="nutrition-badge">
           <span class="badge-label">热量</span>
-          <span class="badge-value">{{ recipe.energy }} kcal</span>
+          <span class="badge-value">{{ Math.floor(recipe.energy) }} kcal</span>
         </div>
         <div class="nutrition-badge">
           <span class="badge-label">蛋白质</span>
-          <span class="badge-value">{{ recipe.protein }}g</span>
+          <span class="badge-value">{{ Math.floor(recipe.protein) }}g</span>
         </div>
         <div class="nutrition-badge">
           <span class="badge-label">碳水</span>
-          <span class="badge-value">{{ recipe.carbohydrate }}g</span>
+          <span class="badge-value">{{ Math.floor(recipe.carbohydrate) }}g</span>
         </div>
         <div class="nutrition-badge">
           <span class="badge-label">脂肪</span>
-          <span class="badge-value">{{ recipe.fat }}g</span>
+          <span class="badge-value">{{ Math.floor(recipe.fat) }}g</span>
         </div>
       </div>
 

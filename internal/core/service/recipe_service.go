@@ -5,7 +5,10 @@ import (
 	"NutriPlan/internal/repository"
 	"encoding/json"
 	"math"
+	"math/rand"
+	"sort"
 	"strings"
+	"time"
 )
 
 // RecipeService 食谱推荐服务接口
@@ -19,12 +22,19 @@ type RecipeService interface {
 
 	// SaveDailyPlan 保存每日食谱计划
 	SaveDailyPlan(plan *domain.DailyRecipePlan) error
+
+	// GetSelectedPlan 获取用户当前选中的计划
+	GetSelectedPlan(userID uint) (*domain.DailyRecipePlan, error)
+
+	// SelectDailyPlan 选择每日食谱计划
+	SelectDailyPlan(userID, planID uint) error
 }
 
 // RecipeServiceImpl 食谱推荐服务实现
 type RecipeServiceImpl struct {
 	recipeRepo   repository.RecipeRepository
 	nutriService NutriService
+	rng          *rand.Rand
 }
 
 // NewRecipeService 创建食谱推荐服务实例
@@ -32,6 +42,7 @@ func NewRecipeService(recipeRepo repository.RecipeRepository, nutriService Nutri
 	return &RecipeServiceImpl{
 		recipeRepo:   recipeRepo,
 		nutriService: nutriService,
+		rng:          rand.New(rand.NewSource(time.Now().UnixNano())),
 	}
 }
 
@@ -66,7 +77,16 @@ func (s *RecipeServiceImpl) RecommendRecipes(user *domain.User, count int) ([]*d
 	dinnerRecipes = s.filterForbiddenRecipes(dinnerRecipes, forbiddenIngredients)
 	snackRecipes = s.filterForbiddenRecipes(snackRecipes, forbiddenIngredients)
 
-	// 4. 生成每日食谱计划
+	// 4. 过滤最近3天吃过的食谱 (History-based Anti-Repetition)
+	recentRecipeIDs, err := s.recipeRepo.FindRecentPlanRecipeIDs(user.ID, 3)
+	if err == nil && len(recentRecipeIDs) > 0 {
+		breakfastRecipes = s.filterRecentRecipes(breakfastRecipes, recentRecipeIDs)
+		lunchRecipes = s.filterRecentRecipes(lunchRecipes, recentRecipeIDs)
+		dinnerRecipes = s.filterRecentRecipes(dinnerRecipes, recentRecipeIDs)
+		snackRecipes = s.filterRecentRecipes(snackRecipes, recentRecipeIDs)
+	}
+
+	// 5. 生成每日食谱计划
 	plans := make([]*domain.DailyRecipePlan, 0)
 	targetNutrition := NutritionTarget{
 		Energy:       targetCalorie,
@@ -76,7 +96,7 @@ func (s *RecipeServiceImpl) RecommendRecipes(user *domain.User, count int) ([]*d
 	}
 
 	// 尝试生成多套方案
-	maxAttempts := count * 10 // 增加尝试次数以确保找到足够的方案
+	maxAttempts := count * 20
 	for i := 0; i < maxAttempts && len(plans) < count; i++ {
 		plan := s.generateOneDailyPlan(
 			user.ID,
@@ -89,10 +109,21 @@ func (s *RecipeServiceImpl) RecommendRecipes(user *domain.User, count int) ([]*d
 
 		// 只保留匹配度>=80%的方案
 		if plan != nil && plan.MatchScore >= 80 {
-			// 检查是否与已有方案重复
-			if !s.isDuplicatePlan(plans, plan) {
-				plans = append(plans, plan)
+			// 检查是否与已有方案重复 (完全重复)
+			if s.isDuplicatePlan(plans, plan) {
+				continue
 			}
+
+			// 多样性检查 (Diversity Filtering): 确保同一批推荐中主菜不重复
+			if !s.checkDiversity(plans, plan) {
+				continue
+			}
+
+			// 保存方案到数据库，以获取ID
+			if err := s.recipeRepo.CreateDailyPlan(plan); err != nil {
+				continue
+			}
+			plans = append(plans, plan)
 		}
 	}
 
@@ -117,7 +148,8 @@ func (s *RecipeServiceImpl) generateOneDailyPlan(
 		return nil
 	}
 
-	// 随机选择各餐次的食谱（实际应用中可以使用更智能的选择算法）
+	// 随机选择各餐次的食谱
+	// TODO: 实际应用中应使用更智能的选择算法
 	breakfast := s.selectBestRecipe(breakfastRecipes, target.Energy*0.25, target)
 	lunch := s.selectBestRecipe(lunchRecipes, target.Energy*0.35, target)
 	dinner := s.selectBestRecipe(dinnerRecipes, target.Energy*0.30, target)
@@ -177,30 +209,40 @@ func (s *RecipeServiceImpl) generateOneDailyPlan(
 	return plan
 }
 
-// selectBestRecipe 从食谱列表中选择最佳食谱
+// selectBestRecipe 从食谱列表中选择最佳食谱（Top-K 随机策略）
 func (s *RecipeServiceImpl) selectBestRecipe(recipes []domain.Recipe, targetEnergy float64, target NutritionTarget) domain.Recipe {
 	if len(recipes) == 0 {
 		return domain.Recipe{}
 	}
 
-	// 简单实现：根据能量接近度选择
-	bestIndex := 0
-	bestScore := 0.0
+	type candidate struct {
+		recipe domain.Recipe
+		score  float64
+	}
 
-	for i, recipe := range recipes {
+	candidates := make([]candidate, 0, len(recipes))
+
+	for _, recipe := range recipes {
 		// 计算能量接近度
 		energyMatch := 1 - math.Abs(recipe.Energy-targetEnergy)/targetEnergy
 		if energyMatch < 0 {
 			energyMatch = 0
 		}
 
-		if energyMatch > bestScore {
-			bestScore = energyMatch
-			bestIndex = i
-		}
+		candidates = append(candidates, candidate{recipe: recipe, score: energyMatch})
 	}
 
-	return recipes[bestIndex]
+	// 按分数降序排序
+	sort.Slice(candidates, func(i, j int) bool {
+		return candidates[i].score > candidates[j].score
+	})
+
+	// 从 Top-K 中随机选择
+	k := min(5, len(candidates))
+
+	// 随机选择一个
+	idx := s.rng.Intn(k)
+	return candidates[idx].recipe
 }
 
 // calculateMatchScore 计算营养匹配度（0-100）
@@ -305,4 +347,64 @@ func (s *RecipeServiceImpl) GetRecipesByMealType(mealType domain.MealType) ([]do
 // SaveDailyPlan 保存每日食谱计划
 func (s *RecipeServiceImpl) SaveDailyPlan(plan *domain.DailyRecipePlan) error {
 	return s.recipeRepo.CreateDailyPlan(plan)
+}
+
+// GetSelectedPlan 获取用户当前选中的计划
+func (s *RecipeServiceImpl) GetSelectedPlan(userID uint) (*domain.DailyRecipePlan, error) {
+	return s.recipeRepo.FindSelectedPlan(userID)
+}
+
+// SelectDailyPlan 选择每日食谱计划
+func (s *RecipeServiceImpl) SelectDailyPlan(userID, planID uint) error {
+	// 1. 获取用户当前已选的计划（如果有）
+	currentSelected, err := s.recipeRepo.FindSelectedPlan(userID)
+	if err == nil && currentSelected != nil {
+		// 取消选中
+		if err := s.recipeRepo.UpdatePlanSelection(currentSelected.ID, false); err != nil {
+			return err
+		}
+	}
+
+	// 2. 选中新计划
+	return s.recipeRepo.UpdatePlanSelection(planID, true)
+}
+
+// filterRecentRecipes 过滤最近吃过的食谱
+func (s *RecipeServiceImpl) filterRecentRecipes(recipes []domain.Recipe, recentIDs []uint) []domain.Recipe {
+	recentMap := make(map[uint]bool)
+	for _, id := range recentIDs {
+		recentMap[id] = true
+	}
+
+	filtered := make([]domain.Recipe, 0)
+	for _, recipe := range recipes {
+		if !recentMap[recipe.ID] {
+			filtered = append(filtered, recipe)
+		}
+	}
+
+	// 如果过滤后数量太少（少于3个），则不过滤，避免无方案可选
+	if len(filtered) < 3 {
+		return recipes
+	}
+	return filtered
+}
+
+// checkDiversity 检查方案多样性（确保主菜不重复）
+func (s *RecipeServiceImpl) checkDiversity(existingPlans []*domain.DailyRecipePlan, newPlan *domain.DailyRecipePlan) bool {
+	for _, plan := range existingPlans {
+		// 检查早餐是否重复
+		if plan.BreakfastRecipeID == newPlan.BreakfastRecipeID {
+			return false
+		}
+		// 检查午餐是否重复
+		if plan.LunchRecipeID == newPlan.LunchRecipeID {
+			return false
+		}
+		// 检查晚餐是否重复
+		if plan.DinnerRecipeID == newPlan.DinnerRecipeID {
+			return false
+		}
+	}
+	return true
 }

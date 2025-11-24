@@ -153,14 +153,50 @@ func (h *RecipeHandler) SelectPlan(c *gin.Context) {
 		return
 	}
 
-	// 保存计划（这里简化处理，实际应验证计划是否属于该用户）
-	_ = userID // 使用 userID 进行验证
+	// 调用服务选择计划
+	if err := h.recipeService.SelectDailyPlan(userID.(uint), uint(planID)); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "选择计划失败: " + err.Error()})
+		return
+	}
 
-	// 这里可以添加更多逻辑，例如保存到用户的历史记录
 	c.JSON(http.StatusOK, gin.H{
 		"message": "计划选择成功",
 		"plan_id": planID,
 	})
+}
+
+// GetSelectedPlan 获取已选食谱计划
+// @Summary 获取已选食谱计划
+// @Description 获取用户当前选中的每日食谱计划
+// @Tags Recipe
+// @Accept json
+// @Produce json
+// @Success 200 {object} DailyPlanDTO
+// @Router /api/recipes/selected [get]
+func (h *RecipeHandler) GetSelectedPlan(c *gin.Context) {
+	// 从上下文获取用户ID
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "未授权"})
+		return
+	}
+
+	// 获取已选计划
+	plan, err := h.recipeService.GetSelectedPlan(userID.(uint))
+	if err != nil {
+		// 如果没有找到已选计划，返回404
+		c.JSON(http.StatusNotFound, gin.H{"error": "未找到已选计划"})
+		return
+	}
+
+	// 转换为DTO
+	planDTO, err := h.convertPlanToDTO(plan)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "数据转换失败"})
+		return
+	}
+
+	c.JSON(http.StatusOK, planDTO)
 }
 
 // SaveRecommendations 保存推荐结果

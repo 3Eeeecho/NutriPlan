@@ -2,6 +2,7 @@ package repository
 
 import (
 	"NutriPlan/internal/core/domain"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -28,6 +29,12 @@ type RecipeRepository interface {
 
 	// UpdatePlanSelection 更新计划选择状态
 	UpdatePlanSelection(planID uint, selected bool) error
+
+	// FindSelectedPlan 查询用户当前选中的计划
+	FindSelectedPlan(userID uint) (*domain.DailyRecipePlan, error)
+
+	// FindRecentPlanRecipeIDs 查询用户最近几天选择的食谱ID
+	FindRecentPlanRecipeIDs(userID uint, days int) ([]uint, error)
 }
 
 // GormRecipeRepository GORM 实现
@@ -92,4 +99,43 @@ func (r *GormRecipeRepository) UpdatePlanSelection(planID uint, selected bool) e
 	return r.db.Model(&domain.DailyRecipePlan{}).
 		Where("id = ?", planID).
 		Update("is_selected", selected).Error
+}
+
+// FindSelectedPlan 查询用户当前选中的计划
+func (r *GormRecipeRepository) FindSelectedPlan(userID uint) (*domain.DailyRecipePlan, error) {
+	var plan domain.DailyRecipePlan
+	err := r.db.Preload("BreakfastRecipe").
+		Preload("LunchRecipe").
+		Preload("DinnerRecipe").
+		Preload("SnackRecipe").
+		Where("user_id = ? AND is_selected = ?", userID, true).
+		Order("created_at DESC").
+		First(&plan).Error
+	if err != nil {
+		return nil, err
+	}
+	return &plan, nil
+}
+
+// FindRecentPlanRecipeIDs 查询用户最近几天选择的食谱ID
+func (r *GormRecipeRepository) FindRecentPlanRecipeIDs(userID uint, days int) ([]uint, error) {
+	var plans []domain.DailyRecipePlan
+	startTime := time.Now().AddDate(0, 0, -days)
+
+	err := r.db.Where("user_id = ? AND is_selected = ? AND created_at >= ?", userID, true, startTime).
+		Find(&plans).Error
+	if err != nil {
+		return nil, err
+	}
+
+	recipeIDs := make([]uint, 0)
+	for _, plan := range plans {
+		recipeIDs = append(recipeIDs, plan.BreakfastRecipeID)
+		recipeIDs = append(recipeIDs, plan.LunchRecipeID)
+		recipeIDs = append(recipeIDs, plan.DinnerRecipeID)
+		if plan.SnackRecipeID != nil {
+			recipeIDs = append(recipeIDs, *plan.SnackRecipeID)
+		}
+	}
+	return recipeIDs, nil
 }
