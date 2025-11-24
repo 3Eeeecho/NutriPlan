@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"NutriPlan/internal/config"
-	"NutriPlan/internal/core/domain"
+	"NutriPlan/internal/core/models"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -53,9 +53,9 @@ func InitDatabase(cfg config.DatabaseConfig) error {
 
 	// 数据库模型迁移
 	err = db.AutoMigrate(
-		&domain.User{},
-		&domain.Recipe{},
-		&domain.DailyRecipePlan{},
+		&models.User{},
+		&models.Recipe{},
+		&models.DailyRecipePlan{},
 	)
 	if err != nil {
 		log.Fatalf("数据库模型迁移失败: %v", err)

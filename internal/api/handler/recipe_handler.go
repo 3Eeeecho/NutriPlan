@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"NutriPlan/internal/core/domain"
+	"NutriPlan/internal/core/models"
 	"NutriPlan/internal/core/service"
 	"NutriPlan/internal/repository"
 	"net/http"
@@ -216,7 +216,7 @@ func (h *RecipeHandler) SaveRecommendations(c *gin.Context) {
 		return
 	}
 
-	var plans []*domain.DailyRecipePlan
+	var plans []*models.DailyRecipePlan
 	if err := c.ShouldBindJSON(&plans); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "请求格式错误"})
 		return
@@ -238,7 +238,7 @@ func (h *RecipeHandler) SaveRecommendations(c *gin.Context) {
 }
 
 // convertPlanToDTO 转换计划为DTO（需要加载关联的食谱）
-func (h *RecipeHandler) convertPlanToDTO(plan *domain.DailyRecipePlan) (DailyPlanDTO, error) {
+func (h *RecipeHandler) convertPlanToDTO(plan *models.DailyRecipePlan) (DailyPlanDTO, error) {
 	// 注意：这里需要预加载食谱数据
 	// 实际实现中应该在repository层使用Preload
 	dto := DailyPlanDTO{
@@ -268,7 +268,7 @@ func (h *RecipeHandler) convertPlanToDTO(plan *domain.DailyRecipePlan) (DailyPla
 }
 
 // convertRecipeToDTO 转换食谱为DTO
-func convertRecipeToDTO(recipe *domain.Recipe) RecipeDTO {
+func convertRecipeToDTO(recipe *models.Recipe) RecipeDTO {
 	// 解析食材列表
 	var ingredients []string
 	// 这里简化处理，实际应该解析JSON

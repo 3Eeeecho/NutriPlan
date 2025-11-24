@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"NutriPlan/internal/core/domain"
+	"NutriPlan/internal/core/models"
 	"NutriPlan/internal/core/service"
 	"NutriPlan/internal/pkg/jwt"
 	"net/http"
@@ -37,7 +37,7 @@ type LoginRequest struct {
 // LoginResponse 登录响应结构体
 type LoginResponse struct {
 	Token   string       `json:"token"`
-	User    *domain.User `json:"user"`
+	User    *models.User `json:"user"`
 	Message string       `json:"message"`
 }
 
@@ -78,7 +78,7 @@ func (h *UserHandler) Register(c *gin.Context) {
 
 	// 创建用户对象，只设置基本注册信息
 	// 身体数据等健康档案信息后续通过更新档案接口填写
-	user := &domain.User{
+	user := &models.User{
 		Username: req.Username,
 		Password: req.Password,
 		Email:    req.Email,
@@ -190,12 +190,12 @@ func (h *UserHandler) UpdateProfile(c *gin.Context) {
 	}
 
 	// 创建更新对象
-	profile := &domain.User{
+	profile := &models.User{
 		Gender:           req.Gender,
 		Age:              req.Age,
 		Height:           req.Height,
 		Weight:           req.Weight,
-		HealthGoal:       domain.HealthGoal(req.HealthGoal),
+		HealthGoal:       models.HealthGoal(req.HealthGoal),
 		TargetWeight:     req.TargetWeight,
 		ActivityLevel:    req.ActivityLevel,
 		Allergies:        req.Allergies,
@@ -237,7 +237,7 @@ func (h *UserHandler) UpdateProfile(c *gin.Context) {
 // @Tags 用户
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} domain.User "用户档案"
+// @Success 200 {object} models.User "用户档案"
 // @Failure 401 {object} map[string]interface{} "未授权"
 // @Failure 404 {object} map[string]interface{} "用户不存在"
 // @Router /api/v1/user/profile [get]

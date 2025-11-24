@@ -2,7 +2,7 @@ package main
 
 import (
 	"NutriPlan/internal/config"
-	"NutriPlan/internal/core/domain"
+	"NutriPlan/internal/core/models"
 	"NutriPlan/internal/repository"
 	"encoding/json"
 	"fmt"
@@ -50,11 +50,11 @@ func main() {
 	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	// 基础数据
-	mealTypes := []domain.MealType{
-		domain.MealTypeBreakfast,
-		domain.MealTypeLunch,
-		domain.MealTypeDinner,
-		domain.MealTypeSnack,
+	mealTypes := []models.MealType{
+		models.MealTypeBreakfast,
+		models.MealTypeLunch,
+		models.MealTypeDinner,
+		models.MealTypeSnack,
 	}
 
 	cookingMethods := []string{"炒", "蒸", "煮", "烤", "煎", "凉拌", "炖"}
@@ -76,7 +76,7 @@ func main() {
 		var ingredients []string
 
 		// 根据餐次选择食材
-		if mealType == domain.MealTypeBreakfast {
+		if mealType == models.MealTypeBreakfast {
 			mainIngredient = proteins[rng.Intn(len(proteins))] // 主要是蛋奶
 			if rng.Intn(2) == 0 {
 				mainIngredient = "鸡蛋"
@@ -84,7 +84,7 @@ func main() {
 			sideIngredient = fruits[rng.Intn(len(fruits))]
 			carbIngredient = carbs[rng.Intn(len(carbs))]
 			ingredients = []string{mainIngredient, sideIngredient, carbIngredient, "牛奶"}
-		} else if mealType == domain.MealTypeSnack {
+		} else if mealType == models.MealTypeSnack {
 			mainIngredient = fruits[rng.Intn(len(fruits))]
 			sideIngredient = nuts[rng.Intn(len(nuts))]
 			ingredients = []string{mainIngredient, sideIngredient, "酸奶"}
@@ -97,13 +97,13 @@ func main() {
 		}
 
 		name := fmt.Sprintf("%s%s配%s", method, mainIngredient, sideIngredient)
-		if mealType == domain.MealTypeSnack {
+		if mealType == models.MealTypeSnack {
 			name = fmt.Sprintf("%s坚果杯", mainIngredient)
 		}
 
 		// 随机营养成分 (基于食材估算)
 		energy := 300 + rng.Float64()*500
-		if mealType == domain.MealTypeSnack {
+		if mealType == models.MealTypeSnack {
 			energy = 100 + rng.Float64()*200
 		}
 
@@ -113,7 +113,7 @@ func main() {
 
 		ingredientsJSON, _ := json.Marshal(ingredients)
 
-		recipe := &domain.Recipe{
+		recipe := &models.Recipe{
 			Name:         name,
 			Description:  fmt.Sprintf("这是一道美味的%s，富含营养。", name),
 			ImageURL:     "https://placehold.co/600x400?text=Recipe", // 占位图

@@ -1,7 +1,7 @@
 package service
 
 import (
-	"NutriPlan/internal/core/domain"
+	"NutriPlan/internal/core/models"
 	"NutriPlan/internal/repository"
 	"encoding/json"
 	"math"
@@ -15,16 +15,16 @@ import (
 type RecipeService interface {
 	// RecommendRecipes 为用户推荐每日食谱计划
 	// count: 推荐方案数量（默认3-5套）
-	RecommendRecipes(user *domain.User, count int) ([]*domain.DailyRecipePlan, error)
+	RecommendRecipes(user *models.User, count int) ([]*models.DailyRecipePlan, error)
 
 	// GetRecipesByMealType 根据餐次类型获取食谱
-	GetRecipesByMealType(mealType domain.MealType) ([]domain.Recipe, error)
+	GetRecipesByMealType(mealType models.MealType) ([]models.Recipe, error)
 
 	// SaveDailyPlan 保存每日食谱计划
-	SaveDailyPlan(plan *domain.DailyRecipePlan) error
+	SaveDailyPlan(plan *models.DailyRecipePlan) error
 
 	// GetSelectedPlan 获取用户当前选中的计划
-	GetSelectedPlan(userID uint) (*domain.DailyRecipePlan, error)
+	GetSelectedPlan(userID uint) (*models.DailyRecipePlan, error)
 
 	// SelectDailyPlan 选择每日食谱计划
 	SelectDailyPlan(userID, planID uint) error
@@ -47,25 +47,25 @@ func NewRecipeService(recipeRepo repository.RecipeRepository, nutriService Nutri
 }
 
 // RecommendRecipes 为用户推荐每日食谱计划
-func (s *RecipeServiceImpl) RecommendRecipes(user *domain.User, count int) ([]*domain.DailyRecipePlan, error) {
+func (s *RecipeServiceImpl) RecommendRecipes(user *models.User, count int) ([]*models.DailyRecipePlan, error) {
 	// 1. 计算用户目标营养需求
 	targetCalorie := s.nutriService.DetermineTargetCalorie(user.TDEE, user.HealthGoal)
 	targetProtein, targetCarb, targetFat := s.nutriService.AllocateMacros(targetCalorie, user.HealthGoal)
 
 	// 2. 获取所有餐次的食谱
-	breakfastRecipes, err := s.recipeRepo.FindByMealType(domain.MealTypeBreakfast)
+	breakfastRecipes, err := s.recipeRepo.FindByMealType(models.MealTypeBreakfast)
 	if err != nil {
 		return nil, err
 	}
-	lunchRecipes, err := s.recipeRepo.FindByMealType(domain.MealTypeLunch)
+	lunchRecipes, err := s.recipeRepo.FindByMealType(models.MealTypeLunch)
 	if err != nil {
 		return nil, err
 	}
-	dinnerRecipes, err := s.recipeRepo.FindByMealType(domain.MealTypeDinner)
+	dinnerRecipes, err := s.recipeRepo.FindByMealType(models.MealTypeDinner)
 	if err != nil {
 		return nil, err
 	}
-	snackRecipes, err := s.recipeRepo.FindByMealType(domain.MealTypeSnack)
+	snackRecipes, err := s.recipeRepo.FindByMealType(models.MealTypeSnack)
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +87,7 @@ func (s *RecipeServiceImpl) RecommendRecipes(user *domain.User, count int) ([]*d
 	}
 
 	// 5. 生成每日食谱计划
-	plans := make([]*domain.DailyRecipePlan, 0)
+	plans := make([]*models.DailyRecipePlan, 0)
 	targetNutrition := NutritionTarget{
 		Energy:       targetCalorie,
 		Protein:      targetProtein,
@@ -141,9 +141,9 @@ type NutritionTarget struct {
 // generateOneDailyPlan 生成一套每日食谱计划
 func (s *RecipeServiceImpl) generateOneDailyPlan(
 	userID uint,
-	breakfastRecipes, lunchRecipes, dinnerRecipes, snackRecipes []domain.Recipe,
+	breakfastRecipes, lunchRecipes, dinnerRecipes, snackRecipes []models.Recipe,
 	target NutritionTarget,
-) *domain.DailyRecipePlan {
+) *models.DailyRecipePlan {
 	if len(breakfastRecipes) == 0 || len(lunchRecipes) == 0 || len(dinnerRecipes) == 0 {
 		return nil
 	}
@@ -154,7 +154,7 @@ func (s *RecipeServiceImpl) generateOneDailyPlan(
 	lunch := s.selectBestRecipe(lunchRecipes, target.Energy*0.35, target)
 	dinner := s.selectBestRecipe(dinnerRecipes, target.Energy*0.30, target)
 
-	var snack *domain.Recipe
+	var snack *models.Recipe
 	if len(snackRecipes) > 0 {
 		selectedSnack := s.selectBestRecipe(snackRecipes, target.Energy*0.10, target)
 		snack = &selectedSnack
@@ -181,7 +181,7 @@ func (s *RecipeServiceImpl) generateOneDailyPlan(
 		target.Energy, target.Protein, target.Carbohydrate, target.Fat,
 	)
 
-	plan := &domain.DailyRecipePlan{
+	plan := &models.DailyRecipePlan{
 		UserID:             userID,
 		BreakfastRecipeID:  breakfast.ID,
 		BreakfastRecipe:    breakfast, // Populate full recipe
@@ -210,13 +210,13 @@ func (s *RecipeServiceImpl) generateOneDailyPlan(
 }
 
 // selectBestRecipe 从食谱列表中选择最佳食谱（Top-K 随机策略）
-func (s *RecipeServiceImpl) selectBestRecipe(recipes []domain.Recipe, targetEnergy float64, target NutritionTarget) domain.Recipe {
+func (s *RecipeServiceImpl) selectBestRecipe(recipes []models.Recipe, targetEnergy float64, target NutritionTarget) models.Recipe {
 	if len(recipes) == 0 {
-		return domain.Recipe{}
+		return models.Recipe{}
 	}
 
 	type candidate struct {
-		recipe domain.Recipe
+		recipe models.Recipe
 		score  float64
 	}
 
@@ -275,7 +275,7 @@ func (s *RecipeServiceImpl) calculateMatchScore(
 }
 
 // parseForbiddenIngredients 解析用户禁忌食材
-func (s *RecipeServiceImpl) parseForbiddenIngredients(user *domain.User) []string {
+func (s *RecipeServiceImpl) parseForbiddenIngredients(user *models.User) []string {
 	forbidden := make([]string, 0)
 
 	// 解析过敏源
@@ -290,12 +290,12 @@ func (s *RecipeServiceImpl) parseForbiddenIngredients(user *domain.User) []strin
 }
 
 // filterForbiddenRecipes 过滤包含禁忌食材的食谱
-func (s *RecipeServiceImpl) filterForbiddenRecipes(recipes []domain.Recipe, forbidden []string) []domain.Recipe {
+func (s *RecipeServiceImpl) filterForbiddenRecipes(recipes []models.Recipe, forbidden []string) []models.Recipe {
 	if len(forbidden) == 0 {
 		return recipes
 	}
 
-	filtered := make([]domain.Recipe, 0)
+	filtered := make([]models.Recipe, 0)
 	for _, recipe := range recipes {
 		// 解析食谱的食材列表
 		var ingredients []string
@@ -328,7 +328,7 @@ func (s *RecipeServiceImpl) filterForbiddenRecipes(recipes []domain.Recipe, forb
 }
 
 // isDuplicatePlan 检查是否为重复方案
-func (s *RecipeServiceImpl) isDuplicatePlan(plans []*domain.DailyRecipePlan, newPlan *domain.DailyRecipePlan) bool {
+func (s *RecipeServiceImpl) isDuplicatePlan(plans []*models.DailyRecipePlan, newPlan *models.DailyRecipePlan) bool {
 	for _, plan := range plans {
 		if plan.BreakfastRecipeID == newPlan.BreakfastRecipeID &&
 			plan.LunchRecipeID == newPlan.LunchRecipeID &&
@@ -340,17 +340,17 @@ func (s *RecipeServiceImpl) isDuplicatePlan(plans []*domain.DailyRecipePlan, new
 }
 
 // GetRecipesByMealType 根据餐次类型获取食谱
-func (s *RecipeServiceImpl) GetRecipesByMealType(mealType domain.MealType) ([]domain.Recipe, error) {
+func (s *RecipeServiceImpl) GetRecipesByMealType(mealType models.MealType) ([]models.Recipe, error) {
 	return s.recipeRepo.FindByMealType(mealType)
 }
 
 // SaveDailyPlan 保存每日食谱计划
-func (s *RecipeServiceImpl) SaveDailyPlan(plan *domain.DailyRecipePlan) error {
+func (s *RecipeServiceImpl) SaveDailyPlan(plan *models.DailyRecipePlan) error {
 	return s.recipeRepo.CreateDailyPlan(plan)
 }
 
 // GetSelectedPlan 获取用户当前选中的计划
-func (s *RecipeServiceImpl) GetSelectedPlan(userID uint) (*domain.DailyRecipePlan, error) {
+func (s *RecipeServiceImpl) GetSelectedPlan(userID uint) (*models.DailyRecipePlan, error) {
 	return s.recipeRepo.FindSelectedPlan(userID)
 }
 
@@ -370,13 +370,13 @@ func (s *RecipeServiceImpl) SelectDailyPlan(userID, planID uint) error {
 }
 
 // filterRecentRecipes 过滤最近吃过的食谱
-func (s *RecipeServiceImpl) filterRecentRecipes(recipes []domain.Recipe, recentIDs []uint) []domain.Recipe {
+func (s *RecipeServiceImpl) filterRecentRecipes(recipes []models.Recipe, recentIDs []uint) []models.Recipe {
 	recentMap := make(map[uint]bool)
 	for _, id := range recentIDs {
 		recentMap[id] = true
 	}
 
-	filtered := make([]domain.Recipe, 0)
+	filtered := make([]models.Recipe, 0)
 	for _, recipe := range recipes {
 		if !recentMap[recipe.ID] {
 			filtered = append(filtered, recipe)
@@ -391,7 +391,7 @@ func (s *RecipeServiceImpl) filterRecentRecipes(recipes []domain.Recipe, recentI
 }
 
 // checkDiversity 检查方案多样性（确保主菜不重复）
-func (s *RecipeServiceImpl) checkDiversity(existingPlans []*domain.DailyRecipePlan, newPlan *domain.DailyRecipePlan) bool {
+func (s *RecipeServiceImpl) checkDiversity(existingPlans []*models.DailyRecipePlan, newPlan *models.DailyRecipePlan) bool {
 	for _, plan := range existingPlans {
 		// 检查早餐是否重复
 		if plan.BreakfastRecipeID == newPlan.BreakfastRecipeID {

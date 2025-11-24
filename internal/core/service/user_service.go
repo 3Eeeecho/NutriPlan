@@ -1,7 +1,7 @@
 package service
 
 import (
-	"NutriPlan/internal/core/domain"
+	"NutriPlan/internal/core/models"
 	"NutriPlan/internal/repository"
 	"errors"
 	"fmt"
@@ -10,19 +10,19 @@ import (
 // UserService 定义了用户业务流程的接口
 type UserService interface {
 	// RegisterUser 处理用户注册逻辑，包括密码加密和创建数据库记录
-	RegisterUser(user *domain.User) error
+	RegisterUser(user *models.User) error
 
 	// LoginUser 处理用户登录逻辑，验证密码等
-	LoginUser(username, password string) (*domain.User, error)
+	LoginUser(username, password string) (*models.User, error)
 
 	// UpdateUserProfile 处理用户健康档案更新，包括触发 TDEE 计算
-	UpdateUserProfile(id uint, profile *domain.User) error
+	UpdateUserProfile(id uint, profile *models.User) error
 
 	// GetUserByID 获取用户信息
-	GetUserByID(id uint) (*domain.User, error)
+	GetUserByID(id uint) (*models.User, error)
 
 	// GetNutritionRequirements 获取用户营养需求
-	GetNutritionRequirements(user *domain.User) (targetCalorie, proteinGram, carbGram, fatGram, proteinRatio, carbRatio, fatRatio float64, err error)
+	GetNutritionRequirements(user *models.User) (targetCalorie, proteinGram, carbGram, fatGram, proteinRatio, carbRatio, fatRatio float64, err error)
 }
 
 // UserServiceImpl 是 UserService 接口的具体实现
@@ -39,7 +39,7 @@ func NewUserService(userRepo repository.UserRepository, nutriService NutriServic
 	}
 }
 
-func (s *UserServiceImpl) RegisterUser(user *domain.User) error {
+func (s *UserServiceImpl) RegisterUser(user *models.User) error {
 	// 检查用户是否已存在
 	existingUser, _ := s.userRepo.GetUserByUsername(user.Username)
 	if existingUser != nil {
@@ -49,7 +49,7 @@ func (s *UserServiceImpl) RegisterUser(user *domain.User) error {
 	return s.userRepo.CreateUser(user)
 }
 
-func (s *UserServiceImpl) LoginUser(username, password string) (*domain.User, error) {
+func (s *UserServiceImpl) LoginUser(username, password string) (*models.User, error) {
 	user, err := s.userRepo.GetUserByUsername(username)
 	if err != nil {
 		return nil, fmt.Errorf("获取用户失败: %w", err)
@@ -65,7 +65,7 @@ func (s *UserServiceImpl) LoginUser(username, password string) (*domain.User, er
 	return user, nil
 }
 
-func (s *UserServiceImpl) UpdateUserProfile(id uint, profile *domain.User) error {
+func (s *UserServiceImpl) UpdateUserProfile(id uint, profile *models.User) error {
 	// 确保用户存在
 	existingUser, err := s.userRepo.GetUserByID(id)
 	if err != nil || existingUser == nil {
@@ -86,12 +86,12 @@ func (s *UserServiceImpl) UpdateUserProfile(id uint, profile *domain.User) error
 	return s.userRepo.UpdateHealthProfile(id, profile)
 }
 
-func (s *UserServiceImpl) GetUserByID(id uint) (*domain.User, error) {
+func (s *UserServiceImpl) GetUserByID(id uint) (*models.User, error) {
 	return s.userRepo.GetUserByID(id)
 }
 
 // GetNutritionRequirements 获取用户营养需求
-func (s *UserServiceImpl) GetNutritionRequirements(user *domain.User) (targetCalorie, proteinGram, carbGram, fatGram, proteinRatio, carbRatio, fatRatio float64, err error) {
+func (s *UserServiceImpl) GetNutritionRequirements(user *models.User) (targetCalorie, proteinGram, carbGram, fatGram, proteinRatio, carbRatio, fatRatio float64, err error) {
 	// 检查档案是否完整
 	if user.TDEE == 0 || user.HealthGoal == "" {
 		return 0, 0, 0, 0, 0, 0, 0, fmt.Errorf("用户档案不完整，请先完善健康档案")

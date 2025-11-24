@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"NutriPlan/internal/core/domain"
+	"NutriPlan/internal/core/models"
 	"fmt"
 
 	"gorm.io/gorm"
@@ -10,22 +10,22 @@ import (
 // UserRepository 定义了对 User 数据的操作接口
 type UserRepository interface {
 	// CreateUser 创建新用户，并保存其健康档案
-	CreateUser(user *domain.User) error
+	CreateUser(user *models.User) error
 
 	// GetUserByID 通过 ID 获取用户信息
-	GetUserByID(id uint) (*domain.User, error)
+	GetUserByID(id uint) (*models.User, error)
 
 	// GetUserByUsername 通过用户名获取用户信息（用于登录）
-	GetUserByUsername(username string) (*domain.User, error)
+	GetUserByUsername(username string) (*models.User, error)
 
 	// UpdateUser 更新用户的基本信息或健康档案
-	UpdateUser(user *domain.User) error
+	UpdateUser(user *models.User) error
 
 	// DeleteUser 通过 ID 删除用户
 	DeleteUser(id uint) error
 
 	// UpdateHealthProfile 专门用于更新健康档案数据
-	UpdateHealthProfile(id uint, profile *domain.User) error
+	UpdateHealthProfile(id uint, profile *models.User) error
 }
 
 type GormUserRepository struct {
@@ -39,15 +39,15 @@ func NewGormUserRepository(db *gorm.DB) UserRepository {
 	}
 }
 
-func (r *GormUserRepository) CreateUser(user *domain.User) error {
+func (r *GormUserRepository) CreateUser(user *models.User) error {
 	if err := r.DB.Create(user).Error; err != nil {
 		return fmt.Errorf("创建用户失败: %w", err)
 	}
 	return nil
 }
 
-func (r *GormUserRepository) GetUserByID(id uint) (*domain.User, error) {
-	var user domain.User
+func (r *GormUserRepository) GetUserByID(id uint) (*models.User, error) {
+	var user models.User
 	if err := r.DB.First(&user, id).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, nil
@@ -57,8 +57,8 @@ func (r *GormUserRepository) GetUserByID(id uint) (*domain.User, error) {
 	return &user, nil
 }
 
-func (r *GormUserRepository) GetUserByUsername(username string) (*domain.User, error) {
-	var user domain.User
+func (r *GormUserRepository) GetUserByUsername(username string) (*models.User, error) {
+	var user models.User
 	if err := r.DB.Where("username = ?", username).First(&user).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, nil
@@ -68,7 +68,7 @@ func (r *GormUserRepository) GetUserByUsername(username string) (*domain.User, e
 	return &user, nil
 }
 
-func (r *GormUserRepository) UpdateUser(user *domain.User) error {
+func (r *GormUserRepository) UpdateUser(user *models.User) error {
 	if err := r.DB.Save(user).Error; err != nil {
 		return fmt.Errorf("更新用户失败: %w", err)
 	}
@@ -76,8 +76,8 @@ func (r *GormUserRepository) UpdateUser(user *domain.User) error {
 }
 
 // 注意：这里仅更新模型中非零值（Zero Value）的字段
-func (r *GormUserRepository) UpdateHealthProfile(id uint, profile *domain.User) error {
-	result := r.DB.Model(&domain.User{}).Where("id = ?", id).Updates(map[string]any{
+func (r *GormUserRepository) UpdateHealthProfile(id uint, profile *models.User) error {
+	result := r.DB.Model(&models.User{}).Where("id = ?", id).Updates(map[string]any{
 		"gender":             profile.Gender,
 		"age":                profile.Age,
 		"height":             profile.Height,
@@ -105,7 +105,7 @@ func (r *GormUserRepository) UpdateHealthProfile(id uint, profile *domain.User) 
 }
 
 func (r *GormUserRepository) DeleteUser(id uint) error {
-	if err := r.DB.Delete(&domain.User{}, id).Error; err != nil {
+	if err := r.DB.Delete(&models.User{}, id).Error; err != nil {
 		return fmt.Errorf("删除用户失败: %w", err)
 	}
 	return nil

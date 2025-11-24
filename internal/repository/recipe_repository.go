@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"NutriPlan/internal/core/domain"
+	"NutriPlan/internal/core/models"
 	"time"
 
 	"gorm.io/gorm"
@@ -10,28 +10,28 @@ import (
 // RecipeRepository 食谱仓储接口
 type RecipeRepository interface {
 	// FindByMealType 根据餐次类型查询食谱
-	FindByMealType(mealType domain.MealType) ([]domain.Recipe, error)
+	FindByMealType(mealType models.MealType) ([]models.Recipe, error)
 
 	// FindByID 根据ID查询食谱
-	FindByID(id uint) (*domain.Recipe, error)
+	FindByID(id uint) (*models.Recipe, error)
 
 	// FindAll 查询所有食谱
-	FindAll() ([]domain.Recipe, error)
+	FindAll() ([]models.Recipe, error)
 
 	// Create 创建食谱
-	Create(recipe *domain.Recipe) error
+	Create(recipe *models.Recipe) error
 
 	// CreateDailyPlan 创建每日食谱计划
-	CreateDailyPlan(plan *domain.DailyRecipePlan) error
+	CreateDailyPlan(plan *models.DailyRecipePlan) error
 
 	// FindPlansByUserID 根据用户ID查询食谱计划
-	FindPlansByUserID(userID uint) ([]domain.DailyRecipePlan, error)
+	FindPlansByUserID(userID uint) ([]models.DailyRecipePlan, error)
 
 	// UpdatePlanSelection 更新计划选择状态
 	UpdatePlanSelection(planID uint, selected bool) error
 
 	// FindSelectedPlan 查询用户当前选中的计划
-	FindSelectedPlan(userID uint) (*domain.DailyRecipePlan, error)
+	FindSelectedPlan(userID uint) (*models.DailyRecipePlan, error)
 
 	// FindRecentPlanRecipeIDs 查询用户最近几天选择的食谱ID
 	FindRecentPlanRecipeIDs(userID uint, days int) ([]uint, error)
@@ -48,15 +48,15 @@ func NewGormRecipeRepository(db *gorm.DB) RecipeRepository {
 }
 
 // FindByMealType 根据餐次类型查询食谱
-func (r *GormRecipeRepository) FindByMealType(mealType domain.MealType) ([]domain.Recipe, error) {
-	var recipes []domain.Recipe
+func (r *GormRecipeRepository) FindByMealType(mealType models.MealType) ([]models.Recipe, error) {
+	var recipes []models.Recipe
 	err := r.db.Where("meal_type = ?", mealType).Find(&recipes).Error
 	return recipes, err
 }
 
 // FindByID 根据ID查询食谱
-func (r *GormRecipeRepository) FindByID(id uint) (*domain.Recipe, error) {
-	var recipe domain.Recipe
+func (r *GormRecipeRepository) FindByID(id uint) (*models.Recipe, error) {
+	var recipe models.Recipe
 	err := r.db.First(&recipe, id).Error
 	if err != nil {
 		return nil, err
@@ -65,25 +65,25 @@ func (r *GormRecipeRepository) FindByID(id uint) (*domain.Recipe, error) {
 }
 
 // FindAll 查询所有食谱
-func (r *GormRecipeRepository) FindAll() ([]domain.Recipe, error) {
-	var recipes []domain.Recipe
+func (r *GormRecipeRepository) FindAll() ([]models.Recipe, error) {
+	var recipes []models.Recipe
 	err := r.db.Find(&recipes).Error
 	return recipes, err
 }
 
 // Create 创建食谱
-func (r *GormRecipeRepository) Create(recipe *domain.Recipe) error {
+func (r *GormRecipeRepository) Create(recipe *models.Recipe) error {
 	return r.db.Create(recipe).Error
 }
 
 // CreateDailyPlan 创建每日食谱计划
-func (r *GormRecipeRepository) CreateDailyPlan(plan *domain.DailyRecipePlan) error {
+func (r *GormRecipeRepository) CreateDailyPlan(plan *models.DailyRecipePlan) error {
 	return r.db.Create(plan).Error
 }
 
 // FindPlansByUserID 根据用户ID查询食谱计划（预加载关联的食谱）
-func (r *GormRecipeRepository) FindPlansByUserID(userID uint) ([]domain.DailyRecipePlan, error) {
-	var plans []domain.DailyRecipePlan
+func (r *GormRecipeRepository) FindPlansByUserID(userID uint) ([]models.DailyRecipePlan, error) {
+	var plans []models.DailyRecipePlan
 	err := r.db.Preload("BreakfastRecipe").
 		Preload("LunchRecipe").
 		Preload("DinnerRecipe").
@@ -96,14 +96,14 @@ func (r *GormRecipeRepository) FindPlansByUserID(userID uint) ([]domain.DailyRec
 
 // UpdatePlanSelection 更新计划选择状态
 func (r *GormRecipeRepository) UpdatePlanSelection(planID uint, selected bool) error {
-	return r.db.Model(&domain.DailyRecipePlan{}).
+	return r.db.Model(&models.DailyRecipePlan{}).
 		Where("id = ?", planID).
 		Update("is_selected", selected).Error
 }
 
 // FindSelectedPlan 查询用户当前选中的计划
-func (r *GormRecipeRepository) FindSelectedPlan(userID uint) (*domain.DailyRecipePlan, error) {
-	var plan domain.DailyRecipePlan
+func (r *GormRecipeRepository) FindSelectedPlan(userID uint) (*models.DailyRecipePlan, error) {
+	var plan models.DailyRecipePlan
 	err := r.db.Preload("BreakfastRecipe").
 		Preload("LunchRecipe").
 		Preload("DinnerRecipe").
@@ -119,7 +119,7 @@ func (r *GormRecipeRepository) FindSelectedPlan(userID uint) (*domain.DailyRecip
 
 // FindRecentPlanRecipeIDs 查询用户最近几天选择的食谱ID
 func (r *GormRecipeRepository) FindRecentPlanRecipeIDs(userID uint, days int) ([]uint, error) {
-	var plans []domain.DailyRecipePlan
+	var plans []models.DailyRecipePlan
 	startTime := time.Now().AddDate(0, 0, -days)
 
 	err := r.db.Where("user_id = ? AND is_selected = ? AND created_at >= ?", userID, true, startTime).
