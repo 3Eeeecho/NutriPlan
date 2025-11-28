@@ -150,13 +150,13 @@ func (s *RecipeServiceImpl) generateOneDailyPlan(
 
 	// 随机选择各餐次的食谱
 	// TODO: 实际应用中应使用更智能的选择算法
-	breakfast := s.selectBestRecipe(breakfastRecipes, target.Energy*0.25, target)
-	lunch := s.selectBestRecipe(lunchRecipes, target.Energy*0.35, target)
-	dinner := s.selectBestRecipe(dinnerRecipes, target.Energy*0.30, target)
+	breakfast := s.selectBestRecipe(breakfastRecipes, target.Energy*0.25)
+	lunch := s.selectBestRecipe(lunchRecipes, target.Energy*0.35)
+	dinner := s.selectBestRecipe(dinnerRecipes, target.Energy*0.30)
 
 	var snack *models.Recipe
 	if len(snackRecipes) > 0 {
-		selectedSnack := s.selectBestRecipe(snackRecipes, target.Energy*0.10, target)
+		selectedSnack := s.selectBestRecipe(snackRecipes, target.Energy*0.10)
 		snack = &selectedSnack
 	}
 
@@ -210,7 +210,7 @@ func (s *RecipeServiceImpl) generateOneDailyPlan(
 }
 
 // selectBestRecipe 从食谱列表中选择最佳食谱（Top-K 随机策略）
-func (s *RecipeServiceImpl) selectBestRecipe(recipes []models.Recipe, targetEnergy float64, target NutritionTarget) models.Recipe {
+func (s *RecipeServiceImpl) selectBestRecipe(recipes []models.Recipe, targetEnergy float64) models.Recipe {
 	if len(recipes) == 0 {
 		return models.Recipe{}
 	}

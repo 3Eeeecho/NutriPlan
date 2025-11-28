@@ -2,8 +2,8 @@ package service
 
 import (
 	"NutriPlan/internal/core/models"
+	"NutriPlan/internal/pkg/xerr"
 	"NutriPlan/internal/repository"
-	"errors"
 	"fmt"
 )
 
@@ -43,7 +43,7 @@ func (s *UserServiceImpl) RegisterUser(user *models.User) error {
 	// 检查用户是否已存在
 	existingUser, _ := s.userRepo.GetUserByUsername(user.Username)
 	if existingUser != nil {
-		return errors.New("用户名已存在")
+		return xerr.ErrUsernameExists
 	}
 
 	return s.userRepo.CreateUser(user)
@@ -55,9 +55,10 @@ func (s *UserServiceImpl) LoginUser(username, password string) (*models.User, er
 		return nil, fmt.Errorf("获取用户失败: %w", err)
 	}
 	if user == nil {
-		return nil, errors.New("用户不存在")
+		return nil, xerr.ErrUserNotFound
 	}
 
+	// TODO 可以加密密码验证
 	// 验证密码
 	// if !util.CheckPasswordHash(password, user.Password) {
 	// 	return nil, errors.New("密码错误")
@@ -69,7 +70,7 @@ func (s *UserServiceImpl) UpdateUserProfile(id uint, profile *models.User) error
 	// 确保用户存在
 	existingUser, err := s.userRepo.GetUserByID(id)
 	if err != nil || existingUser == nil {
-		return errors.New("用户不存在")
+		return xerr.ErrUserNotFound
 	}
 
 	// 更新用户健康档案
@@ -94,7 +95,7 @@ func (s *UserServiceImpl) GetUserByID(id uint) (*models.User, error) {
 func (s *UserServiceImpl) GetNutritionRequirements(user *models.User) (targetCalorie, proteinGram, carbGram, fatGram, proteinRatio, carbRatio, fatRatio float64, err error) {
 	// 检查档案是否完整
 	if user.TDEE == 0 || user.HealthGoal == "" {
-		return 0, 0, 0, 0, 0, 0, 0, fmt.Errorf("用户档案不完整，请先完善健康档案")
+		return 0, 0, 0, 0, 0, 0, 0, xerr.ErrUserProfileIncomplete
 	}
 
 	// 计算目标热量

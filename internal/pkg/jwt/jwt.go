@@ -2,7 +2,7 @@ package jwt
 
 import (
 	"NutriPlan/internal/config"
-	"errors"
+	"NutriPlan/internal/pkg/xerr"
 	"fmt"
 	"strings"
 	"time"
@@ -38,7 +38,7 @@ func GenerateToken(userID uint, username string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString([]byte(config.AppConfig.Server.JWTSecret))
 	if err != nil {
-		return "", fmt.Errorf("生成token失败: %w", err)
+		return "", fmt.Errorf("%w: %w", xerr.ErrTokenGeneration, err)
 	}
 
 	return tokenString, nil
@@ -50,13 +50,13 @@ func ValidateToken(tokenString string) (*Claims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 		// 验证签名算法
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("意外的签名方法: %v", token.Header["alg"])
+			return nil, fmt.Errorf("%w: %v", xerr.ErrUnexpectedSigningMethod, token.Header["alg"])
 		}
 		return []byte(config.AppConfig.Server.JWTSecret), nil
 	})
 
 	if err != nil {
-		return nil, fmt.Errorf("token解析失败: %w", err)
+		return nil, fmt.Errorf("%w: %w", xerr.ErrTokenParsing, err)
 	}
 
 	// 验证token是否有效
@@ -64,7 +64,7 @@ func ValidateToken(tokenString string) (*Claims, error) {
 		return claims, nil
 	}
 
-	return nil, errors.New("无效的token")
+	return nil, xerr.ErrInvalidToken
 }
 
 // AuthMiddleware JWT认证中间件
