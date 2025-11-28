@@ -2,9 +2,9 @@ package router
 
 import (
 	"NutriPlan/internal/api/handler"
-	"NutriPlan/internal/core/service"
-	"NutriPlan/internal/pkg/jwt"
-	"NutriPlan/internal/repository"
+	"NutriPlan/internal/repository/dao"
+	"NutriPlan/internal/service"
+	"NutriPlan/pkg/jwt"
 
 	"github.com/gin-gonic/gin"
 )
@@ -13,7 +13,7 @@ import (
 type RouterDeps struct {
 	UserService   service.UserService
 	RecipeService service.RecipeService
-	UserRepo      repository.UserRepository
+	UserRepo      dao.UserRepository
 }
 
 // NewRouter 初始化并配置 Gin 路由

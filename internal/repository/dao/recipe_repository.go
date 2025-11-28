@@ -1,7 +1,7 @@
-package repository
+package dao
 
 import (
-	"NutriPlan/internal/core/models"
+	"NutriPlan/internal/repository/models"
 	"time"
 
 	"gorm.io/gorm"
@@ -133,9 +133,7 @@ func (r *GormRecipeRepository) FindRecentPlanRecipeIDs(userID uint, days int) ([
 		recipeIDs = append(recipeIDs, plan.BreakfastRecipeID)
 		recipeIDs = append(recipeIDs, plan.LunchRecipeID)
 		recipeIDs = append(recipeIDs, plan.DinnerRecipeID)
-		if plan.SnackRecipeID != nil {
-			recipeIDs = append(recipeIDs, *plan.SnackRecipeID)
-		}
+		recipeIDs = append(recipeIDs, plan.SnackRecipeID)
 	}
 	return recipeIDs, nil
 }

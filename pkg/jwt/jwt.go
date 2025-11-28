@@ -2,7 +2,7 @@ package jwt
 
 import (
 	"NutriPlan/internal/config"
-	"NutriPlan/internal/pkg/xerr"
+	"NutriPlan/pkg/xerr"
 	"fmt"
 	"strings"
 	"time"

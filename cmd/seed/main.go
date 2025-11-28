@@ -2,8 +2,8 @@ package main
 
 import (
 	"NutriPlan/internal/config"
-	"NutriPlan/internal/core/models"
-	"NutriPlan/internal/repository"
+	"NutriPlan/internal/repository/dao"
+	"NutriPlan/internal/repository/models"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -20,7 +20,7 @@ func InitDB() (*gorm.DB, error) {
 	// 加载配置
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
-	viper.AddConfigPath(".")
+	viper.AddConfigPath("./internal/config")
 	if err := viper.ReadInConfig(); err != nil {
 		return nil, fmt.Errorf("读取配置失败: %w", err)
 	}
@@ -46,7 +46,7 @@ func main() {
 		log.Fatalf("数据库连接失败: %v", err)
 	}
 
-	repo := repository.NewGormRecipeRepository(db)
+	repo := dao.NewGormRecipeRepository(db)
 	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	// 基础数据

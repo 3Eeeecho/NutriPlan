@@ -1,4 +1,4 @@
-package repository
+package dao
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"NutriPlan/internal/config"
-	"NutriPlan/internal/core/models"
+	"NutriPlan/internal/repository/models"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -56,6 +56,8 @@ func InitDatabase(cfg config.DatabaseConfig) error {
 		&models.User{},
 		&models.Recipe{},
 		&models.DailyRecipePlan{},
+		&models.UserWeightLog{},
+		&models.DailyIntakeRecord{},
 	)
 	if err != nil {
 		log.Fatalf("数据库模型迁移失败: %v", err)

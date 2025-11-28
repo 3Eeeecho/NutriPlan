@@ -1,10 +1,10 @@
 package main
 
 import (
+	"NutriPlan/internal/api/router"
 	"NutriPlan/internal/config"
-	"NutriPlan/internal/core/service"
-	"NutriPlan/internal/repository"
-	"NutriPlan/internal/router"
+	"NutriPlan/internal/repository/dao"
+	"NutriPlan/internal/service"
 	"fmt"
 	"log"
 
@@ -19,14 +19,14 @@ func main() {
 	log.Println("配置加载成功")
 
 	// 初始化数据库连接
-	if err := repository.InitDatabase(config.AppConfig.Database); err != nil {
+	if err := dao.InitDatabase(config.AppConfig.Database); err != nil {
 		log.Fatalf("数据库初始化失败: %v", err)
 	}
 	log.Println("数据库初始化成功")
 
 	// 创建 Repository 实例
-	userRepo := repository.NewGormUserRepository(repository.DB)
-	recipeRepo := repository.NewGormRecipeRepository(repository.DB)
+	userRepo := dao.NewGormUserRepository(dao.DB)
+	recipeRepo := dao.NewGormRecipeRepository(dao.DB)
 
 	// 创建 Service 实例
 	nutriService := service.NewNutriService()

@@ -1,8 +1,8 @@
 package service
 
 import (
-	"NutriPlan/internal/core/models"
-	"NutriPlan/internal/repository"
+	"NutriPlan/internal/repository/dao"
+	"NutriPlan/internal/repository/models"
 	"encoding/json"
 	"math"
 	"math/rand"
@@ -32,13 +32,13 @@ type RecipeService interface {
 
 // RecipeServiceImpl 食谱推荐服务实现
 type RecipeServiceImpl struct {
-	recipeRepo   repository.RecipeRepository
+	recipeRepo   dao.RecipeRepository
 	nutriService NutriService
 	rng          *rand.Rand
 }
 
 // NewRecipeService 创建食谱推荐服务实例
-func NewRecipeService(recipeRepo repository.RecipeRepository, nutriService NutriService) RecipeService {
+func NewRecipeService(recipeRepo dao.RecipeRepository, nutriService NutriService) RecipeService {
 	return &RecipeServiceImpl{
 		recipeRepo:   recipeRepo,
 		nutriService: nutriService,
@@ -154,10 +154,10 @@ func (s *RecipeServiceImpl) generateOneDailyPlan(
 	lunch := s.selectBestRecipe(lunchRecipes, target.Energy*0.35)
 	dinner := s.selectBestRecipe(dinnerRecipes, target.Energy*0.30)
 
-	var snack *models.Recipe
+	var snack models.Recipe
 	if len(snackRecipes) > 0 {
 		selectedSnack := s.selectBestRecipe(snackRecipes, target.Energy*0.10)
-		snack = &selectedSnack
+		snack = selectedSnack
 	}
 
 	// 计算总营养
@@ -166,14 +166,11 @@ func (s *RecipeServiceImpl) generateOneDailyPlan(
 	totalCarb := breakfast.Carbohydrate + lunch.Carbohydrate + dinner.Carbohydrate
 	totalFat := breakfast.Fat + lunch.Fat + dinner.Fat
 
-	var snackRecipeID *uint
-	if snack != nil {
-		snackRecipeID = &snack.ID
-		totalEnergy += snack.Energy
-		totalProtein += snack.Protein
-		totalCarb += snack.Carbohydrate
-		totalFat += snack.Fat
-	}
+	snackRecipeID := snack.ID
+	totalEnergy += snack.Energy
+	totalProtein += snack.Protein
+	totalCarb += snack.Carbohydrate
+	totalFat += snack.Fat
 
 	// 计算匹配度
 	matchScore := s.calculateMatchScore(
@@ -190,6 +187,7 @@ func (s *RecipeServiceImpl) generateOneDailyPlan(
 		DinnerRecipeID:     dinner.ID,
 		DinnerRecipe:       dinner, // Populate full recipe
 		SnackRecipeID:      snackRecipeID,
+		SnackRecipe:        snack,
 		TotalEnergy:        totalEnergy,
 		TotalProtein:       totalProtein,
 		TotalCarbohydrate:  totalCarb,
@@ -200,10 +198,7 @@ func (s *RecipeServiceImpl) generateOneDailyPlan(
 		TargetFat:          target.Fat,
 		MatchScore:         matchScore,
 		IsSelected:         false,
-	}
-
-	if snack != nil {
-		plan.SnackRecipe = snack // Populate full snack recipe
+		PlanDate:           time.Now(),
 	}
 
 	return plan

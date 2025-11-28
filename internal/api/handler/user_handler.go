@@ -1,9 +1,9 @@
 package handler
 
 import (
-	"NutriPlan/internal/core/models"
-	"NutriPlan/internal/core/service"
-	"NutriPlan/internal/pkg/jwt"
+	"NutriPlan/internal/repository/models"
+	"NutriPlan/internal/service"
+	"NutriPlan/pkg/jwt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"

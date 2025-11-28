@@ -1,9 +1,9 @@
 package service
 
 import (
-	"NutriPlan/internal/core/models"
-	"NutriPlan/internal/pkg/xerr"
-	"NutriPlan/internal/repository"
+	"NutriPlan/internal/repository/dao"
+	"NutriPlan/internal/repository/models"
+	"NutriPlan/pkg/xerr"
 	"fmt"
 )
 
@@ -27,12 +27,12 @@ type UserService interface {
 
 // UserServiceImpl 是 UserService 接口的具体实现
 type UserServiceImpl struct {
-	userRepo     repository.UserRepository
+	userRepo     dao.UserRepository
 	nutriService NutriService
 }
 
 // NewUserService 创建 UserService 实例，注入依赖
-func NewUserService(userRepo repository.UserRepository, nutriService NutriService) UserService {
+func NewUserService(userRepo dao.UserRepository, nutriService NutriService) UserService {
 	return &UserServiceImpl{
 		userRepo:     userRepo,
 		nutriService: nutriService,

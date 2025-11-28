@@ -1,7 +1,7 @@
-package repository
+package dao
 
 import (
-	"NutriPlan/internal/core/models"
+	"NutriPlan/internal/repository/models"
 	"fmt"
 
 	"gorm.io/gorm"

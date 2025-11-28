@@ -2,7 +2,7 @@ package service
 
 import (
 	"NutriPlan/internal/config"
-	"NutriPlan/internal/core/models"
+	"NutriPlan/internal/repository/models"
 	"math"
 	"strings"
 )

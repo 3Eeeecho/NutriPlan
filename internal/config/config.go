@@ -55,7 +55,7 @@ func LoadConfig() error {
 	// 设置配置文件的类型
 	v.SetConfigType("yaml")
 	// 设置查找配置文件的路径
-	v.AddConfigPath(".")
+	v.AddConfigPath("./internal/config")
 
 	// 读取配置
 	if err := v.ReadInConfig(); err != nil {

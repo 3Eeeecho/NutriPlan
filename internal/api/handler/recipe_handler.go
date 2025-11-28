@@ -1,9 +1,9 @@
 package handler
 
 import (
-	"NutriPlan/internal/core/models"
-	"NutriPlan/internal/core/service"
-	"NutriPlan/internal/repository"
+	"NutriPlan/internal/repository/dao"
+	"NutriPlan/internal/repository/models"
+	"NutriPlan/internal/service"
 	"net/http"
 	"strconv"
 
@@ -13,11 +13,11 @@ import (
 // RecipeHandler 食谱处理器
 type RecipeHandler struct {
 	recipeService service.RecipeService
-	userRepo      repository.UserRepository
+	userRepo      dao.UserRepository
 }
 
 // NewRecipeHandler 创建食谱处理器实例
-func NewRecipeHandler(recipeService service.RecipeService, userRepo repository.UserRepository) *RecipeHandler {
+func NewRecipeHandler(recipeService service.RecipeService, userRepo dao.UserRepository) *RecipeHandler {
 	return &RecipeHandler{
 		recipeService: recipeService,
 		userRepo:      userRepo,
@@ -36,20 +36,20 @@ type RecommendResponse struct {
 
 // DailyPlanDTO 每日食谱计划DTO
 type DailyPlanDTO struct {
-	ID                 uint       `json:"id"`
-	Breakfast          RecipeDTO  `json:"breakfast"`
-	Lunch              RecipeDTO  `json:"lunch"`
-	Dinner             RecipeDTO  `json:"dinner"`
-	Snack              *RecipeDTO `json:"snack,omitempty"`
-	TotalEnergy        float64    `json:"total_energy"`
-	TotalProtein       float64    `json:"total_protein"`
-	TotalCarbohydrate  float64    `json:"total_carbohydrate"`
-	TotalFat           float64    `json:"total_fat"`
-	TargetEnergy       float64    `json:"target_energy"`
-	TargetProtein      float64    `json:"target_protein"`
-	TargetCarbohydrate float64    `json:"target_carbohydrate"`
-	TargetFat          float64    `json:"target_fat"`
-	MatchScore         float64    `json:"match_score"`
+	ID                 uint      `json:"id"`
+	Breakfast          RecipeDTO `json:"breakfast"`
+	Lunch              RecipeDTO `json:"lunch"`
+	Dinner             RecipeDTO `json:"dinner"`
+	Snack              RecipeDTO `json:"snack,omitempty"`
+	TotalEnergy        float64   `json:"total_energy"`
+	TotalProtein       float64   `json:"total_protein"`
+	TotalCarbohydrate  float64   `json:"total_carbohydrate"`
+	TotalFat           float64   `json:"total_fat"`
+	TargetEnergy       float64   `json:"target_energy"`
+	TargetProtein      float64   `json:"target_protein"`
+	TargetCarbohydrate float64   `json:"target_carbohydrate"`
+	TargetFat          float64   `json:"target_fat"`
+	MatchScore         float64   `json:"match_score"`
 }
 
 // RecipeDTO 食谱DTO
@@ -258,11 +258,7 @@ func (h *RecipeHandler) convertPlanToDTO(plan *models.DailyRecipePlan) (DailyPla
 	dto.Breakfast = convertRecipeToDTO(&plan.BreakfastRecipe)
 	dto.Lunch = convertRecipeToDTO(&plan.LunchRecipe)
 	dto.Dinner = convertRecipeToDTO(&plan.DinnerRecipe)
-
-	if plan.SnackRecipe != nil {
-		snackDTO := convertRecipeToDTO(plan.SnackRecipe)
-		dto.Snack = &snackDTO
-	}
+	dto.Snack = convertRecipeToDTO(&plan.SnackRecipe)
 
 	return dto, nil
 }
@@ -270,9 +266,8 @@ func (h *RecipeHandler) convertPlanToDTO(plan *models.DailyRecipePlan) (DailyPla
 // convertRecipeToDTO 转换食谱为DTO
 func convertRecipeToDTO(recipe *models.Recipe) RecipeDTO {
 	// 解析食材列表
-	var ingredients []string
 	// 这里简化处理，实际应该解析JSON
-	ingredients = []string{recipe.Ingredients}
+	ingredients := []string{recipe.Ingredients}
 
 	return RecipeDTO{
 		ID:           recipe.ID,

@@ -27,7 +27,7 @@ nutrients:
   fat_factor: 9.0      # 脂肪每克热量
   
   # 目标热量调整值
-  loss_calorie_deficit: 400    # 减脂热量赤字 (kcal)
+  loss_calorie_deficit: 500    # 减脂热量赤字 (kcal)
   gain_calorie_surplus: 300    # 增肌热量盈余 (kcal)
-  control_calorie_deficit: 200 # 控糖热量赤字 (kcal)
+  control_calorie_deficit: 100 # 控糖热量赤字 (kcal)
   min_calorie: 1200            # 最低安全热量 (kcal)
