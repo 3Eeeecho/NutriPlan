@@ -49,7 +49,7 @@
             <div class="nutrition-preview" v-if="authStore.profile">
               <div class="preview-item">
                 <span class="preview-label">每日热量目标</span>
-                <span class="preview-value">{{ authStore.profile.tdee ? Math.floor(authStore.profile.tdee) : '--' }} kcal</span>
+                <span class="preview-value">{{ nutritionData?.target_calorie || (authStore.profile.tdee ? Math.floor(authStore.profile.tdee) : '--') }} kcal</span>
               </div>
             </div>
             <div class="card-status" v-if="!authStore.hasProfile">
@@ -130,7 +130,7 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
@@ -147,9 +147,11 @@ import {
   PieChart
 } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/store/auth'
+import { getNutritionRequirements } from '@/api/user'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const nutritionData = ref(null)
 
 onMounted(async () => {
   if (authStore.isAuthenticated) {
@@ -158,6 +160,16 @@ onMounted(async () => {
         await authStore.loadProfile()
       } catch (error) {
         console.error('加载档案失败:', error)
+      }
+    }
+    
+    // 加载营养需求数据
+    if (authStore.hasProfile) {
+      try {
+        const response = await getNutritionRequirements()
+        nutritionData.value = response
+      } catch (error) {
+        console.log('营养需求数据不可用:', error)
       }
     }
   }

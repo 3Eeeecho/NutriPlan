@@ -2,8 +2,11 @@
   <div class="recipe-recommend-container">
     <div class="header">
       <div class="back-btn-wrapper">
-        <el-button link @click="router.push('/home')" class="back-btn">
-          <el-icon><ArrowLeft /></el-icon> 返回主页
+        <el-button link @click="router.push('/home')"
+          class="back-btn">
+          <el-icon>
+            <ArrowLeft />
+          </el-icon> 返回主页
         </el-button>
       </div>
       <h1>🍽️ 智能食谱推荐</h1>
@@ -19,32 +22,46 @@
     <!-- Error State -->
     <div v-else-if="error" class="error-message">
       <p>{{ error }}</p>
-      <button @click="fetchRecommendations" class="retry-btn">重新获取</button>
+      <button @click="fetchRecommendations"
+        class="retry-btn">重新获取</button>
     </div>
 
     <!-- Recommendations -->
     <div v-else class="content">
       <!-- Selected Plan View -->
-      <div v-if="currentSelectedPlan" class="selected-plan-view">
+      <div v-if="currentSelectedPlan"
+        class="selected-plan-view">
         <div class="selected-header">
           <h3>✅ 您已选择今日食谱</h3>
-          <button @click="reselectPlan" class="reselect-btn">重新选择</button>
+          <button @click="reselectPlan"
+            class="reselect-btn">重新选择</button>
         </div>
-        
+
         <div class="plan-card selected-display">
           <div class="plan-header">
-            <h4>{{ currentSelectedPlan.plan_name || '今日推荐方案' }}</h4>
-            <div class="match-score" :class="getScoreClass(currentSelectedPlan.match_score)">
-              <span class="score-value">{{ currentSelectedPlan.match_score }}%</span>
+            <h4>{{ currentSelectedPlan.plan_name || '今日推荐方案'
+              }}</h4>
+            <div class="match-score"
+              :class="getScoreClass(currentSelectedPlan.match_score)">
+              <span class="score-value">{{
+                currentSelectedPlan.match_score }}%</span>
               <span class="score-label">匹配度</span>
             </div>
           </div>
 
           <div class="meals">
-            <RecipeCard title="早餐" :recipe="currentSelectedPlan.breakfast" icon="🌅" />
-            <RecipeCard title="午餐" :recipe="currentSelectedPlan.lunch" icon="☀️" />
-            <RecipeCard title="晚餐" :recipe="currentSelectedPlan.dinner" icon="🌙" />
-            <RecipeCard v-if="currentSelectedPlan.snack" title="加餐" :recipe="currentSelectedPlan.snack" icon="🍎" />
+            <RecipeCard title="早餐"
+              :recipe="currentSelectedPlan.breakfast"
+              icon="🌅" />
+            <RecipeCard title="午餐"
+              :recipe="currentSelectedPlan.lunch"
+              icon="☀️" />
+            <RecipeCard title="晚餐"
+              :recipe="currentSelectedPlan.dinner"
+              icon="🌙" />
+            <RecipeCard v-if="currentSelectedPlan.snack"
+              title="加餐" :recipe="currentSelectedPlan.snack"
+              icon="🍎" />
           </div>
 
           <div class="plan-nutrition">
@@ -53,30 +70,54 @@
               <div class="bar-item">
                 <span class="bar-label">热量</span>
                 <div class="bar-container">
-                  <div class="bar-fill energy" :style="{ width: getPercentage(currentSelectedPlan.total_energy, currentSelectedPlan.target_energy) + '%' }"></div>
+                  <div class="bar-fill energy"
+                    :style="{ width: getPercentage(currentSelectedPlan.total_energy, currentSelectedPlan.target_energy) + '%' }">
+                  </div>
                 </div>
-                <span class="bar-value">{{ Math.floor(currentSelectedPlan.total_energy) }} / {{ Math.floor(currentSelectedPlan.target_energy) }}</span>
+                <span class="bar-value">{{
+                  Math.floor(currentSelectedPlan.total_energy)
+                  }} / {{
+                    Math.floor(currentSelectedPlan.target_energy)
+                  }}</span>
               </div>
               <div class="bar-item">
                 <span class="bar-label">蛋白质</span>
                 <div class="bar-container">
-                  <div class="bar-fill protein" :style="{ width: getPercentage(currentSelectedPlan.total_protein, currentSelectedPlan.target_protein) + '%' }"></div>
+                  <div class="bar-fill protein"
+                    :style="{ width: getPercentage(currentSelectedPlan.total_protein, currentSelectedPlan.target_protein) + '%' }">
+                  </div>
                 </div>
-                <span class="bar-value">{{ Math.floor(currentSelectedPlan.total_protein) }}g / {{ Math.floor(currentSelectedPlan.target_protein) }}g</span>
+                <span class="bar-value">{{
+                  Math.floor(currentSelectedPlan.total_protein)
+                  }}g / {{
+                    Math.floor(currentSelectedPlan.target_protein)
+                  }}g</span>
               </div>
               <div class="bar-item">
                 <span class="bar-label">碳水</span>
                 <div class="bar-container">
-                  <div class="bar-fill carb" :style="{ width: getPercentage(currentSelectedPlan.total_carbohydrate, currentSelectedPlan.target_carbohydrate) + '%' }"></div>
+                  <div class="bar-fill carb"
+                    :style="{ width: getPercentage(currentSelectedPlan.total_carbohydrate, currentSelectedPlan.target_carbohydrate) + '%' }">
+                  </div>
                 </div>
-                <span class="bar-value">{{ Math.floor(currentSelectedPlan.total_carbohydrate) }}g / {{ Math.floor(currentSelectedPlan.target_carbohydrate) }}g</span>
+                <span class="bar-value">{{
+                  Math.floor(currentSelectedPlan.total_carbohydrate)
+                  }}g / {{
+                    Math.floor(currentSelectedPlan.target_carbohydrate)
+                  }}g</span>
               </div>
               <div class="bar-item">
                 <span class="bar-label">脂肪</span>
                 <div class="bar-container">
-                  <div class="bar-fill fat" :style="{ width: getPercentage(currentSelectedPlan.total_fat, currentSelectedPlan.target_fat) + '%' }"></div>
+                  <div class="bar-fill fat"
+                    :style="{ width: getPercentage(currentSelectedPlan.total_fat, currentSelectedPlan.target_fat) + '%' }">
+                  </div>
                 </div>
-                <span class="bar-value">{{ Math.floor(currentSelectedPlan.total_fat) }}g / {{ Math.floor(currentSelectedPlan.target_fat) }}g</span>
+                <span class="bar-value">{{
+                  Math.floor(currentSelectedPlan.total_fat)
+                  }}g / {{
+                    Math.floor(currentSelectedPlan.target_fat)
+                  }}g</span>
               </div>
             </div>
           </div>
@@ -85,152 +126,144 @@
 
       <!-- Recommendation List View -->
       <div v-else>
-      <!-- Nutrition Summary -->
-      <div class="nutrition-summary">
-        <h3>您的每日营养目标</h3>
-        <div class="nutrition-grid">
-          <div class="nutrition-item energy">
-            <span class="label">热量</span>
-            <span class="value">{{ targetNutrition.energy }} kcal</span>
-          </div>
-          <div class="nutrition-item protein">
-            <span class="label">蛋白质</span>
-            <span class="value">{{ targetNutrition.protein }} g</span>
-          </div>
-          <div class="nutrition-item carb">
-            <span class="label">碳水</span>
-            <span class="value">{{ targetNutrition.carb }} g</span>
-          </div>
-          <div class="nutrition-item fat">
-            <span class="label">脂肪</span>
-            <span class="value">{{ targetNutrition.fat }} g</span>
+        <!-- Nutrition Summary -->
+        <div class="nutrition-summary">
+          <h3>您的每日营养目标</h3>
+          <div class="nutrition-grid">
+            <div class="nutrition-item energy">
+              <span class="label">热量</span>
+              <span class="value">{{ targetNutrition.energy
+                }} kcal</span>
+            </div>
+            <div class="nutrition-item protein">
+              <span class="label">蛋白质</span>
+              <span class="value">{{ targetNutrition.protein
+                }} g</span>
+            </div>
+            <div class="nutrition-item carb">
+              <span class="label">碳水</span>
+              <span class="value">{{ targetNutrition.carb }}
+                g</span>
+            </div>
+            <div class="nutrition-item fat">
+              <span class="label">脂肪</span>
+              <span class="value">{{ targetNutrition.fat }}
+                g</span>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- Recipe Plans -->
-      <div class="plans-section">
-        <h3>为您推荐 {{ plans.length }} 套每日食谱方案</h3>
-        
-        <div class="plans-grid">
-          <div 
-            v-for="(plan, index) in plans" 
-            :key="plan.id || index"
-            class="plan-card"
-            :class="{ selected: selectedPlanIndex === index }"
-            @click="selectPlan(index)"
-          >
-            <div class="plan-header">
-              <h4>方案 {{ index + 1 }}</h4>
-              <div class="match-score" :class="getScoreClass(plan.match_score)">
-                <span class="score-value">{{ plan.match_score }}%</span>
-                <span class="score-label">匹配度</span>
-              </div>
-            </div>
+        <!-- Recipe Plans -->
+        <div class="plans-section">
+          <h3>为您推荐 {{ plans.length }} 套每日食谱方案</h3>
 
-            <!-- Meals -->
-            <div class="meals">
-              <RecipeCard 
-                title="早餐" 
-                :recipe="plan.breakfast" 
-                icon="🌅"
-              />
-              <RecipeCard 
-                title="午餐" 
-                :recipe="plan.lunch" 
-                icon="☀️"
-              />
-              <RecipeCard 
-                title="晚餐" 
-                :recipe="plan.dinner" 
-                icon="🌙"
-              />
-              <RecipeCard 
-                v-if="plan.snack" 
-                title="加餐" 
-                :recipe="plan.snack" 
-                icon="🍎"
-              />
-            </div>
-
-            <!-- Total Nutrition -->
-            <div class="plan-nutrition">
-              <h5>营养总计</h5>
-              <div class="nutrition-bars">
-                <div class="bar-item">
-                  <span class="bar-label">热量</span>
-                  <div class="bar-container">
-                    <div 
-                      class="bar-fill energy" 
-                      :style="{ width: getPercentage(plan.total_energy, plan.target_energy) + '%' }"
-                    ></div>
-                  </div>
-                  <span class="bar-value">{{ Math.floor(plan.total_energy) }} / {{ Math.floor(plan.target_energy) }}</span>
-                </div>
-                <div class="bar-item">
-                  <span class="bar-label">蛋白质</span>
-                  <div class="bar-container">
-                    <div 
-                      class="bar-fill protein" 
-                      :style="{ width: getPercentage(plan.total_protein, plan.target_protein) + '%' }"
-                    ></div>
-                  </div>
-                  <span class="bar-value">{{ Math.floor(plan.total_protein) }}g / {{ Math.floor(plan.target_protein) }}g</span>
-                </div>
-                <div class="bar-item">
-                  <span class="bar-label">碳水</span>
-                  <div class="bar-container">
-                    <div 
-                      class="bar-fill carb" 
-                      :style="{ width: getPercentage(plan.total_carbohydrate, plan.target_carbohydrate) + '%' }"
-                    ></div>
-                  </div>
-                  <span class="bar-value">{{ Math.floor(plan.total_carbohydrate) }}g / {{ Math.floor(plan.target_carbohydrate) }}g</span>
-                </div>
-                <div class="bar-item">
-                  <span class="bar-label">脂肪</span>
-                  <div class="bar-container">
-                    <div 
-                      class="bar-fill fat" 
-                      :style="{ width: getPercentage(plan.total_fat, plan.target_fat) + '%' }"
-                    ></div>
-                  </div>
-                  <span class="bar-value">{{ Math.floor(plan.total_fat) }}g / {{ Math.floor(plan.target_fat) }}g</span>
+          <div class="plans-grid">
+            <div v-for="(plan, index) in plans"
+              :key="plan.id || index" class="plan-card"
+              :class="{ selected: selectedPlanIndex === index }"
+              @click="selectPlan(index)">
+              <div class="plan-header">
+                <h4>方案 {{ index + 1 }}</h4>
+                <div class="match-score"
+                  :class="getScoreClass(plan.match_score)">
+                  <span class="score-value">{{
+                    plan.match_score }}%</span>
+                  <span class="score-label">匹配度</span>
                 </div>
               </div>
-            </div>
 
-            <button 
-              v-if="selectedPlanIndex === index" 
-              @click.stop="confirmSelection" 
-              class="select-btn selected"
-            >
-              ✓ 已选择此方案
-            </button>
-            <button 
-              v-else 
-              @click.stop="selectPlan(index)" 
-              class="select-btn"
-            >
-              选择此方案
-            </button>
+              <!-- Meals -->
+              <div class="meals">
+                <RecipeCard title="早餐"
+                  :recipe="plan.breakfast" icon="🌅" />
+                <RecipeCard title="午餐" :recipe="plan.lunch"
+                  icon="☀️" />
+                <RecipeCard title="晚餐" :recipe="plan.dinner"
+                  icon="🌙" />
+                <RecipeCard v-if="plan.snack" title="加餐"
+                  :recipe="plan.snack" icon="🍎" />
+              </div>
+
+              <!-- Total Nutrition -->
+              <div class="plan-nutrition">
+                <h5>营养总计</h5>
+                <div class="nutrition-bars">
+                  <div class="bar-item">
+                    <span class="bar-label">热量</span>
+                    <div class="bar-container">
+                      <div class="bar-fill energy"
+                        :style="{ width: getPercentage(plan.total_energy, plan.target_energy) + '%' }">
+                      </div>
+                    </div>
+                    <span class="bar-value">{{
+                      Math.floor(plan.total_energy) }} / {{
+                        Math.floor(plan.target_energy)
+                      }}</span>
+                  </div>
+                  <div class="bar-item">
+                    <span class="bar-label">蛋白质</span>
+                    <div class="bar-container">
+                      <div class="bar-fill protein"
+                        :style="{ width: getPercentage(plan.total_protein, plan.target_protein) + '%' }">
+                      </div>
+                    </div>
+                    <span class="bar-value">{{
+                      Math.floor(plan.total_protein) }}g /
+                      {{ Math.floor(plan.target_protein)
+                      }}g</span>
+                  </div>
+                  <div class="bar-item">
+                    <span class="bar-label">碳水</span>
+                    <div class="bar-container">
+                      <div class="bar-fill carb"
+                        :style="{ width: getPercentage(plan.total_carbohydrate, plan.target_carbohydrate) + '%' }">
+                      </div>
+                    </div>
+                    <span class="bar-value">{{
+                      Math.floor(plan.total_carbohydrate)
+                      }}g / {{
+                        Math.floor(plan.target_carbohydrate)
+                      }}g</span>
+                  </div>
+                  <div class="bar-item">
+                    <span class="bar-label">脂肪</span>
+                    <div class="bar-container">
+                      <div class="bar-fill fat"
+                        :style="{ width: getPercentage(plan.total_fat, plan.target_fat) + '%' }">
+                      </div>
+                    </div>
+                    <span class="bar-value">{{
+                      Math.floor(plan.total_fat) }}g / {{
+                        Math.floor(plan.target_fat) }}g</span>
+                  </div>
+                </div>
+              </div>
+
+              <button v-if="selectedPlanIndex === index"
+                @click.stop="confirmSelection"
+                class="select-btn selected">
+                ✓ 已选择此方案
+              </button>
+              <button v-else @click.stop="selectPlan(index)"
+                class="select-btn">
+                选择此方案
+              </button>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- Action Buttons -->
-      <div class="actions">
-        <button @click="fetchRecommendations" class="action-btn secondary">
-          🔄 重新推荐
-        </button>
-        <button 
-          @click="confirmSelection" 
-          class="action-btn primary"
-          :disabled="selectedPlanIndex === null"
-        >
-          确认选择
-        </button>
-      </div>
+        <!-- Action Buttons -->
+        <div class="actions">
+          <button @click="fetchRecommendations"
+            class="action-btn secondary">
+            🔄 重新推荐
+          </button>
+          <button @click="confirmSelection"
+            class="action-btn primary"
+            :disabled="selectedPlanIndex === null">
+            确认选择
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -243,6 +276,7 @@ import { ArrowLeft } from '@element-plus/icons-vue';
 import { getRecipeRecommendations, selectRecipePlan, getSelectedRecipePlan } from '../api/recipeApi';
 import { getNutritionRequirements } from '../api/user';
 import RecipeCard from '../components/RecipeCard.vue';
+import Swal from 'sweetalert2';
 
 export default {
   name: 'RecipeRecommend',
@@ -267,7 +301,7 @@ export default {
     const fetchRecommendations = async (ignoreSelected = false) => {
       loading.value = true;
       error.value = null;
-      
+
       try {
         // 1. 先尝试获取已选方案 (除非强制忽略)
         if (!ignoreSelected) {
@@ -316,15 +350,28 @@ export default {
 
     const confirmSelection = async () => {
       if (selectedPlanIndex.value === null) return;
-      
+
       const plan = plans.value[selectedPlanIndex.value];
       try {
         await selectRecipePlan(plan.id);
         // 更新当前已选方案并刷新视图
         currentSelectedPlan.value = plan;
-        alert('食谱方案已保存！');
+
+        // 保存成功提示
+        Swal.fire({
+          title: '成功',
+          text: '食谱方案已保存！',
+          icon: 'success',
+          confirmButtonText: '确定'
+        });
       } catch (err) {
-        alert('保存失败：' + (err.response?.data?.error || '未知错误'));
+        // 保存失败错误提示
+        Swal.fire({
+          title: '保存失败',
+          text: err.response?.data?.error || '未知错误',
+          icon: 'error',
+          confirmButtonText: '确定'
+        });
       }
     };
 
@@ -423,7 +470,9 @@ export default {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .error-message {
@@ -510,7 +559,7 @@ export default {
   border-radius: 15px;
   padding: 1.5rem;
   background: linear-gradient(white, white) padding-box,
-              linear-gradient(135deg, #667eea, #764ba2) border-box;
+    linear-gradient(135deg, #667eea, #764ba2) border-box;
   cursor: pointer;
   transition: all 0.3s ease;
 }
@@ -523,7 +572,7 @@ export default {
 .plan-card.selected {
   border-color: #667eea;
   background: linear-gradient(white, white) padding-box,
-              linear-gradient(135deg, #667eea, #764ba2) border-box;
+    linear-gradient(135deg, #667eea, #764ba2) border-box;
   box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4);
 }
 
@@ -756,7 +805,14 @@ export default {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 </style>

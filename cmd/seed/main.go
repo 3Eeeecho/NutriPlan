@@ -76,7 +76,8 @@ func main() {
 		var ingredients []string
 
 		// 根据餐次选择食材
-		if mealType == models.MealTypeBreakfast {
+		switch mealType {
+		case models.MealTypeBreakfast:
 			mainIngredient = proteins[rng.Intn(len(proteins))] // 主要是蛋奶
 			if rng.Intn(2) == 0 {
 				mainIngredient = "鸡蛋"
@@ -84,12 +85,12 @@ func main() {
 			sideIngredient = fruits[rng.Intn(len(fruits))]
 			carbIngredient = carbs[rng.Intn(len(carbs))]
 			ingredients = []string{mainIngredient, sideIngredient, carbIngredient, "牛奶"}
-		} else if mealType == models.MealTypeSnack {
+		case models.MealTypeSnack:
 			mainIngredient = fruits[rng.Intn(len(fruits))]
 			sideIngredient = nuts[rng.Intn(len(nuts))]
 			ingredients = []string{mainIngredient, sideIngredient, "酸奶"}
 			method = "即食"
-		} else {
+		default:
 			mainIngredient = proteins[rng.Intn(len(proteins))]
 			sideIngredient = vegetables[rng.Intn(len(vegetables))]
 			carbIngredient = carbs[rng.Intn(len(carbs))]
