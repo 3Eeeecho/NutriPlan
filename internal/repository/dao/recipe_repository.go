@@ -9,8 +9,8 @@ import (
 
 // RecipeRepository 食谱仓储接口
 type RecipeRepository interface {
-	// FindByMealType 根据餐次类型查询食谱
-	FindByMealType(mealType models.MealType) ([]models.Recipe, error)
+	// FindByMealType 根据餐次类型查询食谱,并过滤掉禁忌食材
+	FindByMealType(mealType models.MealType, forbidden []string) ([]models.Recipe, error)
 
 	// FindByID 根据ID查询食谱
 	FindByID(id uint) (*models.Recipe, error)
@@ -47,10 +47,22 @@ func NewGormRecipeRepository(db *gorm.DB) RecipeRepository {
 	return &GormRecipeRepository{db: db}
 }
 
-// FindByMealType 根据餐次类型查询食谱
-func (r *GormRecipeRepository) FindByMealType(mealType models.MealType) ([]models.Recipe, error) {
+// FindByMealType 根据餐次类型查询食谱,并过滤掉禁忌食材
+func (r *GormRecipeRepository) FindByMealType(mealType models.MealType, forbidden []string) ([]models.Recipe, error) {
 	var recipes []models.Recipe
-	err := r.db.Where("meal_type = ?", mealType).Find(&recipes).Error
+	tx := r.db.Model(&models.Recipe{}).Where("meal_type = ?", mealType)
+
+	//添加禁忌食材过滤
+	for _, item := range forbidden {
+		if item == "" {
+			continue
+		}
+		tx = tx.Where("ingredients NOT LIKE ?", "%"+item+"%")
+	}
+	err := tx.Find(&recipes).Limit(100).Error
+	if err != nil {
+		return nil, err
+	}
 	return recipes, err
 }
 
