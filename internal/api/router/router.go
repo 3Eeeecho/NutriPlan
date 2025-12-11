@@ -2,7 +2,6 @@ package router
 
 import (
 	"NutriPlan/internal/api/handler"
-	"NutriPlan/internal/repository/dao"
 	"NutriPlan/internal/service"
 	"NutriPlan/pkg/jwt"
 
@@ -13,7 +12,6 @@ import (
 type RouterDeps struct {
 	UserService   service.UserService
 	RecipeService service.RecipeService
-	UserRepo      dao.UserRepository
 }
 
 // NewRouter 初始化并配置 Gin 路由
@@ -26,7 +24,7 @@ func NewRouter(deps RouterDeps) *gin.Engine {
 
 	// 实例化 Handler
 	userHandler := handler.NewUserHandler(deps.UserService)
-	recipeHandler := handler.NewRecipeHandler(deps.RecipeService, deps.UserRepo)
+	recipeHandler := handler.NewRecipeHandler(deps.RecipeService, deps.UserService)
 
 	// 基础路由组
 	v1 := r.Group("/api/v1")
@@ -68,6 +66,18 @@ func NewRouter(deps RouterDeps) *gin.Engine {
 
 			// 获取已选食谱计划 (GET /api/v1/recipes/selected)
 			recipes.GET("/selected", recipeHandler.GetSelectedPlan)
+
+			// 获取食谱详情 (GET /api/v1/recipes/:id)
+			recipes.GET("/:id", recipeHandler.GetRecipeDetail)
+
+			// 添加收藏 (POST /api/v1/recipes/:id/favorite)
+			recipes.POST("/:id/favorite", recipeHandler.AddFavorite)
+
+			// 取消收藏 (DELETE /api/v1/recipes/:id/favorite)
+			recipes.DELETE("/:id/favorite", recipeHandler.RemoveFavorite)
+
+			// 获取收藏列表 (GET /api/v1/recipes/favorites)
+			recipes.GET("/favorites", recipeHandler.GetFavoriteList)
 		}
 	}
 

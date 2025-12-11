@@ -26,6 +26,18 @@ type RecipeService interface {
 
 	// SelectDailyPlan 选择每日食谱计划
 	SelectDailyPlan(userID, planID uint) error
+
+	// GetRecipeDetail 获取食谱详情
+	GetRecipeDetail(recipeID uint, userID uint) (*models.Recipe, bool, error)
+
+	// AddFavorite 添加收藏
+	AddFavorite(userID, recipeID uint) error
+
+	// RemoveFavorite 取消收藏
+	RemoveFavorite(userID, recipeID uint) error
+
+	// GetUserFavorites 获取用户收藏列表
+	GetUserFavorites(userID uint) ([]models.Recipe, error)
 }
 
 // RecipeServiceImpl 食谱推荐服务实现
@@ -432,6 +444,45 @@ func (s *RecipeServiceImpl) SelectDailyPlan(userID, planID uint) error {
 
 	// 2. 选中新计划
 	return s.recipeRepo.UpdatePlanSelection(planID, true)
+}
+
+// GetRecipeDetail 获取食谱详情（含收藏状态）
+func (s *RecipeServiceImpl) GetRecipeDetail(recipeID uint, userID uint) (*models.Recipe, bool, error) {
+	// 查询食谱
+	recipe, err := s.recipeRepo.FindByID(recipeID)
+	if err != nil {
+		return nil, false, err
+	}
+
+	// 检查是否已收藏
+	isFavorite := false
+	if userID > 0 {
+		isFavorite, _ = s.recipeRepo.IsFavorite(userID, recipeID)
+	}
+
+	return recipe, isFavorite, nil
+}
+
+// AddFavorite 添加收藏
+func (s *RecipeServiceImpl) AddFavorite(userID, recipeID uint) error {
+	// 检查食谱是否存在
+	_, err := s.recipeRepo.FindByID(recipeID)
+	if err != nil {
+		return err
+	}
+
+	// 添加收藏
+	return s.recipeRepo.AddFavorite(userID, recipeID)
+}
+
+// RemoveFavorite 取消收藏
+func (s *RecipeServiceImpl) RemoveFavorite(userID, recipeID uint) error {
+	return s.recipeRepo.RemoveFavorite(userID, recipeID)
+}
+
+// GetUserFavorites 获取用户收藏列表
+func (s *RecipeServiceImpl) GetUserFavorites(userID uint) ([]models.Recipe, error) {
+	return s.recipeRepo.GetUserFavorites(userID)
 }
 
 // filterRecentRecipes 过滤最近吃过的食谱

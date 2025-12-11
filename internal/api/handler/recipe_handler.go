@@ -1,9 +1,9 @@
 package handler
 
 import (
-	"NutriPlan/internal/repository/dao"
 	"NutriPlan/internal/repository/models"
 	"NutriPlan/internal/service"
+	"encoding/json"
 	"net/http"
 	"strconv"
 
@@ -13,14 +13,14 @@ import (
 // RecipeHandler 食谱处理器
 type RecipeHandler struct {
 	recipeService service.RecipeService
-	userRepo      dao.UserRepository
+	userService   service.UserService
 }
 
 // NewRecipeHandler 创建食谱处理器实例
-func NewRecipeHandler(recipeService service.RecipeService, userRepo dao.UserRepository) *RecipeHandler {
+func NewRecipeHandler(recipeService service.RecipeService, userService service.UserService) *RecipeHandler {
 	return &RecipeHandler{
 		recipeService: recipeService,
-		userRepo:      userRepo,
+		userService:   userService,
 	}
 }
 
@@ -63,9 +63,12 @@ type RecipeDTO struct {
 	Protein      float64  `json:"protein"`
 	Carbohydrate float64  `json:"carbohydrate"`
 	Fat          float64  `json:"fat"`
+	DietaryFiber float64  `json:"dietary_fiber"`
 	Ingredients  []string `json:"ingredients"`
+	CookingSteps string   `json:"cooking_steps"`
 	CookingTime  int      `json:"cooking_time"`
 	Difficulty   string   `json:"difficulty"`
+	IsFavorite   bool     `json:"is_favorite,omitempty"`
 }
 
 // GetRecommendations 获取食谱推荐
@@ -85,8 +88,8 @@ func (h *RecipeHandler) GetRecommendations(c *gin.Context) {
 		return
 	}
 
-	// 获取用户信息
-	user, err := h.userRepo.GetUserByID(userID.(uint))
+	// 通过 UserService 获取用户信息
+	user, err := h.userService.GetUserByID(userID.(uint))
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "用户不存在"})
 		return
@@ -237,10 +240,9 @@ func (h *RecipeHandler) SaveRecommendations(c *gin.Context) {
 	})
 }
 
-// convertPlanToDTO 转换计划为DTO（需要加载关联的食谱）
+// convertPlanToDTO 转换计划为DTO
 func (h *RecipeHandler) convertPlanToDTO(plan *models.DailyRecipePlan) (DailyPlanDTO, error) {
-	// 注意：这里需要预加载食谱数据
-	// 实际实现中应该在repository层使用Preload
+	// Repository 层已使用 Preload 预加载了关联的食谱数据
 	dto := DailyPlanDTO{
 		ID:                 plan.ID,
 		TotalEnergy:        plan.TotalEnergy,
@@ -254,7 +256,7 @@ func (h *RecipeHandler) convertPlanToDTO(plan *models.DailyRecipePlan) (DailyPla
 		MatchScore:         plan.MatchScore,
 	}
 
-	// 转换食谱（这里简化处理，实际应从数据库加载）
+	// 转换预加载的食谱数据为 DTO
 	dto.Breakfast = convertRecipeToDTO(&plan.BreakfastRecipe)
 	dto.Lunch = convertRecipeToDTO(&plan.LunchRecipe)
 	dto.Dinner = convertRecipeToDTO(&plan.DinnerRecipe)
@@ -266,8 +268,11 @@ func (h *RecipeHandler) convertPlanToDTO(plan *models.DailyRecipePlan) (DailyPla
 // convertRecipeToDTO 转换食谱为DTO
 func convertRecipeToDTO(recipe *models.Recipe) RecipeDTO {
 	// 解析食材列表
-	// 这里简化处理，实际应该解析JSON
-	ingredients := []string{recipe.Ingredients}
+	var ingredients []string
+	if err := json.Unmarshal([]byte(recipe.Ingredients), &ingredients); err != nil {
+		// 如果解析失败，作为单个字符串返回
+		ingredients = []string{recipe.Ingredients}
+	}
 
 	return RecipeDTO{
 		ID:           recipe.ID,
@@ -279,8 +284,155 @@ func convertRecipeToDTO(recipe *models.Recipe) RecipeDTO {
 		Protein:      recipe.Protein,
 		Carbohydrate: recipe.Carbohydrate,
 		Fat:          recipe.Fat,
+		DietaryFiber: recipe.DietaryFiber,
 		Ingredients:  ingredients,
+		CookingSteps: recipe.CookingSteps,
 		CookingTime:  recipe.CookingTime,
 		Difficulty:   recipe.Difficulty,
 	}
+}
+
+// GetRecipeDetail 获取食谱详情
+// @Summary 获取食谱详情
+// @Description 根据ID获取单个食谱的详细信息
+// @Tags Recipe
+// @Accept json
+// @Produce json
+// @Param id path int true "食谱ID"
+// @Success 200 {object} RecipeDTO
+// @Router /api/recipes/{id} [get]
+func (h *RecipeHandler) GetRecipeDetail(c *gin.Context) {
+	// 解析食谱ID
+	recipeIDStr := c.Param("id")
+	recipeID, err := strconv.ParseUint(recipeIDStr, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的食谱ID"})
+		return
+	}
+
+	// 获取用户ID（可选，用于检查收藏状态）
+	var userID uint
+	if uid, exists := c.Get("user_id"); exists {
+		userID = uid.(uint)
+	}
+
+	// 查询食谱和收藏状态
+	recipe, isFavorite, err := h.recipeService.GetRecipeDetail(uint(recipeID), userID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "食谱不存在"})
+		return
+	}
+
+	// 转换为DTO
+	dto := convertRecipeToDTO(recipe)
+	dto.IsFavorite = isFavorite
+
+	c.JSON(http.StatusOK, dto)
+}
+
+// AddFavorite 添加收藏
+// @Summary 添加收藏
+// @Description 收藏某个食谱
+// @Tags Recipe
+// @Accept json
+// @Produce json
+// @Param id path int true "食谱ID"
+// @Success 200 {object} map[string]interface{}
+// @Router /api/recipes/{id}/favorite [post]
+func (h *RecipeHandler) AddFavorite(c *gin.Context) {
+	// 从上下文获取用户ID
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "未授权"})
+		return
+	}
+
+	// 解析食谱ID
+	recipeIDStr := c.Param("id")
+	recipeID, err := strconv.ParseUint(recipeIDStr, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的食谱ID"})
+		return
+	}
+
+	// 添加收藏
+	err = h.recipeService.AddFavorite(userID.(uint), uint(recipeID))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "收藏失败"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "收藏成功"})
+}
+
+// RemoveFavorite 取消收藏
+// @Summary 取消收藏
+// @Description 取消收藏某个食谱
+// @Tags Recipe
+// @Accept json
+// @Produce json
+// @Param id path int true "食谱ID"
+// @Success 200 {object} map[string]interface{}
+// @Router /api/recipes/{id}/favorite [delete]
+func (h *RecipeHandler) RemoveFavorite(c *gin.Context) {
+	// 从上下文获取用户ID
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "未授权"})
+		return
+	}
+
+	// 解析食谱ID
+	recipeIDStr := c.Param("id")
+	recipeID, err := strconv.ParseUint(recipeIDStr, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的食谱ID"})
+		return
+	}
+
+	// 取消收藏
+	err = h.recipeService.RemoveFavorite(userID.(uint), uint(recipeID))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "取消收藏失败"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "已取消收藏"})
+}
+
+// GetFavoriteList 获取收藏列表
+// @Summary 获取收藏列表
+// @Description 获取用户收藏的食谱列表
+// @Tags Recipe
+// @Accept json
+// @Produce json
+// @Success 200 {object} map[string]interface{}
+// @Router /api/recipes/favorites [get]
+func (h *RecipeHandler) GetFavoriteList(c *gin.Context) {
+	// 从上下文获取用户ID
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "未授权"})
+		return
+	}
+
+	// 获取收藏列表
+	recipes, err := h.recipeService.GetUserFavorites(userID.(uint))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "获取收藏列表失败"})
+		return
+	}
+
+	// 转换为DTO
+	recipeDTOs := make([]RecipeDTO, 0, len(recipes))
+	for _, recipe := range recipes {
+		dto := convertRecipeToDTO(&recipe)
+		dto.IsFavorite = true // 收藏列表中的都是已收藏
+		recipeDTOs = append(recipeDTOs, dto)
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"recipes": recipeDTOs,
+		"count":   len(recipeDTOs),
+	})
 }

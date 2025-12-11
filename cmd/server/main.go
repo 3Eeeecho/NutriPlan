@@ -37,7 +37,6 @@ func main() {
 	r := router.NewRouter(router.RouterDeps{
 		UserService:   userService,
 		RecipeService: recipeService,
-		UserRepo:      userRepo,
 	})
 
 	// 根据环境设置 Gin 模式
