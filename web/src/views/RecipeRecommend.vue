@@ -387,7 +387,10 @@ export default {
     };
 
     onMounted(() => {
-      fetchRecommendations();
+      // 只在没有数据时才获取推荐，避免返回时重新刷新
+      if (plans.value.length === 0 && !currentSelectedPlan.value) {
+        fetchRecommendations();
+      }
     });
 
     return {

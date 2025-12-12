@@ -17,6 +17,10 @@
                     <el-icon><User /></el-icon>
                     个人档案
                   </el-dropdown-item>
+                  <el-dropdown-item command="favorites">
+                    <el-icon><Star /></el-icon>
+                    我的收藏
+                  </el-dropdown-item>
                   <el-dropdown-item divided command="logout">
                     <el-icon><SwitchButton /></el-icon>
                     退出登录
@@ -144,7 +148,8 @@ import {
   TrendCharts,
   DataLine,
   Medal,
-  PieChart
+  PieChart,
+  Star
 } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/store/auth'
 import { getNutritionRequirements } from '@/api/user'
@@ -196,9 +201,15 @@ const goToNutrition = () => {
   router.push('/profile/view')
 }
 
+const goToFavorites = () => {
+  router.push('/favorites')
+}
+
 const handleCommand = async (command) => {
   if (command === 'profile') {
     router.push('/profile/view')
+  } else if (command === 'favorites') {
+    goToFavorites()
   } else if (command === 'logout') {
     try {
       await ElMessageBox.confirm('确定要退出登录吗？', '提示', {

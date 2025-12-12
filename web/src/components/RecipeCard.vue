@@ -1,5 +1,5 @@
 <template>
-  <div class="recipe-card">
+  <div class="recipe-card" @click="viewDetail">
     <div class="card-header">
       <span class="meal-icon">{{ icon }}</span>
       <h4>{{ title }}</h4>
@@ -37,10 +37,20 @@
         <span v-if="recipe.difficulty">{{ getDifficultyEmoji(recipe.difficulty) }} {{ recipe.difficulty }}</span>
       </div>
     </div>
+
+    <div class="card-footer">
+      <button class="view-btn" @click.stop="viewDetail">查看详情</button>
+      <button class="fav-small" @click.stop="toggleFavorite">
+        <span v-if="localFavorite">💖</span>
+        <span v-else>🤍</span>
+      </button>
+    </div>
   </div>
 </template>
 
 <script>
+import { addFavorite, removeFavorite } from '@/api/recipeApi'
+
 export default {
   name: 'RecipeCard',
   props: {
@@ -57,6 +67,11 @@ export default {
       default: '🍽️'
     }
   },
+  data() {
+    return {
+      localFavorite: this.recipe.is_favorite || false
+    }
+  },
   methods: {
     formatIngredients(ingredients) {
       if (Array.isArray(ingredients)) {
@@ -71,9 +86,26 @@ export default {
         '困难': '⭐⭐⭐'
       };
       return emojiMap[difficulty] || '⭐';
+    },
+    viewDetail() {
+      this.$router.push({ name: 'RecipeDetail', params: { id: this.recipe.id } })
+    },
+    async toggleFavorite(e) {
+      e && e.stopPropagation && e.stopPropagation()
+      try {
+        if (this.localFavorite) {
+          await removeFavorite(this.recipe.id)
+          this.localFavorite = false
+        } else {
+          await addFavorite(this.recipe.id)
+          this.localFavorite = true
+        }
+      } catch (err) {
+        console.error(err)
+      }
     }
   }
-};
+}
 </script>
 
 <style scoped>
@@ -112,6 +144,49 @@ export default {
 .card-body {
   padding: 1rem;
   background: rgba(255, 255, 255, 0.6);
+}
+
+.card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem 1rem;
+}
+
+.view-btn {
+  flex: 1;
+  padding: 0.55rem 0.8rem;
+  border-radius: 10px;
+  border: none;
+  background: #ff7a59;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 6px 14px rgba(255, 122, 89, 0.35);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.view-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 16px rgba(255, 122, 89, 0.45);
+}
+
+.fav-small {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: none;
+  background: #fff;
+  cursor: pointer;
+  font-size: 1.2rem;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.fav-small:hover {
+  transform: translateY(-1px) scale(1.03);
+  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.12);
 }
 
 .recipe-name {

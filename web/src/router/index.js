@@ -42,6 +42,20 @@ const routes = [
     component: () => import('@/views/RecipeRecommend.vue'),
     meta: { requiresAuth: true }
   }
+  ,
+  {
+    path: '/recipes/:id',
+    name: 'RecipeDetail',
+    component: () => import('@/views/RecipeDetail.vue'),
+    meta: { requiresAuth: true }
+  }
+  ,
+  {
+    path: '/favorites',
+    name: 'FavoriteList',
+    component: () => import('@/views/FavoriteList.vue'),
+    meta: { requiresAuth: true }
+  }
 ]
 
 const router = createRouter({

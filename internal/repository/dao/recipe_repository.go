@@ -162,8 +162,18 @@ func (r *GormRecipeRepository) FindRecentPlanRecipeIDs(userID uint, days int) ([
 	return recipeIDs, nil
 }
 
-// AddFavorite 添加收藏
+// AddFavorite 添加收藏（支持恢复软删除的记录）
 func (r *GormRecipeRepository) AddFavorite(userID, recipeID uint) error {
+	// 先检查是否存在软删除的记录
+	var existing models.UserFavoriteRecipe
+	err := r.db.Unscoped().Where("user_id = ? AND recipe_id = ?", userID, recipeID).First(&existing).Error
+
+	if err == nil {
+		// 记录存在（可能软删除），恢复它
+		return r.db.Unscoped().Model(&existing).Update("deleted_at", nil).Error
+	}
+
+	// 不存在，创建新记录
 	favorite := &models.UserFavoriteRecipe{
 		UserID:   userID,
 		RecipeID: recipeID,

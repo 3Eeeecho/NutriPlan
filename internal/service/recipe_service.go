@@ -38,6 +38,9 @@ type RecipeService interface {
 
 	// GetUserFavorites 获取用户收藏列表
 	GetUserFavorites(userID uint) ([]models.Recipe, error)
+
+	// IsFavorite 检查收藏状态
+	IsFavorite(userID, recipeID uint) (bool, error)
 }
 
 // RecipeServiceImpl 食谱推荐服务实现
@@ -471,6 +474,11 @@ func (s *RecipeServiceImpl) AddFavorite(userID, recipeID uint) error {
 		return err
 	}
 
+	// 已收藏则直接返回，避免重复插入
+	if ok, _ := s.recipeRepo.IsFavorite(userID, recipeID); ok {
+		return nil
+	}
+
 	// 添加收藏
 	return s.recipeRepo.AddFavorite(userID, recipeID)
 }
@@ -483,6 +491,11 @@ func (s *RecipeServiceImpl) RemoveFavorite(userID, recipeID uint) error {
 // GetUserFavorites 获取用户收藏列表
 func (s *RecipeServiceImpl) GetUserFavorites(userID uint) ([]models.Recipe, error) {
 	return s.recipeRepo.GetUserFavorites(userID)
+}
+
+// IsFavorite 检查收藏状态
+func (s *RecipeServiceImpl) IsFavorite(userID, recipeID uint) (bool, error) {
+	return s.recipeRepo.IsFavorite(userID, recipeID)
 }
 
 // filterRecentRecipes 过滤最近吃过的食谱

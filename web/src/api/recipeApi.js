@@ -33,3 +33,35 @@ export const getSelectedRecipePlan = () => {
     method: 'get'
   });
 };
+
+// 获取食谱详情
+export const getRecipeDetail = (id) => {
+  return request({
+    url: `/recipes/${id}`,
+    method: 'get'
+  });
+};
+
+// 添加收藏
+export const addFavorite = (id) => {
+  return request({
+    url: `/recipes/${id}/favorite`,
+    method: 'post'
+  });
+};
+
+// 取消收藏
+export const removeFavorite = (id) => {
+  return request({
+    url: `/recipes/${id}/favorite`,
+    method: 'delete'
+  });
+};
+
+// 获取收藏列表
+export const getFavoriteList = () => {
+  return request({
+    url: '/recipes/favorites',
+    method: 'get'
+  });
+};

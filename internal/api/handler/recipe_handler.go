@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -65,7 +66,7 @@ type RecipeDTO struct {
 	Fat          float64  `json:"fat"`
 	DietaryFiber float64  `json:"dietary_fiber"`
 	Ingredients  []string `json:"ingredients"`
-	CookingSteps string   `json:"cooking_steps"`
+	CookingSteps []string `json:"cooking_steps"`
 	CookingTime  int      `json:"cooking_time"`
 	Difficulty   string   `json:"difficulty"`
 	IsFavorite   bool     `json:"is_favorite,omitempty"`
@@ -119,7 +120,7 @@ func (h *RecipeHandler) GetRecommendations(c *gin.Context) {
 	// 加载完整的食谱信息
 	planDTOs := make([]DailyPlanDTO, 0, len(plans))
 	for _, plan := range plans {
-		planDTO, err := h.convertPlanToDTO(plan)
+		planDTO, err := h.convertPlanToDTO(plan, userID.(uint))
 		if err != nil {
 			continue // 跳过转换失败的计划
 		}
@@ -193,7 +194,7 @@ func (h *RecipeHandler) GetSelectedPlan(c *gin.Context) {
 	}
 
 	// 转换为DTO
-	planDTO, err := h.convertPlanToDTO(plan)
+	planDTO, err := h.convertPlanToDTO(plan, userID.(uint))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "数据转换失败"})
 		return
@@ -241,7 +242,7 @@ func (h *RecipeHandler) SaveRecommendations(c *gin.Context) {
 }
 
 // convertPlanToDTO 转换计划为DTO
-func (h *RecipeHandler) convertPlanToDTO(plan *models.DailyRecipePlan) (DailyPlanDTO, error) {
+func (h *RecipeHandler) convertPlanToDTO(plan *models.DailyRecipePlan, userID uint) (DailyPlanDTO, error) {
 	// Repository 层已使用 Preload 预加载了关联的食谱数据
 	dto := DailyPlanDTO{
 		ID:                 plan.ID,
@@ -256,11 +257,34 @@ func (h *RecipeHandler) convertPlanToDTO(plan *models.DailyRecipePlan) (DailyPla
 		MatchScore:         plan.MatchScore,
 	}
 
-	// 转换预加载的食谱数据为 DTO
+	// 转换预加载的食谱数据为 DTO 并标记收藏状态
 	dto.Breakfast = convertRecipeToDTO(&plan.BreakfastRecipe)
 	dto.Lunch = convertRecipeToDTO(&plan.LunchRecipe)
 	dto.Dinner = convertRecipeToDTO(&plan.DinnerRecipe)
 	dto.Snack = convertRecipeToDTO(&plan.SnackRecipe)
+
+	if userID > 0 {
+		if dto.Breakfast.ID > 0 {
+			if ok, _ := h.recipeService.IsFavorite(userID, dto.Breakfast.ID); ok {
+				dto.Breakfast.IsFavorite = true
+			}
+		}
+		if dto.Lunch.ID > 0 {
+			if ok, _ := h.recipeService.IsFavorite(userID, dto.Lunch.ID); ok {
+				dto.Lunch.IsFavorite = true
+			}
+		}
+		if dto.Dinner.ID > 0 {
+			if ok, _ := h.recipeService.IsFavorite(userID, dto.Dinner.ID); ok {
+				dto.Dinner.IsFavorite = true
+			}
+		}
+		if dto.Snack.ID > 0 {
+			if ok, _ := h.recipeService.IsFavorite(userID, dto.Snack.ID); ok {
+				dto.Snack.IsFavorite = true
+			}
+		}
+	}
 
 	return dto, nil
 }
@@ -272,6 +296,17 @@ func convertRecipeToDTO(recipe *models.Recipe) RecipeDTO {
 	if err := json.Unmarshal([]byte(recipe.Ingredients), &ingredients); err != nil {
 		// 如果解析失败，作为单个字符串返回
 		ingredients = []string{recipe.Ingredients}
+	}
+
+	// 解析烹饪步骤，支持 JSON 数组或按换行拆分
+	var steps []string
+	if err := json.Unmarshal([]byte(recipe.CookingSteps), &steps); err != nil || len(steps) == 0 {
+		for _, line := range strings.Split(recipe.CookingSteps, "\n") {
+			trim := strings.TrimSpace(line)
+			if trim != "" {
+				steps = append(steps, trim)
+			}
+		}
 	}
 
 	return RecipeDTO{
@@ -286,7 +321,7 @@ func convertRecipeToDTO(recipe *models.Recipe) RecipeDTO {
 		Fat:          recipe.Fat,
 		DietaryFiber: recipe.DietaryFiber,
 		Ingredients:  ingredients,
-		CookingSteps: recipe.CookingSteps,
+		CookingSteps: steps,
 		CookingTime:  recipe.CookingTime,
 		Difficulty:   recipe.Difficulty,
 	}
