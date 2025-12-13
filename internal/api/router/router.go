@@ -12,6 +12,7 @@ import (
 type RouterDeps struct {
 	UserService   service.UserService
 	RecipeService service.RecipeService
+	IntakeService service.IntakeService
 }
 
 // NewRouter 初始化并配置 Gin 路由
@@ -25,6 +26,7 @@ func NewRouter(deps RouterDeps) *gin.Engine {
 	// 实例化 Handler
 	userHandler := handler.NewUserHandler(deps.UserService)
 	recipeHandler := handler.NewRecipeHandler(deps.RecipeService, deps.UserService)
+	intakeHandler := handler.NewIntakeHandler(deps.IntakeService)
 
 	// 基础路由组
 	v1 := r.Group("/api/v1")
@@ -78,6 +80,23 @@ func NewRouter(deps RouterDeps) *gin.Engine {
 
 			// 获取收藏列表 (GET /api/v1/recipes/favorites)
 			recipes.GET("/favorites", recipeHandler.GetFavoriteList)
+		}
+
+		// --- 饮食记录路由 ---
+		intake := v1.Group("/intake")
+		intake.Use(jwt.AuthMiddleware()) // 需要认证
+		{
+			// 添加饮食记录 (POST /api/v1/intake/records)
+			intake.POST("/records", intakeHandler.AddIntakeRecord)
+
+			// 删除饮食记录 (DELETE /api/v1/intake/records/:id)
+			intake.DELETE("/records/:id", intakeHandler.DeleteIntakeRecord)
+
+			// 获取当日营养状态 (GET /api/v1/intake/today)
+			intake.GET("/today", intakeHandler.GetTodayStatus)
+
+			// 获取周报告 (GET /api/v1/intake/weekly)
+			intake.GET("/weekly", intakeHandler.GetWeeklyReport)
 		}
 	}
 

@@ -55,6 +55,18 @@ const routes = [
     name: 'FavoriteList',
     component: () => import('@/views/FavoriteList.vue'),
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/intake',
+    name: 'IntakeRecord',
+    component: () => import('@/views/IntakeRecord.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/weekly',
+    name: 'WeeklyReport',
+    component: () => import('@/views/WeeklyReport.vue'),
+    meta: { requiresAuth: true }
   }
 ]
 

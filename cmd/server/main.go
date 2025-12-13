@@ -27,16 +27,19 @@ func main() {
 	// 创建 Repository 实例
 	userRepo := dao.NewGormUserRepository(dao.DB)
 	recipeRepo := dao.NewGormRecipeRepository(dao.DB)
+	intakeRepo := dao.NewIntakeRepository(dao.DB)
 
 	// 创建 Service 实例
 	nutriService := service.NewNutriService()
 	userService := service.NewUserService(userRepo, nutriService)
 	recipeService := service.NewRecipeService(recipeRepo, nutriService)
+	intakeService := service.NewIntakeService(intakeRepo, userRepo, nutriService)
 
 	// 创建 Router 并注入依赖
 	r := router.NewRouter(router.RouterDeps{
 		UserService:   userService,
 		RecipeService: recipeService,
+		IntakeService: intakeService,
 	})
 
 	// 根据环境设置 Gin 模式

@@ -7,6 +7,14 @@ import (
 	"strings"
 )
 
+// NutritionTargets 营养目标
+type NutritionTargets struct {
+	DailyEnergy       float64 `json:"daily_energy"`
+	DailyProtein      float64 `json:"daily_protein"`
+	DailyCarbohydrate float64 `json:"daily_carbohydrate"`
+	DailyFat          float64 `json:"daily_fat"`
+}
+
 type NutriService interface {
 	// CalculateTDEE 基于用户档案计算 BMR, TDEE, 和 BMI
 	// 返回计算结果 BMR, TDEE, BMI
@@ -18,6 +26,9 @@ type NutriService interface {
 	// AllocateMacros 根据目标热量和健康目标分配宏量营养素的克数
 	// 返回 P_g, C_g, F_g (蛋白质克数, 碳水克数, 脂肪克数)
 	AllocateMacros(targetCalorie float64, goal models.HealthGoal) (pGram float64, cGram float64, fGram float64)
+
+	// CalculateNutritionTargets 计算用户的营养目标
+	CalculateNutritionTargets(user *models.User) *NutritionTargets
 }
 
 type NutriServiceImpl struct {
@@ -147,4 +158,23 @@ func (s *NutriServiceImpl) AllocateMacros(targetCalorie float64, goal models.Hea
 
 	// 返回四舍五入的克数
 	return math.Round(pGram), math.Round(cGram), math.Round(fGram)
+}
+
+// CalculateNutritionTargets 计算用户的营养目标
+func (s *NutriServiceImpl) CalculateNutritionTargets(user *models.User) *NutritionTargets {
+	// 计算 TDEE
+	_, tdee, _ := s.CalculateTDEE(user)
+
+	// 确定目标热量
+	targetCalorie := s.DetermineTargetCalorie(tdee, user.HealthGoal)
+
+	// 分配宏量营养素
+	protein, carb, fat := s.AllocateMacros(targetCalorie, user.HealthGoal)
+
+	return &NutritionTargets{
+		DailyEnergy:       targetCalorie,
+		DailyProtein:      protein,
+		DailyCarbohydrate: carb,
+		DailyFat:          fat,
+	}
 }

@@ -21,6 +21,14 @@
                     <el-icon><Star /></el-icon>
                     我的收藏
                   </el-dropdown-item>
+                  <el-dropdown-item command="intake">
+                    <el-icon><DataLine /></el-icon>
+                    饮食记录
+                  </el-dropdown-item>
+                  <el-dropdown-item command="weekly">
+                    <el-icon><TrendCharts /></el-icon>
+                    周报告
+                  </el-dropdown-item>
                   <el-dropdown-item divided command="logout">
                     <el-icon><SwitchButton /></el-icon>
                     退出登录
@@ -85,15 +93,31 @@
             </div>
           </div>
 
-          <!-- Coming Soon Cards -->
-          <div class="feature-card coming-soon-card disabled">
-            <div class="card-icon-wrapper coming">
+          <!-- Intake Record Card -->
+          <div class="feature-card intake-card" @click="goToIntake">
+            <div class="card-icon-wrapper intake">
               <el-icon class="card-icon"><DataLine /></el-icon>
             </div>
             <h3 class="card-title">饮食记录</h3>
-            <p class="card-description">记录每日饮食摄入</p>
-            <el-tag type="info" size="small">即将推出</el-tag>
+            <p class="card-description">记录每日饮食摄入与营养达标率</p>
+            <div class="card-arrow">
+              <el-icon><ArrowRight /></el-icon>
+            </div>
           </div>
+
+          <!-- Weekly Report Card -->
+          <div class="feature-card weekly-card" @click="goToWeekly">
+            <div class="card-icon-wrapper weekly">
+              <el-icon class="card-icon"><TrendCharts /></el-icon>
+            </div>
+            <h3 class="card-title">周报告</h3>
+            <p class="card-description">查看每周饮食趋势分析</p>
+            <div class="card-arrow">
+              <el-icon><ArrowRight /></el-icon>
+            </div>
+          </div>
+
+          <!-- Coming Soon Cards -->
 
           <div class="feature-card coming-soon-card disabled">
             <div class="card-icon-wrapper coming">
@@ -192,6 +216,14 @@ const goToRecipes = () => {
   router.push('/recipes')
 }
 
+const goToIntake = () => {
+  router.push('/intake')
+}
+
+const goToWeekly = () => {
+  router.push('/weekly')
+}
+
 const goToNutrition = () => {
   if (!authStore.hasProfile) {
     ElMessage.warning('请先完善健康档案')
@@ -210,6 +242,10 @@ const handleCommand = async (command) => {
     router.push('/profile/view')
   } else if (command === 'favorites') {
     goToFavorites()
+  } else if (command === 'intake') {
+    goToIntake()
+  } else if (command === 'weekly') {
+    goToWeekly()
   } else if (command === 'logout') {
     try {
       await ElMessageBox.confirm('确定要退出登录吗？', '提示', {
@@ -410,6 +446,16 @@ const handleCommand = async (command) => {
 .card-icon-wrapper.nutrition {
   background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
   box-shadow: 0 8px 16px rgba(0, 242, 254, 0.2);
+}
+
+.card-icon-wrapper.intake {
+  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+  box-shadow: 0 8px 16px rgba(168, 237, 234, 0.3);
+}
+
+.card-icon-wrapper.weekly {
+  background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+  box-shadow: 0 8px 16px rgba(252, 182, 159, 0.3);
 }
 
 .card-icon-wrapper.coming {
