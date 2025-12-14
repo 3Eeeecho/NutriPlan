@@ -22,24 +22,28 @@ func main() {
 	if err := dao.InitDatabase(config.AppConfig.Database); err != nil {
 		log.Fatalf("数据库初始化失败: %v", err)
 	}
+	// 数据库初始化成功
 	log.Println("数据库初始化成功")
 
 	// 创建 Repository 实例
 	userRepo := dao.NewGormUserRepository(dao.DB)
 	recipeRepo := dao.NewGormRecipeRepository(dao.DB)
 	intakeRepo := dao.NewIntakeRepository(dao.DB)
+	shoppingListRepo := dao.NewShoppingListRepository(dao.DB)
 
 	// 创建 Service 实例
 	nutriService := service.NewNutriService()
 	userService := service.NewUserService(userRepo, nutriService)
 	recipeService := service.NewRecipeService(recipeRepo, nutriService)
 	intakeService := service.NewIntakeService(intakeRepo, userRepo, nutriService)
+	shoppingListService := service.NewShoppingListService(shoppingListRepo, recipeRepo)
 
 	// 创建 Router 并注入依赖
 	r := router.NewRouter(router.RouterDeps{
-		UserService:   userService,
-		RecipeService: recipeService,
-		IntakeService: intakeService,
+		UserService:         userService,
+		RecipeService:       recipeService,
+		IntakeService:       intakeService,
+		ShoppingListService: shoppingListService,
 	})
 
 	// 根据环境设置 Gin 模式

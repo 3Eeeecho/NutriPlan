@@ -10,9 +10,10 @@ import (
 
 // RouterDeps 结构体用于接收所有需要的依赖服务
 type RouterDeps struct {
-	UserService   service.UserService
-	RecipeService service.RecipeService
-	IntakeService service.IntakeService
+	UserService         service.UserService
+	RecipeService       service.RecipeService
+	IntakeService       service.IntakeService
+	ShoppingListService service.ShoppingListService
 }
 
 // NewRouter 初始化并配置 Gin 路由
@@ -27,6 +28,7 @@ func NewRouter(deps RouterDeps) *gin.Engine {
 	userHandler := handler.NewUserHandler(deps.UserService)
 	recipeHandler := handler.NewRecipeHandler(deps.RecipeService, deps.UserService)
 	intakeHandler := handler.NewIntakeHandler(deps.IntakeService)
+	shoppingListHandler := handler.NewShoppingListHandler(deps.ShoppingListService)
 
 	// 基础路由组
 	v1 := r.Group("/api/v1")
@@ -98,6 +100,19 @@ func NewRouter(deps RouterDeps) *gin.Engine {
 			// 获取周报告 (GET /api/v1/intake/weekly)
 			intake.GET("/weekly", intakeHandler.GetWeeklyReport)
 		}
+
+		// --- 购物清单路由 ---
+		shopping := v1.Group("/shopping")
+		shopping.Use(jwt.AuthMiddleware())
+		{
+			shopping.POST("/lists", shoppingListHandler.CreateShoppingList)
+			shopping.GET("/lists", shoppingListHandler.GetShoppingLists)
+			shopping.GET("/lists/:id", shoppingListHandler.GetShoppingListDetail)
+			shopping.PUT("/lists/:id", shoppingListHandler.UpdateShoppingList)
+			shopping.DELETE("/lists/:id", shoppingListHandler.DeleteShoppingList)
+			shopping.PUT("/lists/:id/complete", shoppingListHandler.CompleteShoppingList)
+		}
+
 	}
 
 	return r

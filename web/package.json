@@ -12,6 +12,8 @@
     "axios": "^1.6.2",
     "echarts": "^6.0.0",
     "element-plus": "^2.4.4",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^3.0.4",
     "pinia": "^2.1.7",
     "sweetalert2": "^11.26.3",
     "vue": "^3.4.0",

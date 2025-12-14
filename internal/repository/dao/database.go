@@ -59,6 +59,7 @@ func InitDatabase(cfg config.DatabaseConfig) error {
 		&models.UserWeightLog{},
 		&models.DailyIntakeRecord{},
 		&models.UserFavoriteRecipe{},
+		&models.ShoppingList{},
 	)
 	if err != nil {
 		log.Fatalf("数据库模型迁移失败: %v", err)
