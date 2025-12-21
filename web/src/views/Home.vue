@@ -9,7 +9,11 @@
         </div>
         <el-dropdown @command="handleCommand" trigger="click">
           <div class="user-menu">
-            <el-avatar :size="36" :icon="UserFilled" style="background: #10b981;" />
+            <el-avatar
+              :size="36"
+              :icon="UserFilled"
+              style="background: #10b981"
+            />
             <span class="user-name">{{ authStore.user?.username }}</span>
             <el-icon class="dropdown-icon"><ArrowDown /></el-icon>
           </div>
@@ -19,7 +23,9 @@
               <el-dropdown-item command="favorites">我的收藏</el-dropdown-item>
               <el-dropdown-item command="intake">饮食记录</el-dropdown-item>
               <el-dropdown-item command="weekly">周报告</el-dropdown-item>
-              <el-dropdown-item divided command="logout">退出登录</el-dropdown-item>
+              <el-dropdown-item divided command="logout"
+                >退出登录</el-dropdown-item
+              >
             </el-dropdown-menu>
           </template>
         </el-dropdown>
@@ -32,15 +38,27 @@
       <div class="hero-section">
         <div class="hero-content">
           <h1 class="hero-title">
-            {{ getGreeting() }}，<span class="highlight">{{ authStore.user?.username }}</span> 👋
+            {{ getGreeting() }}，<span class="highlight">{{
+              authStore.user?.username
+            }}</span>
+            👋
           </h1>
           <p class="hero-subtitle">今天想吃点什么呢？</p>
         </div>
-        <div class="quick-stats" v-if="authStore.hasProfile && authStore.profile">
+        <div
+          class="quick-stats"
+          v-if="authStore.hasProfile && authStore.profile"
+        >
           <div class="stat-item">
             <div class="stat-icon">🔥</div>
             <div class="stat-info">
-              <div class="stat-value">{{ authStore.profile.tdee ? Math.floor(authStore.profile.tdee) : '--' }}</div>
+              <div class="stat-value">
+                {{
+                  authStore.profile.tdee
+                    ? Math.floor(authStore.profile.tdee)
+                    : "--"
+                }}
+              </div>
               <div class="stat-label">每日目标热量</div>
             </div>
           </div>
@@ -48,7 +66,9 @@
           <div class="stat-item">
             <div class="stat-icon">⚖️</div>
             <div class="stat-info">
-              <div class="stat-value">{{ authStore.profile.current_weight || '--' }}</div>
+              <div class="stat-value">
+                {{ authStore.profile.current_weight || "--" }}
+              </div>
               <div class="stat-label">当前体重 (kg)</div>
             </div>
           </div>
@@ -58,77 +78,132 @@
       <!-- 功能卡片区 -->
       <div class="content-section">
         <div class="features-grid">
-          <!-- 主要功能卡片 -->
-          <div class="main-card big-card" @click="goToRecipes" :class="{ disabled: !authStore.hasProfile }">
-            <div class="card-content">
-              <div class="card-header">
-                <span class="card-emoji">🍳</span>
-                <h2 class="card-title-big">今日食谱</h2>
+          <!-- 主要功能卡片区 (顶层双巨头) -->
+          <div class="big-cards-row">
+            <!-- 1. 今日食谱 (Big Card) -->
+            <div
+              class="main-card big-card recipe-card"
+              @click="goToRecipes"
+              :class="{ disabled: !authStore.hasProfile }"
+            >
+              <div class="card-content">
+                <div class="card-header">
+                  <span class="card-emoji">🍳</span>
+                  <h2 class="card-title-big">今日食谱</h2>
+                </div>
+                <p class="card-desc">
+                  {{
+                    authStore.hasProfile
+                      ? "获取推荐的营养均衡食谱"
+                      : "完善档案后开启智能推荐"
+                  }}
+                </p>
+                <div class="card-action">
+                  <span class="action-text"
+                    >查看今日推荐 <el-icon><ArrowRight /></el-icon
+                  ></span>
+                </div>
               </div>
-              <p class="card-desc">{{ authStore.hasProfile ? '获取推荐的营养均衡食谱' : '完善档案后开启智能推荐' }}</p>
+            </div>
+
+            <!-- 2. 营养分析 (Big Card - 原个人档案升级) -->
+            <div
+              class="main-card big-card nutrition-card"
+              @click="goToNutrition"
+            >
+              <div class="card-content">
+                <div class="card-header">
+                  <span class="card-emoji">📊</span>
+                  <div class="header-text">
+                    <h2 class="card-title-big">营养分析</h2>
+                    <span class="card-subtitle">目标追踪 & 档案管理</span>
+                  </div>
+                </div>
+
+                <div
+                  v-if="authStore.hasProfile && nutritionData"
+                  class="nutrition-preview"
+                >
+                  <div class="target-cal">
+                    <span class="label">今日目标</span>
+                    <span class="value">{{
+                      nutritionData.target_calorie || "--"
+                    }}</span>
+                    <span class="unit">kcal</span>
+                  </div>
+                  <div class="macros-mini">
+                    <div class="macro-mini-item">
+                      <span class="macro-label">碳水</span>
+                      <span class="macro-val"
+                        >{{ nutritionData.carb_ratio?.toFixed(0) }}%</span
+                      >
+                    </div>
+                    <div class="macro-mini-item">
+                      <span class="macro-label">蛋白</span>
+                      <span class="macro-val"
+                        >{{ nutritionData.protein_ratio?.toFixed(0) }}%</span
+                      >
+                    </div>
+                    <div class="macro-mini-item">
+                      <span class="macro-label">脂肪</span>
+                      <span class="macro-val"
+                        >{{ nutritionData.fat_ratio?.toFixed(0) }}%</span
+                      >
+                    </div>
+                  </div>
+                </div>
+                <p v-else class="card-desc">完善档案，获取专属营养分析</p>
+
+                <div class="card-status" v-if="!authStore.hasProfile">
+                  <el-tag type="warning" size="small" effect="plain"
+                    >待完善</el-tag
+                  >
+                </div>
+              </div>
             </div>
           </div>
 
-          <!-- 个人档案 -->
-          <div class="main-card" @click="goToProfile">
-            <div class="card-content">
-              <div class="card-header-small">
-                <span class="card-emoji-small">👤</span>
-                <h3 class="card-title-small">个人档案</h3>
-              </div>
-              <p class="card-desc-small">{{ authStore.hasProfile ? '查看健康数据' : '完善基本信息' }}</p>
-              <div class="card-status" v-if="!authStore.hasProfile">
-                <el-tag type="warning" size="small" effect="plain">待完善</el-tag>
-              </div>
-            </div>
-          </div>
-
-          <!-- 饮食记录 -->
-          <div class="main-card" @click="goToIntake">
-            <div class="card-content">
-              <div class="card-header-small">
+          <!-- 次级功能卡片区 (小卡片网格) -->
+          <div class="secondary-grid">
+            <!-- 饮食记录 -->
+            <div class="main-card small-card" @click="goToIntake">
+              <div class="card-content-center">
                 <span class="card-emoji-small">📝</span>
                 <h3 class="card-title-small">饮食记录</h3>
+                <p class="card-desc-mini">记录每餐摄入</p>
               </div>
-              <p class="card-desc-small">记录今天吃了什么</p>
             </div>
-          </div>
 
-          <!-- 周报告 -->
-          <div class="main-card" @click="goToWeekly">
-            <div class="card-content">
-              <div class="card-header-small">
-                <span class="card-emoji-small">📊</span>
+            <!-- 周报告 -->
+            <div class="main-card small-card" @click="goToWeekly">
+              <div class="card-content-center">
+                <span class="card-emoji-small">📈</span>
                 <h3 class="card-title-small">周报告</h3>
+                <p class="card-desc-mini">查看长期趋势</p>
               </div>
-              <p class="card-desc-small">查看本周营养趋势</p>
             </div>
-          </div>
 
-          <!-- 收藏夹 -->
-          <div class="main-card" @click="goToFavorites">
-            <div class="card-content">
-              <div class="card-header-small">
+            <!-- 收藏夹 -->
+            <div class="main-card small-card" @click="goToFavorites">
+              <div class="card-content-center">
                 <span class="card-emoji-small">⭐</span>
                 <h3 class="card-title-small">我的收藏</h3>
+                <p class="card-desc-mini">喜爱的食谱</p>
               </div>
-              <p class="card-desc-small">喜欢的食谱都在这</p>
             </div>
-          </div>
 
-          <!-- 购物清单 -->
-          <div class="main-card" @click="goToShopping">
-            <div class="card-content">
-              <div class="card-header-small">
+            <!-- 购物清单 -->
+            <div class="main-card small-card" @click="goToShopping">
+              <div class="card-content-center">
                 <span class="card-emoji-small">🛒</span>
                 <h3 class="card-title-small">购物清单</h3>
+                <p class="card-desc-mini">食材采购助手</p>
               </div>
-              <p class="card-desc-small">食材采购一键搞定</p>
             </div>
           </div>
         </div>
 
-        <!-- 提示信息 -->
+        <!-- 提示信息 (当没有档案时显示) -->
         <div class="tip-card" v-if="!authStore.hasProfile">
           <div class="tip-icon">💡</div>
           <div class="tip-content">
@@ -145,9 +220,9 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
+import { ElMessage, ElMessageBox } from "element-plus";
 import {
   UserFilled,
   User,
@@ -160,111 +235,111 @@ import {
   DataLine,
   Medal,
   PieChart,
-  Star
-} from '@element-plus/icons-vue'
-import { useAuthStore } from '@/store/auth'
-import { getNutritionRequirements } from '@/api/user'
+  Star,
+} from "@element-plus/icons-vue";
+import { useAuthStore } from "@/store/auth";
+import { getNutritionRequirements } from "@/api/user";
 
-const router = useRouter()
-const authStore = useAuthStore()
-const nutritionData = ref(null)
+const router = useRouter();
+const authStore = useAuthStore();
+const nutritionData = ref(null);
 
 onMounted(async () => {
   if (authStore.isAuthenticated) {
     if (!authStore.user || !authStore.profile) {
       try {
-        await authStore.loadProfile()
+        await authStore.loadProfile();
       } catch (error) {
-        console.error('加载档案失败:', error)
+        console.error("加载档案失败:", error);
       }
     }
-    
+
     // 加载营养需求数据
     if (authStore.hasProfile) {
       try {
-        const response = await getNutritionRequirements()
-        nutritionData.value = response
+        const response = await getNutritionRequirements();
+        nutritionData.value = response;
       } catch (error) {
-        console.log('营养需求数据不可用:', error)
+        console.log("营养需求数据不可用:", error);
       }
     }
   }
-})
+});
 
 const goToProfile = () => {
-  router.push('/profile/view')
-}
+  router.push("/profile/view");
+};
 
 const goToRecipes = () => {
   if (!authStore.hasProfile) {
-    ElMessage.warning('请先完善健康档案')
-    return
+    ElMessage.warning("请先完善健康档案");
+    return;
   }
-  router.push('/recipes')
-}
+  router.push("/recipes");
+};
 
 const goToIntake = () => {
-  router.push('/intake')
-}
+  router.push("/intake");
+};
 
 const goToWeekly = () => {
-  router.push('/weekly')
-}
+  router.push("/weekly");
+};
 
 const goToNutrition = () => {
   if (!authStore.hasProfile) {
-    ElMessage.warning('请先完善健康档案')
-    return
+    ElMessage.warning("请先完善健康档案");
+    return;
   }
   // 可以创建一个专门的营养需求展示页面
-  router.push('/profile/view')
-}
+  router.push("/profile/view");
+};
 
 const goToFavorites = () => {
-  router.push('/favorites')
-}
+  router.push("/favorites");
+};
 
 const goToShopping = () => {
-  console.log('点击购物清单卡片')
-  router.push('/shopping')
-}
+  console.log("点击购物清单卡片");
+  router.push("/shopping");
+};
 
 // 获取问候语
 const getGreeting = () => {
-  const hour = new Date().getHours()
-  if (hour < 6) return '夜深了'
-  if (hour < 9) return '早上好'
-  if (hour < 12) return '上午好'
-  if (hour < 14) return '中午好'
-  if (hour < 18) return '下午好'
-  if (hour < 22) return '晚上好'
-  return '夜深了'
-}
+  const hour = new Date().getHours();
+  if (hour < 6) return "夜深了";
+  if (hour < 9) return "早上好";
+  if (hour < 12) return "上午好";
+  if (hour < 14) return "中午好";
+  if (hour < 18) return "下午好";
+  if (hour < 22) return "晚上好";
+  return "夜深了";
+};
 
 const handleCommand = async (command) => {
-  if (command === 'profile') {
-    router.push('/profile/view')
-  } else if (command === 'favorites') {
-    goToFavorites()
-  } else if (command === 'intake') {
-    goToIntake()
-  } else if (command === 'weekly') {
-    goToWeekly()
-  } else if (command === 'logout') {
+  if (command === "profile") {
+    router.push("/profile/view");
+  } else if (command === "favorites") {
+    goToFavorites();
+  } else if (command === "intake") {
+    goToIntake();
+  } else if (command === "weekly") {
+    goToWeekly();
+  } else if (command === "logout") {
     try {
-      await ElMessageBox.confirm('确定要退出登录吗？', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      })
-      authStore.logout()
-      ElMessage.success('已退出登录')
-      router.push('/login')
+      await ElMessageBox.confirm("确定要退出登录吗？", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning",
+      });
+      authStore.logout();
+      ElMessage.success("已退出登录");
+      router.push("/login");
     } catch {
       // 用户取消
     }
   }
-}
+};
 </script>
 
 <style scoped>
@@ -281,7 +356,7 @@ const handleCommand = async (command) => {
   position: sticky;
   top: 0;
   z-index: 100;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .top-bar-content {
@@ -413,228 +488,271 @@ const handleCommand = async (command) => {
   background: #e5e7eb;
 }
 
-/* 内容区域 */
+/* 功能区布局 */
 .content-section {
   animation: fadeIn 0.5s ease-out;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
 }
 
-/* 功能网格 */
 .features-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
 }
 
-/* 卡片样式 */
+/* 顶部大卡片行 */
+.big-cards-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+/* 次级小卡片网格 */
+.secondary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+/* 卡片通用样式 */
 .main-card {
   background: #ffffff;
-  border-radius: 16px;
-  padding: 24px;
+  border-radius: 20px;
   cursor: pointer;
-  transition: all 0.3s ease;
-  border: 1px solid #e8eaed;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid #eef2f6;
+  position: relative;
+  overflow: hidden;
 }
 
 .main-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  transform: translateY(-5px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
   border-color: #10b981;
 }
 
-.main-card.disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+.main-card:active {
+  transform: scale(0.98);
 }
 
-.main-card.disabled:hover {
-  transform: none;
-  box-shadow: none;
-  border-color: #e8eaed;
-}
-
-/* 大卡片（食谱推荐） */
+/* 大卡片样式 */
 .big-card {
-  grid-column: span 2;
-  background: linear-gradient(135deg, #10b98110 0%, #05966910 100%);
-  border: 2px solid #10b98130;
+  height: 220px;
+  padding: 28px;
+  /* background: linear-gradient(145deg, #ffffff 0%, #f9fafb 100%); */
 }
 
-.big-card:hover {
-  border-color: #10b981;
+.recipe-card {
+  background: linear-gradient(135deg, #e6fffa 0%, #ffffff 100%);
+  border-color: #b2f5ea;
 }
 
-.card-content {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
+.nutrition-card {
+  background: linear-gradient(135deg, #ebf8ff 0%, #ffffff 100%);
+  border-color: #bee3f8;
+}
+
+.nutrition-card:hover {
+  border-color: #3182ce;
 }
 
 .card-header {
   display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.header-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.card-subtitle {
+  font-size: 13px;
+  color: #64748b;
+  margin-top: 4px;
 }
 
 .card-emoji {
-  font-size: 40px;
+  font-size: 42px;
+  line-height: 1;
 }
 
 .card-title-big {
   font-size: 24px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: #1e293b;
   margin: 0;
+  line-height: 1.2;
 }
 
 .card-desc {
   font-size: 15px;
-  color: #6b7280;
-  line-height: 1.5;
-  margin-bottom: 16px;
+  color: #64748b;
+  line-height: 1.6;
+  margin-bottom: auto;
 }
 
-.card-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  background: #10b981;
-  color: white;
-  border-radius: 20px;
-  font-size: 13px;
-  font-weight: 500;
-  width: fit-content;
-}
-
-.tag-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: white;
-  animation: pulse 2s infinite;
-}
-
-/* 小卡片 */
-.card-header-small {
+.card-action {
+  margin-top: auto;
+  color: #10b981;
+  font-weight: 600;
+  font-size: 14px;
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 8px;
+}
+
+.action-text {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* 营养数据预览 */
+.nutrition-preview {
+  margin-top: 10px;
+}
+
+.target-cal {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.target-cal .label {
+  font-size: 13px;
+  color: #64748b;
+}
+
+.target-cal .value {
+  font-size: 28px;
+  font-weight: 800;
+  color: #2c5282;
+  font-family: "DIN Alternate", sans-serif;
+}
+
+.target-cal .unit {
+  font-size: 13px;
+  color: #64748b;
+}
+
+.macros-mini {
+  display: flex;
+  gap: 12px;
+}
+
+.macro-mini-item {
+  background: rgba(255, 255, 255, 0.6);
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.macro-label {
+  color: #94a3b8;
+  margin-right: 4px;
+}
+
+.macro-val {
+  color: #334155;
+  font-weight: 600;
+}
+
+/* 小卡片样式 */
+.small-card {
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  height: 140px;
+}
+
+.card-content-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
 }
 
 .card-emoji-small {
-  font-size: 28px;
+  font-size: 32px;
+  margin-bottom: 4px;
 }
 
 .card-title-small {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: #334155;
   margin: 0;
 }
 
-.card-desc-small {
-  font-size: 14px;
-  color: #6b7280;
+.card-desc-mini {
+  font-size: 12px;
+  color: #94a3b8;
   margin: 0;
-}
-
-.card-status {
-  margin-top: 12px;
-}
-
-/* 提示卡片 */
-.tip-card {
-  background: linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%);
-  border: 2px solid #fed7aa;
-  border-radius: 16px;
-  padding: 24px;
-  display: flex;
-  gap: 20px;
-  align-items: center;
-}
-
-.tip-icon {
-  font-size: 48px;
-  flex-shrink: 0;
-}
-
-.tip-content {
-  flex: 1;
-}
-
-.tip-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #1a1a1a;
-  margin: 0 0 8px 0;
-}
-
-.tip-text {
-  font-size: 14px;
-  color: #6b7280;
-  margin: 0 0 16px 0;
-}
-
-/* 动画 */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
 }
 
 /* 响应式设计 */
 @media (max-width: 1024px) {
-  .features-grid {
+  .secondary-grid {
     grid-template-columns: repeat(2, 1fr);
-  }
-  
-  .big-card {
-    grid-column: span 2;
   }
 }
 
 @media (max-width: 768px) {
+  .top-bar-content {
+    padding: 12px 16px;
+  }
+
+  .main-wrapper {
+    padding: 16px;
+  }
+
   .hero-section {
     padding: 24px;
+    margin-bottom: 24px;
   }
-  
+
   .hero-title {
     font-size: 24px;
   }
-  
-  .features-grid {
+
+  /* 移动端改为单列 */
+  .big-cards-row {
     grid-template-columns: 1fr;
+    gap: 16px;
   }
-  
+
+  .secondary-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
   .big-card {
-    grid-column: span 1;
+    height: auto;
+    min-height: 180px;
   }
-  
+
+  .small-card {
+    height: 120px;
+    padding: 16px;
+  }
+
   .quick-stats {
     flex-direction: column;
     gap: 16px;
   }
-  
+
   .stat-divider {
     display: none;
   }
-  
+
   .tip-card {
     flex-direction: column;
     text-align: center;
@@ -642,18 +760,11 @@ const handleCommand = async (command) => {
 }
 
 @media (max-width: 480px) {
-  .top-bar-content {
-    padding: 12px 16px;
-  }
-  
-  .main-wrapper {
-    padding: 20px 16px;
-  }
-  
+  /* 极窄屏幕 */
   .hero-title {
     font-size: 20px;
   }
-  
+
   .stat-value {
     font-size: 20px;
   }
