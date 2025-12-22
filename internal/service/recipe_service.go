@@ -3,6 +3,7 @@ package service
 import (
 	"NutriPlan/internal/repository/dao"
 	"NutriPlan/internal/repository/models"
+	"encoding/json"
 	"math"
 	"math/rand"
 	"sort"
@@ -463,7 +464,26 @@ func (s *RecipeServiceImpl) GetRecipeDetail(recipeID uint, userID uint) (*models
 		isFavorite, _ = s.recipeRepo.IsFavorite(userID, recipeID)
 	}
 
+	// [Hybrid Approach] Fill legacy JSON if empty
+	s.fillLegacyIngredients(recipe)
+
 	return recipe, isFavorite, nil
+}
+
+// fillLegacyIngredients checks if the JSON ingredients field is empty
+// and populates it from RecipeIngredients if available.
+func (s *RecipeServiceImpl) fillLegacyIngredients(recipe *models.Recipe) {
+	if (recipe.Ingredients == "" || recipe.Ingredients == "[]") && len(recipe.RecipeIngredients) > 0 {
+		var names []string
+		for _, ri := range recipe.RecipeIngredients {
+			// Use the Ingredient Name
+			names = append(names, ri.Ingredient.Name)
+		}
+		// Marshal names to JSON
+		if bytes, err := json.Marshal(names); err == nil {
+			recipe.Ingredients = string(bytes)
+		}
+	}
 }
 
 // AddFavorite 添加收藏

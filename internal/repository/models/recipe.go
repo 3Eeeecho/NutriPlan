@@ -33,6 +33,9 @@ type Recipe struct {
 	// 长文本字段
 	Ingredients  string `gorm:"type:text;not null;comment:所需食材清单(JSON)" json:"ingredients"`
 	CookingSteps string `gorm:"type:text;comment:烹饪步骤" json:"cookingSteps"`
+
+	// 关联食材 (新)
+	RecipeIngredients []RecipeIngredient `gorm:"foreignKey:RecipeID" json:"recipeIngredients,omitempty"`
 }
 
 func (Recipe) TableName() string {
