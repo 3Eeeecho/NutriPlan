@@ -6,17 +6,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// HealthGoal 定义用户的健康目标
-type HealthGoal string
-
-// 定义健康目标常量，用于提高代码可读性和类型安全
-const (
-	GoalWeightLoss   HealthGoal = "减脂"
-	GoalMuscleGain   HealthGoal = "增肌"
-	GoalSugarControl HealthGoal = "控糖"
-	GoalMaintain     HealthGoal = "维持健康"
-)
-
 type User struct {
 	gorm.Model
 	// 账号信息

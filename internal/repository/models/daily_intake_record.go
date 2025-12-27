@@ -10,7 +10,7 @@ import (
 type DailyIntakeRecord struct {
 	gorm.Model
 	UserID     uint      `gorm:"not null;index;comment:关联用户ID" json:"userId"`
-	RecordDate time.Time `gorm:"type:date;not null;index;comment:记录日期" json:"recordDate"`
+	RecordDate time.Time `gorm:"type:date;not null;comment:记录日期" json:"recordDate"`
 	MealType   string    `gorm:"type:varchar(20);not null;comment:餐点类型" json:"mealType"`
 
 	// 核心逻辑: 区分是食谱还是单一食物

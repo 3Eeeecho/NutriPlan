@@ -32,3 +32,4 @@ go.work.sum
 # .vscode/
 
 算法优化.md
+pkg/scripts/recipe/recipe_corpus_full.json

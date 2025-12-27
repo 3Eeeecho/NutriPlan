@@ -9,7 +9,7 @@ import (
 type DailyRecipePlan struct {
 	gorm.Model
 	UserID     uint      `gorm:"not null;index;comment:关联用户ID" json:"userId"`
-	PlanDate   time.Time `gorm:"type:date;not null;index;comment:计划日期" json:"planDate"` // 注意这里的 type:date
+	PlanDate   time.Time `gorm:"type:date;not null;comment:计划日期" json:"planDate"` // 注意这里的 type:date
 	PlanName   string    `gorm:"type:varchar(200);comment:计划名称" json:"planName"`
 	IsSelected bool      `gorm:"type:tinyint(1);default:0;comment:用户是否采纳" json:"isSelected"`
 
@@ -34,10 +34,10 @@ type DailyRecipePlan struct {
 	MatchScore float64 `gorm:"type:decimal(5,2);comment:匹配度评分" json:"matchScore"`
 
 	// 关联关系 (Preload 用)
-	BreakfastRecipe Recipe `gorm:"foreignKey:BreakfastRecipeID" json:"breakfastRecipe,omitempty"`
-	LunchRecipe     Recipe `gorm:"foreignKey:LunchRecipeID" json:"lunchRecipe,omitempty"`
-	DinnerRecipe    Recipe `gorm:"foreignKey:DinnerRecipeID" json:"dinnerRecipe,omitempty"`
-	SnackRecipe     Recipe `gorm:"foreignKey:SnackRecipeID" json:"snackRecipe,omitempty"`
+	BreakfastRecipe Recipe `gorm:"foreignKey:BreakfastRecipeID" json:"breakfastRecipe"`
+	LunchRecipe     Recipe `gorm:"foreignKey:LunchRecipeID" json:"lunchRecipe"`
+	DinnerRecipe    Recipe `gorm:"foreignKey:DinnerRecipeID" json:"dinnerRecipe"`
+	SnackRecipe     Recipe `gorm:"foreignKey:SnackRecipeID" json:"snackRecipe"`
 }
 
 func (DailyRecipePlan) TableName() string {

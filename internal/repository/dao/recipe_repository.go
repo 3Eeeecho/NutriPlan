@@ -9,17 +9,11 @@ import (
 
 // RecipeRepository 食谱仓储接口
 type RecipeRepository interface {
-	// FindByMealType 根据餐次类型查询食谱,并过滤掉禁忌食材
-	FindByMealType(mealType models.MealType, forbidden []string) ([]models.Recipe, error)
+	// FindByMealType 根据餐次类型以及目标用户查询食谱,并过滤掉禁忌食材
+	FindByMealType(mealType models.MealType, target models.HealthGoal, forbidden []string) ([]models.Recipe, error)
 
 	// FindByID 根据ID查询食谱
 	FindByID(id uint) (*models.Recipe, error)
-
-	// FindAll 查询所有食谱
-	FindAll() ([]models.Recipe, error)
-
-	// Create 创建食谱
-	Create(recipe *models.Recipe) error
 
 	// CreateDailyPlan 创建每日食谱计划
 	CreateDailyPlan(plan *models.DailyRecipePlan) error
@@ -59,8 +53,8 @@ func NewGormRecipeRepository(db *gorm.DB) RecipeRepository {
 	return &GormRecipeRepository{db: db}
 }
 
-// FindByMealType 根据餐次类型查询食谱,并过滤掉禁忌食材
-func (r *GormRecipeRepository) FindByMealType(mealType models.MealType, forbidden []string) ([]models.Recipe, error) {
+// FindByMealType 根据餐次类型以及目标用户查询食谱,并过滤掉禁忌食材
+func (r *GormRecipeRepository) FindByMealType(mealType models.MealType, target models.HealthGoal, forbidden []string) ([]models.Recipe, error) {
 	var recipes []models.Recipe
 	tx := r.db.Model(&models.Recipe{}).Where("meal_type = ?", mealType)
 
@@ -71,7 +65,7 @@ func (r *GormRecipeRepository) FindByMealType(mealType models.MealType, forbidde
 		}
 		tx = tx.Where("ingredients NOT LIKE ?", "%"+item+"%")
 	}
-	err := tx.Preload("RecipeIngredients.Ingredient").Find(&recipes).Limit(100).Error
+	err := tx.Find(&recipes).Limit(100).Error
 	if err != nil {
 		return nil, err
 	}
@@ -81,23 +75,11 @@ func (r *GormRecipeRepository) FindByMealType(mealType models.MealType, forbidde
 // FindByID 根据ID查询食谱
 func (r *GormRecipeRepository) FindByID(id uint) (*models.Recipe, error) {
 	var recipe models.Recipe
-	err := r.db.Preload("RecipeIngredients.Ingredient").First(&recipe, id).Error
+	err := r.db.First(&recipe, id).Error
 	if err != nil {
 		return nil, err
 	}
 	return &recipe, nil
-}
-
-// FindAll 查询所有食谱
-func (r *GormRecipeRepository) FindAll() ([]models.Recipe, error) {
-	var recipes []models.Recipe
-	err := r.db.Preload("RecipeIngredients.Ingredient").Find(&recipes).Error
-	return recipes, err
-}
-
-// Create 创建食谱
-func (r *GormRecipeRepository) Create(recipe *models.Recipe) error {
-	return r.db.Create(recipe).Error
 }
 
 // CreateDailyPlan 创建每日食谱计划
@@ -108,11 +90,7 @@ func (r *GormRecipeRepository) CreateDailyPlan(plan *models.DailyRecipePlan) err
 // FindPlansByUserID 根据用户ID查询食谱计划（预加载关联的食谱）
 func (r *GormRecipeRepository) FindPlansByUserID(userID uint) ([]models.DailyRecipePlan, error) {
 	var plans []models.DailyRecipePlan
-	err := r.db.Preload("BreakfastRecipe.RecipeIngredients.Ingredient").
-		Preload("LunchRecipe.RecipeIngredients.Ingredient").
-		Preload("DinnerRecipe.RecipeIngredients.Ingredient").
-		Preload("SnackRecipe.RecipeIngredients.Ingredient").
-		Preload("BreakfastRecipe").
+	err := r.db.Preload("BreakfastRecipe").
 		Preload("LunchRecipe").
 		Preload("DinnerRecipe").
 		Preload("SnackRecipe").
@@ -132,11 +110,7 @@ func (r *GormRecipeRepository) UpdatePlanSelection(planID uint, selected bool) e
 // FindSelectedPlan 查询用户当前选中的计划
 func (r *GormRecipeRepository) FindSelectedPlan(userID uint) (*models.DailyRecipePlan, error) {
 	var plan models.DailyRecipePlan
-	err := r.db.Preload("BreakfastRecipe.RecipeIngredients.Ingredient").
-		Preload("LunchRecipe.RecipeIngredients.Ingredient").
-		Preload("DinnerRecipe.RecipeIngredients.Ingredient").
-		Preload("SnackRecipe.RecipeIngredients.Ingredient").
-		Preload("BreakfastRecipe").
+	err := r.db.Preload("BreakfastRecipe").
 		Preload("LunchRecipe").
 		Preload("DinnerRecipe").
 		Preload("SnackRecipe").
@@ -198,8 +172,7 @@ func (r *GormRecipeRepository) RemoveFavorite(userID, recipeID uint) error {
 // GetUserFavorites 获取用户收藏的食谱列表
 func (r *GormRecipeRepository) GetUserFavorites(userID uint) ([]models.Recipe, error) {
 	var favorites []models.UserFavoriteRecipe
-	err := r.db.Preload("Recipe.RecipeIngredients.Ingredient").
-		Preload("Recipe").
+	err := r.db.Preload("Recipe").
 		Where("user_id = ?", userID).
 		Order("created_at DESC").
 		Find(&favorites).Error

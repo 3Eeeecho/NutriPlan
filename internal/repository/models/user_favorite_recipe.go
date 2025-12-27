@@ -12,7 +12,7 @@ type UserFavoriteRecipe struct {
 	UserID    uint           `gorm:"not null;index:idx_user_recipe,unique" json:"user_id"`
 	RecipeID  uint           `gorm:"not null;index:idx_user_recipe,unique" json:"recipe_id"`
 	CreatedAt time.Time      `json:"created_at"`
-	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
+	DeletedAt gorm.DeletedAt `json:"-"`
 
 	// 关联关系
 	User   User   `gorm:"foreignKey:UserID" json:"-"`

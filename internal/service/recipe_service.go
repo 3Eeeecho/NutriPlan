@@ -3,7 +3,6 @@ package service
 import (
 	"NutriPlan/internal/repository/dao"
 	"NutriPlan/internal/repository/models"
-	"encoding/json"
 	"math"
 	"math/rand"
 	"sort"
@@ -25,7 +24,7 @@ type RecipeService interface {
 	// GetSelectedPlan 获取用户当前选中的计划
 	GetSelectedPlan(userID uint) (*models.DailyRecipePlan, error)
 
-	// SelectDailyPlan 选择每日食谱计划
+	// SelectDailyPlan 选择每日食谱计划并保存
 	SelectDailyPlan(userID, planID uint) error
 
 	// GetRecipeDetail 获取食谱详情
@@ -93,27 +92,35 @@ func (s *RecipeServiceImpl) RecommendRecipes(user *models.User, count int) ([]*m
 	targetCalorie := s.nutriService.DetermineTargetCalorie(user.TDEE, user.HealthGoal)
 	targetProtein, targetCarb, targetFat := s.nutriService.AllocateMacros(targetCalorie, user.HealthGoal)
 
-	// 获取所有餐次过滤掉禁忌食材后的食谱
-	forbiddenIngredients := s.parseForbiddenIngredients(user)
-	breakfastRecipes, err := s.recipeRepo.FindByMealType(models.MealTypeBreakfast, forbiddenIngredients)
+	// 解析用户偏好与禁忌（过敏 / 健康状况）
+	userTags, forbiddenIngredients := s.parseUserPreferences(user)
+
+	// 获取所有餐次，后续再基于 TargetUsers/ForbiddenUsers 做精筛
+	breakfastRecipes, err := s.recipeRepo.FindByMealType(models.MealTypeBreakfast, user.HealthGoal, forbiddenIngredients)
 	if err != nil {
 		return nil, err
 	}
-	lunchRecipes, err := s.recipeRepo.FindByMealType(models.MealTypeLunch, forbiddenIngredients)
+	lunchRecipes, err := s.recipeRepo.FindByMealType(models.MealTypeLunch, user.HealthGoal, forbiddenIngredients)
 	if err != nil {
 		return nil, err
 	}
-	dinnerRecipes, err := s.recipeRepo.FindByMealType(models.MealTypeDinner, forbiddenIngredients)
+	dinnerRecipes, err := s.recipeRepo.FindByMealType(models.MealTypeDinner, user.HealthGoal, forbiddenIngredients)
 	if err != nil {
 		return nil, err
 	}
-	snackRecipes, err := s.recipeRepo.FindByMealType(models.MealTypeSnack, forbiddenIngredients)
+	snackRecipes, err := s.recipeRepo.FindByMealType(models.MealTypeSnack, user.HealthGoal, forbiddenIngredients)
 	if err != nil {
 		return nil, err
 	}
 
-	// 过滤最近7天吃过的食谱 (扩大去重范围，避免近期重复)
-	recentRecipeIDs, err := s.recipeRepo.FindRecentPlanRecipeIDs(user.ID, 7)
+	// 基于 Recipe.TargetUsers / Recipe.ForbiddenUsers 做精确过滤
+	breakfastRecipes = s.filterRecipesByUserPreferences(breakfastRecipes, userTags)
+	lunchRecipes = s.filterRecipesByUserPreferences(lunchRecipes, userTags)
+	dinnerRecipes = s.filterRecipesByUserPreferences(dinnerRecipes, userTags)
+	snackRecipes = s.filterRecipesByUserPreferences(snackRecipes, userTags)
+
+	// 过滤最近5天吃过的食谱 (扩大去重范围，避免近期重复)
+	recentRecipeIDs, err := s.recipeRepo.FindRecentPlanRecipeIDs(user.ID, 5)
 	if err == nil && len(recentRecipeIDs) > 0 {
 		breakfastRecipes = s.filterRecentRecipes(breakfastRecipes, recentRecipeIDs)
 		lunchRecipes = s.filterRecentRecipes(lunchRecipes, recentRecipeIDs)
@@ -410,21 +417,6 @@ func (s *RecipeServiceImpl) calculateMatchScore(
 	return math.Round(score)
 }
 
-// parseForbiddenIngredients 解析用户禁忌食材
-func (s *RecipeServiceImpl) parseForbiddenIngredients(user *models.User) []string {
-	forbidden := make([]string, 0)
-
-	// 解析过敏源
-	if user.Allergies != "" {
-		allergies := strings.Split(user.Allergies, ",")
-		for _, a := range allergies {
-			forbidden = append(forbidden, strings.TrimSpace(a))
-		}
-	}
-
-	return forbidden
-}
-
 // SaveDailyPlan 保存每日食谱计划
 func (s *RecipeServiceImpl) SaveDailyPlan(plan *models.DailyRecipePlan) error {
 	return s.recipeRepo.CreateDailyPlan(plan)
@@ -437,7 +429,7 @@ func (s *RecipeServiceImpl) GetSelectedPlan(userID uint) (*models.DailyRecipePla
 
 // SelectDailyPlan 选择每日食谱计划
 func (s *RecipeServiceImpl) SelectDailyPlan(userID, planID uint) error {
-	// 1. 获取用户当前已选的计划（如果有）
+	// 获取用户当前已选的计划（如果有）
 	currentSelected, err := s.recipeRepo.FindSelectedPlan(userID)
 	if err == nil && currentSelected != nil {
 		// 取消选中
@@ -446,7 +438,7 @@ func (s *RecipeServiceImpl) SelectDailyPlan(userID, planID uint) error {
 		}
 	}
 
-	// 2. 选中新计划
+	// 选中新计划
 	return s.recipeRepo.UpdatePlanSelection(planID, true)
 }
 
@@ -464,26 +456,7 @@ func (s *RecipeServiceImpl) GetRecipeDetail(recipeID uint, userID uint) (*models
 		isFavorite, _ = s.recipeRepo.IsFavorite(userID, recipeID)
 	}
 
-	// [Hybrid Approach] Fill legacy JSON if empty
-	s.fillLegacyIngredients(recipe)
-
 	return recipe, isFavorite, nil
-}
-
-// fillLegacyIngredients checks if the JSON ingredients field is empty
-// and populates it from RecipeIngredients if available.
-func (s *RecipeServiceImpl) fillLegacyIngredients(recipe *models.Recipe) {
-	if (recipe.Ingredients == "" || recipe.Ingredients == "[]") && len(recipe.RecipeIngredients) > 0 {
-		var names []string
-		for _, ri := range recipe.RecipeIngredients {
-			// Use the Ingredient Name
-			names = append(names, ri.Ingredient.Name)
-		}
-		// Marshal names to JSON
-		if bytes, err := json.Marshal(names); err == nil {
-			recipe.Ingredients = string(bytes)
-		}
-	}
 }
 
 // AddFavorite 添加收藏
@@ -535,6 +508,110 @@ func (s *RecipeServiceImpl) filterRecentRecipes(recipes []models.Recipe, recentI
 	// 如果过滤后数量太少（少于3个），则不过滤，避免无方案可选
 	if len(filtered) < 3 {
 		return recipes
+	}
+	return filtered
+}
+
+// parseUserPreferences 解析用户的标签与禁忌，用于后续筛选
+// 返回 userTags: 用户拥有的标签（如健康状况、饮食偏好、目标等）
+// 返回 forbidden: 需要在仓库层初筛的禁忌食材（过敏源）
+func (s *RecipeServiceImpl) parseUserPreferences(user *models.User) (userTags []string, forbidden []string) {
+	tags := make([]string, 0)
+	forb := make([]string, 0)
+
+	if user == nil {
+		return tags, forb
+	}
+
+	// 健康状况（例如: 高血压, 糖尿病）
+	if strings.TrimSpace(user.HealthConditions) != "" {
+		parts := strings.SplitSeq(user.HealthConditions, ",")
+		for p := range parts {
+			v := strings.TrimSpace(p)
+			if v != "" {
+				tags = append(tags, v)
+				// 健康状况既可能是用户的标签（用于 targetUsers 匹配），也可能是禁忌（例如某些菜禁忌高血压）
+				forb = append(forb, v)
+			}
+		}
+	}
+
+	// 饮食偏好
+	if strings.TrimSpace(user.DietaryPrefs) != "" {
+		parts := strings.SplitSeq(user.DietaryPrefs, ",")
+		for p := range parts {
+			v := strings.TrimSpace(p)
+			if v != "" {
+				tags = append(tags, v)
+			}
+		}
+	}
+
+	// 过敏源作为严格的 forbidden
+	if strings.TrimSpace(user.Allergies) != "" {
+		parts := strings.SplitSeq(user.Allergies, ",")
+		for p := range parts {
+			v := strings.TrimSpace(p)
+			if v != "" {
+				forb = append(forb, v)
+			}
+		}
+	}
+
+	tags = append(tags, string(user.HealthGoal))
+	return tags, forb
+}
+
+// filterRecipesByUserPreferences 基于 Recipe.TargetUsers 与 Recipe.ForbiddenUsers 进行精筛
+func (s *RecipeServiceImpl) filterRecipesByUserPreferences(recipes []models.Recipe, userTags []string) []models.Recipe {
+	if len(recipes) == 0 {
+		return recipes
+	}
+
+	tagSet := make(map[string]bool)
+	for _, t := range userTags {
+		t = strings.ToLower(strings.TrimSpace(t))
+		if t != "" {
+			tagSet[t] = true
+		}
+	}
+
+	filtered := make([]models.Recipe, 0, len(recipes))
+	for _, r := range recipes {
+		// 如果菜谱标注了 ForbiddenUsers，且与用户标签有交集，则排除
+		skip := false
+		for _, fu := range r.ForbiddenUsers {
+			if fu == "" {
+				continue
+			}
+			if tagSet[strings.TrimSpace(fu)] {
+				skip = true
+				break
+			}
+		}
+		if skip {
+			continue
+		}
+
+		// 如果菜谱有 TargetUsers，则要求与用户标签有至少一个交集；否则认为通用
+		if len(r.TargetUsers) > 0 {
+			matched := false
+			for _, tu := range r.TargetUsers {
+				if tu == "" {
+					continue
+				}
+				if tagSet[strings.TrimSpace(tu)] {
+					matched = true
+					break
+				}
+			}
+			if !matched {
+				// 如果没有匹配的标签，跳过这个菜谱
+				continue
+			}
+		}
+
+		filtered = append(filtered, r)
 	}
 	return filtered
 }

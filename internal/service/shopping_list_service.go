@@ -60,14 +60,7 @@ func (s *shoppingListService) GenerateFromRecipes(userID uint, recipeIDs []uint,
 	ingredientMap := make(map[string][]string) // name -> amounts
 
 	for _, recipe := range recipes {
-		var ingredients []string
-		// 尝试解析 JSON
-		if err := json.Unmarshal([]byte(recipe.Ingredients), &ingredients); err != nil {
-			// 如果不是 JSON，尝试按逗号分隔
-			ingredients = strings.Split(recipe.Ingredients, ",")
-		}
-
-		for _, raw := range ingredients {
+		for _, raw := range recipe.Ingredients {
 			name, amount := parseIngredient(raw)
 			if name != "" {
 				ingredientMap[name] = append(ingredientMap[name], amount)

@@ -3,10 +3,8 @@ package handler
 import (
 	"NutriPlan/internal/repository/models"
 	"NutriPlan/internal/service"
-	"encoding/json"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -291,37 +289,17 @@ func (h *RecipeHandler) convertPlanToDTO(plan *models.DailyRecipePlan, userID ui
 
 // convertRecipeToDTO 转换食谱为DTO
 func convertRecipeToDTO(recipe *models.Recipe) RecipeDTO {
-	// 解析食材列表
-	var ingredients []string
-	if err := json.Unmarshal([]byte(recipe.Ingredients), &ingredients); err != nil {
-		// 如果解析失败，作为单个字符串返回
-		ingredients = []string{recipe.Ingredients}
-	}
-
-	// 解析烹饪步骤，支持 JSON 数组或按换行拆分
-	var steps []string
-	if err := json.Unmarshal([]byte(recipe.CookingSteps), &steps); err != nil || len(steps) == 0 {
-		for _, line := range strings.Split(recipe.CookingSteps, "\n") {
-			trim := strings.TrimSpace(line)
-			if trim != "" {
-				steps = append(steps, trim)
-			}
-		}
-	}
-
 	return RecipeDTO{
 		ID:           recipe.ID,
 		Name:         recipe.Name,
-		Description:  recipe.Description,
 		ImageURL:     recipe.ImageURL,
 		MealType:     string(recipe.MealType),
 		Energy:       recipe.Energy,
 		Protein:      recipe.Protein,
 		Carbohydrate: recipe.Carbohydrate,
 		Fat:          recipe.Fat,
-		DietaryFiber: recipe.DietaryFiber,
-		Ingredients:  ingredients,
-		CookingSteps: steps,
+		Ingredients:  recipe.Ingredients,
+		CookingSteps: recipe.CookingSteps,
 		CookingTime:  recipe.CookingTime,
 		Difficulty:   recipe.Difficulty,
 	}
