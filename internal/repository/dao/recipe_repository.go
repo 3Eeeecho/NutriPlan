@@ -42,6 +42,12 @@ type RecipeRepository interface {
 
 	// IsFavorite 检查是否已收藏
 	IsFavorite(userID, recipeID uint) (bool, error)
+
+	// ClearAllSelectedPlans 取消用户所有已选中的计划(is_selected=false)
+	ClearAllSelectedPlans(userID uint) error
+
+	// DeleteTodayAllPlans 删除用户当天的所有计划
+	DeleteTodayAllPlans(userID uint) error
 }
 
 // GormRecipeRepository GORM 实现
@@ -103,19 +109,30 @@ func (r *GormRecipeRepository) FindPlansByUserID(userID uint) ([]models.DailyRec
 
 // UpdatePlanSelection 更新计划选择状态
 func (r *GormRecipeRepository) UpdatePlanSelection(planID uint, selected bool) error {
+	updates := map[string]interface{}{
+		"is_selected": selected,
+	}
+	// 如果是选中操作，同时更新plan_date为当前日期
+	if selected {
+		updates["plan_date"] = time.Now()
+	}
 	return r.db.Model(&models.DailyRecipePlan{}).
 		Where("id = ?", planID).
-		Update("is_selected", selected).Error
+		Updates(updates).Error
 }
 
-// FindSelectedPlan 查询用户当前选中的计划
+// FindSelectedPlan 查询用户当前选中的计划(只查询今天的)
 func (r *GormRecipeRepository) FindSelectedPlan(userID uint) (*models.DailyRecipePlan, error) {
 	var plan models.DailyRecipePlan
+	// 构造今天的日期(只包含年月日,不包含时间)
+	now := time.Now()
+	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+
 	err := r.db.Preload("BreakfastRecipe").
 		Preload("LunchRecipe").
 		Preload("DinnerRecipe").
 		Preload("SnackRecipe").
-		Where("user_id = ? AND is_selected = ?", userID, true).
+		Where("user_id = ? AND is_selected = ? AND plan_date = ?", userID, true, today).
 		Order("created_at DESC").
 		First(&plan).Error
 	if err != nil {
@@ -195,4 +212,20 @@ func (r *GormRecipeRepository) IsFavorite(userID, recipeID uint) (bool, error) {
 		Where("user_id = ? AND recipe_id = ?", userID, recipeID).
 		Count(&count).Error
 	return count > 0, err
+}
+
+// ClearAllSelectedPlans 取消用户所有已选中的计划
+func (r *GormRecipeRepository) ClearAllSelectedPlans(userID uint) error {
+	return r.db.Model(&models.DailyRecipePlan{}).
+		Where("user_id = ? AND is_selected = ?", userID, true).
+		Update("is_selected", false).Error
+}
+
+// DeleteTodayAllPlans 删除用户当天的所有计划
+func (r *GormRecipeRepository) DeleteTodayAllPlans(userID uint) error {
+	now := time.Now()
+	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	return r.db.Unscoped().
+		Where("user_id = ? AND plan_date = ?", userID, today).
+		Delete(&models.DailyRecipePlan{}).Error
 }

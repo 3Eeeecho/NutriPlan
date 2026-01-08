@@ -3,6 +3,8 @@ package service
 import (
 	"NutriPlan/internal/repository/dao"
 	"NutriPlan/internal/repository/models"
+	"fmt"
+	"log"
 	"math"
 	"math/rand"
 	"sort"
@@ -25,7 +27,7 @@ type RecipeService interface {
 	GetSelectedPlan(userID uint) (*models.DailyRecipePlan, error)
 
 	// SelectDailyPlan 选择每日食谱计划并保存
-	SelectDailyPlan(userID, planID uint) error
+	SelectDailyPlan(userID uint, plan *models.DailyRecipePlan) error
 
 	// GetRecipeDetail 获取食谱详情
 	GetRecipeDetail(recipeID uint, userID uint) (*models.Recipe, bool, error)
@@ -160,10 +162,7 @@ func (s *RecipeServiceImpl) RecommendRecipes(user *models.User, count int) ([]*m
 			continue
 		}
 
-		// 入库并保存
-		if err := s.recipeRepo.CreateDailyPlan(plan); err != nil {
-			continue
-		}
+		// 不再入库,只返回推荐结果
 		finalPlans = append(finalPlans, plan)
 
 		if len(finalPlans) >= count {
@@ -508,22 +507,37 @@ func (s *RecipeServiceImpl) SaveDailyPlan(plan *models.DailyRecipePlan) error {
 
 // GetSelectedPlan 获取用户当前选中的计划
 func (s *RecipeServiceImpl) GetSelectedPlan(userID uint) (*models.DailyRecipePlan, error) {
-	return s.recipeRepo.FindSelectedPlan(userID)
+	// FindSelectedPlan已经只查询今天的计划了,如果查不到就是没有或已过期
+	plan, err := s.recipeRepo.FindSelectedPlan(userID)
+	if err != nil {
+		log.Printf("FindSelectedPlan error: %v", err)
+		return nil, fmt.Errorf("当前计划已过期,请重新获取推荐")
+	}
+
+	return plan, nil
 }
 
 // SelectDailyPlan 选择每日食谱计划
-func (s *RecipeServiceImpl) SelectDailyPlan(userID, planID uint) error {
-	// 获取用户当前已选的计划（如果有）
-	currentSelected, err := s.recipeRepo.FindSelectedPlan(userID)
-	if err == nil && currentSelected != nil {
-		// 取消选中
-		if err := s.recipeRepo.UpdatePlanSelection(currentSelected.ID, false); err != nil {
-			return err
-		}
+func (s *RecipeServiceImpl) SelectDailyPlan(userID uint, plan *models.DailyRecipePlan) error {
+	// 1. 先取消所有历史的is_selected=true记录(解决多条选中记录问题)
+	if err := s.recipeRepo.ClearAllSelectedPlans(userID); err != nil {
+		return fmt.Errorf("取消历史选中记录失败: %w", err)
 	}
 
-	// 选中新计划
-	return s.recipeRepo.UpdatePlanSelection(planID, true)
+	// 2. 删除用户当天所有计划(包括刚取消选中的,保证每天只有一份)
+	if err := s.recipeRepo.DeleteTodayAllPlans(userID); err != nil {
+		return fmt.Errorf("删除当天计划失败: %w", err)
+	}
+
+	// 3. 设置新计划的属性
+	plan.UserID = userID
+	plan.IsSelected = true
+	// 只保存日期部分,不包含时间(与type:date字段匹配)
+	now := time.Now()
+	plan.PlanDate = time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+
+	// 4. 保存新计划
+	return s.recipeRepo.CreateDailyPlan(plan)
 }
 
 // GetRecipeDetail 获取食谱详情（含收藏状态）

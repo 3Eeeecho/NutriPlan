@@ -136,9 +136,9 @@ func (h *RecipeHandler) GetRecommendations(c *gin.Context) {
 // @Tags Recipe
 // @Accept json
 // @Produce json
-// @Param planId path int true "计划ID"
+// @Param plan body DailyPlanDTO true "计划数据"
 // @Success 200 {object} map[string]interface{}
-// @Router /api/recipes/plan/{planId}/select [post]
+// @Router /api/recipes/plan/select [post]
 func (h *RecipeHandler) SelectPlan(c *gin.Context) {
 	// 从上下文获取用户ID
 	userID, exists := c.Get("user_id")
@@ -147,23 +147,40 @@ func (h *RecipeHandler) SelectPlan(c *gin.Context) {
 		return
 	}
 
-	// 解析计划ID
-	planIDStr := c.Param("planId")
-	planID, err := strconv.ParseUint(planIDStr, 10, 32)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的计划ID"})
+	// 解析请求体
+	var planDTO DailyPlanDTO
+	if err := c.ShouldBindJSON(&planDTO); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的计划数据"})
 		return
 	}
 
+	// 转换为model
+	plan := &models.DailyRecipePlan{
+		BreakfastRecipeID: planDTO.Breakfast.ID,
+		LunchRecipeID:     planDTO.Lunch.ID,
+		DinnerRecipeID:    planDTO.Dinner.ID,
+		SnackRecipeID:     planDTO.Snack.ID,
+
+		TotalEnergy:       planDTO.TotalEnergy,
+		TotalProtein:      planDTO.TotalProtein,
+		TotalCarbohydrate: planDTO.TotalCarbohydrate,
+		TotalFat:          planDTO.TotalFat,
+
+		TargetEnergy:       planDTO.TargetEnergy,
+		TargetProtein:      planDTO.TargetProtein,
+		TargetCarbohydrate: planDTO.TargetCarbohydrate,
+		TargetFat:          planDTO.TargetFat,
+		MatchScore:         planDTO.MatchScore,
+	}
+
 	// 调用服务选择计划
-	if err := h.recipeService.SelectDailyPlan(userID.(uint), uint(planID)); err != nil {
+	if err := h.recipeService.SelectDailyPlan(userID.(uint), plan); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "选择计划失败: " + err.Error()})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "计划选择成功",
-		"plan_id": planID,
 	})
 }
 
@@ -186,8 +203,8 @@ func (h *RecipeHandler) GetSelectedPlan(c *gin.Context) {
 	// 获取已选计划
 	plan, err := h.recipeService.GetSelectedPlan(userID.(uint))
 	if err != nil {
-		// 如果没有找到已选计划，返回404
-		c.JSON(http.StatusNotFound, gin.H{"error": "未找到已选计划"})
+		// 没有找到今天的已选计划,返回404
+		c.JSON(http.StatusNotFound, gin.H{"error": "未找到已选计划", "code": "NO_PLAN"})
 		return
 	}
 

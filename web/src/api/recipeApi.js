@@ -10,10 +10,11 @@ export const getRecipeRecommendations = (count = 3) => {
 };
 
 // 选择食谱计划
-export const selectRecipePlan = (planId) => {
+export const selectRecipePlan = (plan) => {
   return request({
-    url: `/recipes/plan/${planId}/select`,
-    method: 'post'
+    url: `/recipes/plan/select`,
+    method: 'post',
+    data: plan
   });
 };
 

@@ -17,7 +17,7 @@ database:
   # 地址:端口
   host: "127.0.0.1:3306"
   # 数据库名
-  name: "nutri_plan_db"
+  name: "nutri_plan"
 
 # 营养计算配置
 nutrients:
