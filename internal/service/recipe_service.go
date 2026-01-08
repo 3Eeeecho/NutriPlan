@@ -264,60 +264,74 @@ func (s *RecipeServiceImpl) generateRankedPlans(
 	return allPlans
 }
 
-// shuffleByWeights 对前 N 个方案进行加权洗牌
+// shuffleByWeights 使用加权 Fisher-Yates 变种算法对方案进行洗牌
+// 算法逻辑：
+// 1. 遍历位置 i 从 0 到 N-1
+// 2. 计算从 i 到 N-1 所有剩余元素的总权重
+// 3. 在剩余总权重中随机生成一个值 r
+// 4. 找到 r 对应的元素（累加权重法）
+// 5. 将该元素与当前位置 i 的元素交换
 func (s *RecipeServiceImpl) shuffleByWeights(candidates []*models.DailyRecipePlan) []*models.DailyRecipePlan {
-	if len(candidates) == 0 {
+	n := len(candidates)
+	if n == 0 {
 		return nil
 	}
 
-	// 1. 只取前 100 名 (或者全部)，保证质量
-	// 剩下的分数太低，就不参与随机了，避免推荐烂方案
-	topN := min(len(candidates), 100)
-	pool := candidates[:topN]
+	// 只对前 Top N 进行洗牌（比如前100个），太后面的还是截断掉比较好
+	// 如果列表过长，计算权重的开销会增大，限制范围是明智的
+	limit := min(n, 100)
 
-	// 如果池子很小，直接返回，没必要随机
-	if len(pool) < 3 {
-		return pool
+	// 直接在 candidates 原切片上操作的前 limit 个元素
+	pool := candidates[:limit]
+
+	// 预计算所有元素的权重，避免在双重循环中重复调用 math.Pow
+	// 空间换时间：O(N) 空间换取 O(N) 次 Pow 计算
+	weights := make([]float64, limit)
+	for i, p := range pool {
+		// 使用立方让高分项被选中的概率显著增加
+		weights[i] = math.Pow(p.MatchScore, 3)
 	}
 
-	// --- 更稳健的实现：加权构建法 ---
-	// 创建一个临时列表用于抽取
-	source := make([]*models.DailyRecipePlan, len(pool))
-	copy(source, pool)
-	result := make([]*models.DailyRecipePlan, 0, len(pool))
-
-	for len(source) > 0 {
-		// 计算总权重
-		totalWeight := 0.0
-		for _, p := range source {
-			// 权重放大：分数^3，让高分优势更明显
-			totalWeight += math.Pow(p.MatchScore, 3)
+	// 开始 Fisher-Yates 加权洗牌
+	// i 代表当前要填充的位置
+	for i := 0; i < limit-1; i++ {
+		// 1. 计算剩余部分的总权重 (从 i 到 end)
+		// 这一步虽然是 O(N)，但在 N=100 时非常快，且比维护树状数组简单
+		remainingWeight := 0.0
+		for j := i; j < limit; j++ {
+			remainingWeight += weights[j]
 		}
 
-		r := rand.Float64() * totalWeight
-		curr := 0.0
-		foundIdx := -1
+		// 2. 生成随机阈值
+		r := s.rng.Float64() * remainingWeight
 
-		for i, p := range source {
-			curr += math.Pow(p.MatchScore, 3)
-			if r <= curr {
-				foundIdx = i
+		// 3. 在剩余元素中寻找命中者
+		currentSum := 0.0
+		winnerIdx := -1
+
+		for j := i; j < limit; j++ {
+			currentSum += weights[j]
+			if r <= currentSum {
+				winnerIdx = j
 				break
 			}
 		}
 
-		if foundIdx == -1 {
-			foundIdx = len(source) - 1
-		} // 防止精度误差
+		// 浮点数兜底：如果没找到（极少数情况），默认选最后一个
+		if winnerIdx == -1 {
+			winnerIdx = limit - 1
+		}
 
-		// 放入结果集
-		result = append(result, source[foundIdx])
-
-		// 从源列表中删除已选的 (避免重复)
-		source = append(source[:foundIdx], source[foundIdx+1:]...)
+		// 4. 交换：将中奖者放到当前位置 i
+		if winnerIdx != i {
+			// 交换元素
+			pool[i], pool[winnerIdx] = pool[winnerIdx], pool[i]
+			// 同步交换对应的权重，保证下次循环逻辑正确
+			weights[i], weights[winnerIdx] = weights[winnerIdx], weights[i]
+		}
 	}
 
-	return result
+	return pool
 }
 
 // 获取不同健康目标的权重向量
