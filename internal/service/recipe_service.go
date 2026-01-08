@@ -72,7 +72,6 @@ func NewRecipeService(recipeRepo dao.RecipeRepository, nutriService NutriService
 // 	随机洗牌：从中随机抽取 15 道进入下一轮计算。
 // 	优化点：这是为了解决“每次都选完全一样的那几道菜”的问题。
 // 3. 生成组合 (Combination)
-// 	采用笛卡尔积（Breakfast × Lunch × Dinner × Snack）生成上万种可能的“一日食谱组合”。
 // 4. 评分逻辑 (Scoring)
 // 	计算每种组合的总热量和宏量营养素。
 // 	计算其与目标值的偏差（Deviation）。
@@ -189,29 +188,67 @@ func (s *RecipeServiceImpl) generateRankedPlans(
 	breakfastRecipes, lunchRecipes, dinnerRecipes, snackRecipes []models.Recipe,
 	target NutritionTarget, userGoal models.HealthGoal,
 ) []*models.DailyRecipePlan {
-	// 初筛：每餐选出最接近单餐热量目标的候选
-	// 这样可以避免后面组合爆炸，同时保证候选质量
-	cBreakfast := s.getTopCandidates(breakfastRecipes, target.Energy*0.25, 15)
-	cLunch := s.getTopCandidates(lunchRecipes, target.Energy*0.35, 15)
-	cDinner := s.getTopCandidates(dinnerRecipes, target.Energy*0.30, 15)
 
-	// 加餐可选，没有就塞一个空食谱进去方便循环
-	cSnack := s.getTopCandidates(snackRecipes, target.Energy*0.10, 10)
+	// 1. 分配每餐的目标营养 (按比例)
+	// 早餐 25%, 午餐 35%, 晚餐 30%, 加餐 10%
+	ratios := []float64{0.25, 0.35, 0.30, 0.10}
+
+	// 辅助函数：计算单餐目标
+	getTarget := func(ratio float64) (float64, float64, float64, float64) {
+		return target.Energy * ratio, target.Protein * ratio, target.Carbohydrate * ratio, target.Fat * ratio
+	}
+
+	// 2. 优化后的初筛：传入所有营养目标
+	te, tp, tc, tf := getTarget(ratios[0])
+	cBreakfast := s.getTopCandidates(breakfastRecipes, te, tp, tc, tf, 15, userGoal)
+
+	te, tp, tc, tf = getTarget(ratios[1])
+	cLunch := s.getTopCandidates(lunchRecipes, te, tp, tc, tf, 15, userGoal)
+
+	te, tp, tc, tf = getTarget(ratios[2])
+	cDinner := s.getTopCandidates(dinnerRecipes, te, tp, tc, tf, 15, userGoal)
+
+	te, tp, tc, tf = getTarget(ratios[3])
+	cSnack := s.getTopCandidates(snackRecipes, te, tp, tc, tf, 10, userGoal)
 	if len(cSnack) == 0 {
-		cSnack = append(cSnack, models.Recipe{Name: ""}) // 空占位
+		cSnack = append(cSnack, models.Recipe{Name: ""})
 	}
 
 	if len(cBreakfast) == 0 || len(cLunch) == 0 || len(cDinner) == 0 {
-		return nil // 无法生成
+		return nil
 	}
 
-	allPlans := make([]*models.DailyRecipePlan, 0, 2560)
+	allPlans := make([]*models.DailyRecipePlan, 0, 2000)
 
-	// 笛卡尔积循环：遍历所有组合
+	// 3. 循环与剪枝
+	// 设定热量容忍阈值 (例如 ±2000大卡明显是不可能的，早点break)
+	// 这里设定一个宽松的剪枝范围：如果当前热量已经超过目标值的 1.3倍，就没必要继续加菜了
+	maxEnergyLimit := target.Energy * 1.3
+
 	for _, b := range cBreakfast {
 		for _, l := range cLunch {
+			// [剪枝 1]：如果早+午已经热量爆表，跳过晚餐
+			currentE := b.Energy + l.Energy
+			if currentE > maxEnergyLimit {
+				continue
+			}
+
 			for _, d := range cDinner {
+				// [优化多样性]：午餐和晚餐不能吃一样的
+				if l.ID == d.ID {
+					continue
+				}
+
+				// [剪枝 2]：早+午+晚 热量爆表
+				if currentE+d.Energy > maxEnergyLimit {
+					continue
+				}
+
 				for _, sn := range cSnack {
+					// [优化多样性]：加餐不能和正餐重复
+					if sn.ID != 0 && (sn.ID == b.ID || sn.ID == l.ID || sn.ID == d.ID) {
+						continue
+					}
 
 					// 计算当前组合的总营养
 					totalE := b.Energy + l.Energy + d.Energy + sn.Energy
@@ -224,6 +261,11 @@ func (s *RecipeServiceImpl) generateRankedPlans(
 						target.Energy, target.Protein, target.Carbohydrate, target.Fat,
 						userGoal,
 					)
+
+					// [最后筛选]：只保留及格分以上的方案 (例如 60分)，减少后续排序压力
+					if matchScore < 60.0 {
+						continue
+					}
 
 					plan := &models.DailyRecipePlan{
 						UserID:            userID,
@@ -350,26 +392,54 @@ func getNutrientWeights(goal models.HealthGoal) (wE, wP, wC, wF float64) {
 	}
 }
 
-// 获取 Top-K 候选食谱（只基于热量粗筛，为了减少计算量）
-func (s *RecipeServiceImpl) getTopCandidates(recipes []models.Recipe, targetEnergy float64, k int) []models.Recipe {
+// scoreRecipe 单个食谱评分：计算单个食谱与单餐目标的匹配度
+func (s *RecipeServiceImpl) scoreSingleRecipe(r models.Recipe, targetE, targetP, targetC, targetF float64, goal models.HealthGoal) float64 {
+	// 获取权重（复用你现有的逻辑）
+	wE, wP, wC, wF := getNutrientWeights(goal)
+
+	// 计算偏差率 (使用相对偏差)
+	// 避免分母为0
+	safeDiv := func(val, target float64) float64 {
+		if target == 0 {
+			return 0
+		}
+		diff := math.Abs(val - target)
+		return diff / target // 偏差百分比
+	}
+
+	scoreE := safeDiv(r.Energy, targetE)
+	scoreP := safeDiv(r.Protein, targetP)
+	scoreC := safeDiv(r.Carbohydrate, targetC)
+	scoreF := safeDiv(r.Fat, targetF)
+
+	// 综合偏差 (越小越好)
+	totalDiff := scoreE*wE + scoreP*wP + scoreC*wC + scoreF*wF
+
+	// 转化为得分 (100分制，偏差越大分越低)
+	return math.Max(0, 100*(1-totalDiff))
+}
+
+// 获取 Top-K 候选食谱,基于综合评分筛选
+func (s *RecipeServiceImpl) getTopCandidates(recipes []models.Recipe,
+	targetE, targetP, targetC, targetF float64, // 传入该餐的具体营养目标
+	k int, goal models.HealthGoal) []models.Recipe {
 	if len(recipes) == 0 {
 		return nil
 	}
 
-	// 简单算一下热量差，排序
 	type candidate struct {
-		r    models.Recipe
-		diff float64
+		r     models.Recipe
+		score float64
 	}
 
 	var cs []candidate
 	for _, r := range recipes {
-		diff := math.Abs(r.Energy - targetEnergy)
-		cs = append(cs, candidate{r, diff})
+		score := s.scoreSingleRecipe(r, targetE, targetP, targetC, targetF, goal)
+		cs = append(cs, candidate{r, score})
 	}
 
-	// 排序
-	sort.Slice(cs, func(i, j int) bool { return cs[i].diff < cs[j].diff })
+	// 分数从高到低排序
+	sort.Slice(cs, func(i, j int) bool { return cs[i].score > cs[j].score })
 
 	// 不直接取前 k 个，而是取前 3*k 个作为“候选池”，然后从中随机选 k 个
 	// 这样可以避免每次都选出完全一样的“最优解”

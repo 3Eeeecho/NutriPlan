@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 // RecipeRepository 食谱仓储接口
@@ -84,7 +85,7 @@ func (r *GormRecipeRepository) FindByID(id uint) (*models.Recipe, error) {
 
 // CreateDailyPlan 创建每日食谱计划
 func (r *GormRecipeRepository) CreateDailyPlan(plan *models.DailyRecipePlan) error {
-	return r.db.Create(plan).Error
+	return r.db.Omit(clause.Associations).Create(plan).Error
 }
 
 // FindPlansByUserID 根据用户ID查询食谱计划（预加载关联的食谱）
