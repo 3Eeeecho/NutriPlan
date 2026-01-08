@@ -1,6 +1,36 @@
 <template>
   <div class="recipe-detail">
-    <button class="back-btn" @click="goBack">← 返回</button>
+    <!-- 顶部导航栏 -->
+    <div class="top-nav">
+      <el-button @click="goBack" class="back-button" circle>
+        <el-icon><ArrowLeft /></el-icon>
+      </el-button>
+      <div class="user-info-nav">
+        <el-dropdown @command="handleCommand">
+          <span class="user-info-display">
+            <el-avatar :size="32" :icon="UserFilled" />
+            <span class="username">{{ authStore.user?.username || '用户' }}</span>
+            <el-icon><ArrowDown /></el-icon>
+          </span>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item command="home">
+                <el-icon><HomeFilled /></el-icon>
+                返回首页
+              </el-dropdown-item>
+              <el-dropdown-item command="profile">
+                <el-icon><User /></el-icon>
+                个人档案
+              </el-dropdown-item>
+              <el-dropdown-item command="intake">
+                <el-icon><DataLine /></el-icon>
+                饮食记录
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
+      </div>
+    </div>
 
     <header class="header">
       <h1>{{ recipe.name }}</h1>
@@ -49,10 +79,13 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { ArrowLeft, UserFilled, ArrowDown, HomeFilled, User, DataLine } from '@element-plus/icons-vue'
 import { getRecipeDetail, addFavorite, removeFavorite } from '@/api/recipeApi'
+import { useAuthStore } from '@/store/auth'
 
 const route = useRoute()
 const router = useRouter()
+const authStore = useAuthStore()
 const id = route.params.id
 
 const recipe = ref({})
@@ -79,6 +112,20 @@ onMounted(() => {
 
 const goBack = () => router.back()
 const goFavorites = () => router.push({ name: 'FavoriteList' })
+
+const handleCommand = (command) => {
+  switch (command) {
+    case 'home':
+      router.push('/home')
+      break
+    case 'profile':
+      router.push('/profile/view')
+      break
+    case 'intake':
+      router.push('/intake')
+      break
+  }
+}
 
 const toggleFavorite = async () => {
   try {
@@ -130,6 +177,55 @@ const formatIngredient = (ing) => {
   padding: 2rem; 
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   min-height: 100vh;
+}
+
+/* 顶部导航栏样式 */
+.top-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 10px 0;
+}
+
+.back-button {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: none;
+  width: 40px;
+  height: 40px;
+  transition: all 0.3s;
+}
+
+.back-button:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+  transform: translateX(-3px);
+}
+
+.user-info-nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-info-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 20px;
+  transition: all 0.3s;
+  color: white;
+}
+
+.user-info-display:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.username {
+  font-size: 14px;
+  font-weight: 500;
 }
 
 .back-btn { 

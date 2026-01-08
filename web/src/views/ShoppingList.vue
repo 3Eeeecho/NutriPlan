@@ -1,5 +1,37 @@
 <template>
   <div class="shopping-container">
+    <!-- 顶部导航栏 -->
+    <div class="top-nav">
+      <el-button @click="goBack" class="back-button" circle>
+        <el-icon><ArrowLeft /></el-icon>
+      </el-button>
+      <div class="user-info-nav">
+        <el-dropdown @command="handleCommand">
+          <span class="user-info-display">
+            <el-avatar :size="32" :icon="UserFilled" />
+            <span class="username">{{ authStore.user?.username || '用户' }}</span>
+            <el-icon><ArrowDown /></el-icon>
+          </span>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item command="home">
+                <el-icon><HomeFilled /></el-icon>
+                返回首页
+              </el-dropdown-item>
+              <el-dropdown-item command="profile">
+                <el-icon><User /></el-icon>
+                个人档案
+              </el-dropdown-item>
+              <el-dropdown-item command="intake">
+                <el-icon><DataLine /></el-icon>
+                饮食记录
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
+      </div>
+    </div>
+
     <div class="header">
       <h2>🛒 食材采购清单</h2>
       <el-button type="primary" @click="openCreateDialog">
@@ -95,9 +127,14 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Picture, Document } from '@element-plus/icons-vue'
+import { Plus, Picture, Document, ArrowLeft, UserFilled, ArrowDown, HomeFilled, User, DataLine } from '@element-plus/icons-vue'
 import { getShoppingLists, createShoppingList, deleteShoppingList, updateShoppingList, completeShoppingList, getShoppingListDetail } from '@/api/shoppingApi'
 import { getSelectedRecipePlan, getFavoriteList } from '@/api/recipeApi'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/store/auth'
+
+const router = useRouter()
+const authStore = useAuthStore()
 
 const loading = ref(false)
 const lists = ref([])
@@ -147,7 +184,13 @@ const openCreateDialog = async () => {
 const loadSourceRecipes = async () => {
   try {
     const [planRes, favRes] = await Promise.all([
-      getSelectedRecipePlan().catch(() => null),
+      getSelectedRecipePlan().catch((error) => {
+        // 没有今天的选中计划
+        if (error.response?.status === 404) {
+          console.log('No selected plan for today')
+        }
+        return null
+      }),
       getFavoriteList().catch(() => ({ recipes: [] }))
     ])
 
@@ -337,6 +380,22 @@ const exportPDF = async () => {
   }
 }
 
+const goBack = () => router.back()
+
+const handleCommand = (command) => {
+  switch (command) {
+    case 'home':
+      router.push('/home')
+      break
+    case 'profile':
+      router.push('/profile/view')
+      break
+    case 'intake':
+      router.push('/intake')
+      break
+  }
+}
+
 const formatDate = (dateStr) => {
   if (!dateStr) return ''
   return new Date(dateStr).toLocaleDateString()
@@ -348,6 +407,55 @@ const formatDate = (dateStr) => {
   padding: 20px;
   max-width: 1200px;
   margin: 0 auto;
+}
+
+/* 顶部导航栏样式 */
+.top-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 10px 0;
+}
+
+.back-button {
+  background-color: #f5f5f5;
+  color: #333;
+  border: none;
+  width: 40px;
+  height: 40px;
+  transition: all 0.3s;
+}
+
+.back-button:hover {
+  background-color: #e0e0e0;
+  transform: translateX(-3px);
+}
+
+.user-info-nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-info-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 20px;
+  transition: all 0.3s;
+}
+
+.user-info-display:hover {
+  background-color: #f5f5f5;
+}
+
+.username {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
 }
 
 .header {
