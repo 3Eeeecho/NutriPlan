@@ -67,7 +67,7 @@
             <div class="stat-icon">⚖️</div>
             <div class="stat-info">
               <div class="stat-value">
-                {{ authStore.profile.current_weight || "--" }}
+                {{ authStore.profile.weight || "--" }}
               </div>
               <div class="stat-label">当前体重 (kg)</div>
             </div>
@@ -345,13 +345,14 @@ const handleCommand = async (command) => {
 <style scoped>
 .home-container {
   min-height: 100vh;
-  background: #fafbfc;
+  background: transparent;
   position: relative;
 }
 
 /* 顶部导航栏 */
 .top-bar {
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
   border-bottom: 1px solid #e8eaed;
   position: sticky;
   top: 0;
