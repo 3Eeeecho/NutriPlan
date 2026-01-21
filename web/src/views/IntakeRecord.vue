@@ -73,6 +73,45 @@
         </div>
       </template>
       <el-form :model="recordForm" label-width="100px">
+        <!-- AI识别区域 -->
+        <el-form-item label="智能识别">
+          <div class="ai-recognition-zone">
+            <input 
+              ref="fileInputRef" 
+              type="file" 
+              accept="image/*" 
+              :capture="isMobile ? 'environment' : undefined"
+              style="display: none;" 
+              @change="handleImageSelect"
+            />
+            <el-button 
+              type="success" 
+              @click="triggerFileInput"
+              :loading="recognizing"
+              size="large"
+            >
+              <el-icon style="margin-right: 5px;">
+                <component :is="isMobile ? Camera : Picture" />
+              </el-icon>
+              {{ isMobile ? '拍照识别' : '上传图片识别' }}
+            </el-button>
+            <span class="ai-hint">📸 AI自动识别食物营养信息</span>
+          </div>
+          
+          <!-- 图片预览 -->
+          <div v-if="previewImage" class="image-preview">
+            <img :src="previewImage" alt="预览" />
+            <el-button 
+              type="danger" 
+              :icon="Delete" 
+              circle 
+              size="small" 
+              class="delete-preview"
+              @click="clearImage"
+            />
+          </div>
+        </el-form-item>
+        
         <el-form-item label="餐点类型" required>
           <el-select v-model="recordForm.meal_type" placeholder="请选择餐点类型" style="width: 100%">
             <el-option label="🌅 早餐" value="breakfast"></el-option>
@@ -158,7 +197,7 @@
           style="margin-bottom: 20px"
         >
           <template #title>
-            <span style="font-size: 12px;">💡 提示：如果不清楚营养信息，可以只填写食物名称和重量，其他留空即可</span>
+            <span style="font-size: 12px;">提示：如果不清楚营养信息，可以使用AI拍照识别功能，或者只填写食物名称和重量，其他留空即可</span>
           </template>
         </el-alert>
         <el-form-item>
@@ -226,13 +265,14 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, onMounted, nextTick, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import { Plus, ArrowLeft, UserFilled, User, ArrowDown, HomeFilled, TrendCharts } from '@element-plus/icons-vue'
+import { ElMessage, ElLoading } from 'element-plus'
+import { Plus, ArrowLeft, UserFilled, User, ArrowDown, HomeFilled, TrendCharts, Camera, Picture, Delete } from '@element-plus/icons-vue'
 import * as echarts from 'echarts'
 import { useAuthStore } from '@/store/auth'
 import { getTodayStatus, addIntakeRecord, deleteIntakeRecord } from '@/api/intakeApi'
+import { recognizeFood } from '@/api/foodRecognitionApi'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -242,8 +282,26 @@ let chartInstance = null
 
 const loading = ref(false)
 const adding = ref(false)
+const recognizing = ref(false)
 const currentDate = ref('')
 const nutritionStatus = ref({})
+const fileInputRef = ref(null)
+const previewImage = ref('')
+const selectedFile = ref(null)
+
+// 存储AI识别的原始数据（每100克的营养值）
+const aiRecognizedData = ref({
+  per100g_calories: 0,
+  per100g_protein: 0,
+  per100g_carbs: 0,
+  per100g_fat: 0,
+  original_weight: 100
+})
+
+// 检测是否为移动端
+const isMobile = computed(() => {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+})
 
 const recordForm = ref({
   meal_type: '',
@@ -253,6 +311,18 @@ const recordForm = ref({
   calculated_protein: 0,
   calculated_carb: 0,
   calculated_fat: 0
+})
+
+// 监听摄入量变化，自动重新计算营养信息
+watch(() => recordForm.value.intake_amount, (newWeight) => {
+  if (aiRecognizedData.value.per100g_calories > 0) {
+    // 根据新的重量重新计算营养信息
+    const weightFactor = newWeight / 100.0
+    recordForm.value.calculated_energy = Math.round(aiRecognizedData.value.per100g_calories * weightFactor)
+    recordForm.value.calculated_protein = parseFloat((aiRecognizedData.value.per100g_protein * weightFactor).toFixed(1))
+    recordForm.value.calculated_carb = parseFloat((aiRecognizedData.value.per100g_carbs * weightFactor).toFixed(1))
+    recordForm.value.calculated_fat = parseFloat((aiRecognizedData.value.per100g_fat * weightFactor).toFixed(1))
+  }
 })
 
 onMounted(() => {
@@ -415,6 +485,107 @@ function initChart() {
   chartInstance.setOption(option)
 }
 
+// 触发文件选择
+function triggerFileInput() {
+  fileInputRef.value?.click()
+}
+
+// 处理图片选择
+function handleImageSelect(event) {
+  const file = event.target.files?.[0]
+  if (!file) return
+
+  // 验证文件类型
+  if (!file.type.startsWith('image/')) {
+    ElMessage.error('请选择图片文件')
+    return
+  }
+
+  // 验证文件大小（限制为10MB）
+  if (file.size > 10 * 1024 * 1024) {
+    ElMessage.error('图片大小不能超过10MB')
+    return
+  }
+
+  selectedFile.value = file
+
+  // 创建预览
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    previewImage.value = e.target.result
+  }
+  reader.readAsDataURL(file)
+
+  // 立即开始识别
+  recognizeFoodImage(file)
+}
+
+// 清除图片
+function clearImage() {
+  selectedFile.value = null
+  previewImage.value = ''
+  if (fileInputRef.value) {
+    fileInputRef.value.value = ''
+  }
+}
+
+// 识别食物图片
+async function recognizeFoodImage(file) {
+  recognizing.value = true
+  
+  // 创建全屏加载提示
+  const loadingInstance = ElLoading.service({
+    lock: true,
+    text: '🤖 AI正在识别食物中...\n请稍候，这可能需要一些时间',
+    background: 'rgba(0, 0, 0, 0.7)',
+    customClass: 'ai-loading'
+  })
+
+  try {
+    const response = await recognizeFood(file)
+    
+    // 保存AI识别的原始数据（每100克的营养值）
+    aiRecognizedData.value = {
+      per100g_calories: response.calories_per_100g || 0,
+      per100g_protein: response.protein_per_100g || 0,
+      per100g_carbs: response.carbs_per_100g || 0,
+      per100g_fat: response.fat_per_100g || 0,
+      original_weight: response.estimated_weight || 100
+    }
+    
+    // 成功识别后自动填充表单
+    recordForm.value.food_name = response.dish_name || ''
+    recordForm.value.intake_amount = response.estimated_weight || 100
+    
+    // 填充营养信息（使用总营养值）
+    recordForm.value.calculated_energy = Math.round(response.total_calories || 0)
+    recordForm.value.calculated_protein = parseFloat((response.total_protein || 0).toFixed(1))
+    recordForm.value.calculated_carb = parseFloat((response.total_carbs || 0).toFixed(1))
+    recordForm.value.calculated_fat = parseFloat((response.total_fat || 0).toFixed(1))
+
+    loadingInstance.close()
+
+    // 显示识别结果提示
+    ElMessage.success({
+      message: `✅ 识别成功！\n食物：${response.dish_name}\n重量：${response.estimated_weight}克\n💡 提示：可以修改摄入量，营养信息会自动调整\n${response.reasoning ? '\n' + response.reasoning : ''}`,
+      duration: 6000,
+      dangerouslyUseHTMLString: true,
+      customClass: 'recognition-success-message'
+    })
+
+  } catch (error) {
+    loadingInstance.close()
+    console.error('食物识别失败:', error)
+    ElMessage.error({
+      message: '❌ 识别失败：' + (error.message || '请重试或手动输入'),
+      duration: 4000
+    })
+    clearImage()
+  } finally {
+    recognizing.value = false
+  }
+}
+
 // 添加记录
 async function handleAddRecord() {
   if (!recordForm.value.meal_type) {
@@ -465,6 +636,15 @@ function resetForm() {
     calculated_carb: 0,
     calculated_fat: 0
   }
+  // 清空AI识别数据
+  aiRecognizedData.value = {
+    per100g_calories: 0,
+    per100g_protein: 0,
+    per100g_carbs: 0,
+    per100g_fat: 0,
+    original_weight: 100
+  }
+  clearImage()
 }
 
 // 获取餐点类型标签
@@ -647,5 +827,90 @@ function handleCommand(command) {
 
 :deep(.el-table) {
   font-size: 14px;
+}
+
+/* AI识别区域样式 */
+.ai-recognition-zone {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.ai-hint {
+  font-size: 13px;
+  color: #909399;
+  font-style: italic;
+}
+
+.image-preview {
+  position: relative;
+  margin-top: 15px;
+  max-width: 300px;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+.image-preview img {
+  width: 100%;
+  display: block;
+}
+
+.delete-preview {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+/* 移动端优化 */
+@media (max-width: 768px) {
+  .intake-container {
+    padding: 10px;
+  }
+
+  .page-header h2 {
+    font-size: 24px;
+  }
+
+  .chart-container {
+    height: 300px;
+  }
+
+  .nutrition-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .el-form {
+    max-width: 100%;
+  }
+
+  .image-preview {
+    max-width: 100%;
+  }
+
+  .ai-recognition-zone {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* 自定义加载样式 */
+:deep(.ai-loading) {
+  .el-loading-text {
+    font-size: 16px;
+    font-weight: 500;
+    white-space: pre-line;
+    text-align: center;
+  }
+}
+
+/* 识别成功消息样式 */
+:deep(.recognition-success-message) {
+  .el-message__content {
+    white-space: pre-line;
+    line-height: 1.6;
+  }
 }
 </style>

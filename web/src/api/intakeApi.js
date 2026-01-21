@@ -46,3 +46,22 @@ export function getWeeklyReport() {
     method: 'get'
   })
 }
+
+/**
+ * 食物识别
+ * @param {File} file - 图像文件
+ * @returns {Promise}
+ */
+export function recognizeFood(file) {
+  const formData = new FormData()
+  formData.append('image', file)
+
+  return request({
+    url: '/food/recognize',
+    method: 'post',
+    data: formData,
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  })
+}
