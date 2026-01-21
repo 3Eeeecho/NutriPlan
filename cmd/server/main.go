@@ -2,6 +2,7 @@ package main
 
 import (
 	"NutriPlan/internal/api/router"
+	"NutriPlan/internal/client"
 	"NutriPlan/internal/config"
 	"NutriPlan/internal/repository/dao"
 	"NutriPlan/internal/service"
@@ -25,6 +26,9 @@ func main() {
 	// 数据库初始化成功
 	log.Println("数据库初始化成功")
 
+	// 创建智谱大模型客户端
+	zhipuClient := client.NewZhipuAIClient(config.AppConfig.Zhipu.APIKey)
+
 	// 创建 Repository 实例
 	userRepo := dao.NewGormUserRepository(dao.DB)
 	recipeRepo := dao.NewGormRecipeRepository(dao.DB)
@@ -37,13 +41,15 @@ func main() {
 	recipeService := service.NewRecipeService(recipeRepo, nutriService)
 	intakeService := service.NewIntakeService(intakeRepo, userRepo, nutriService)
 	shoppingListService := service.NewShoppingListService(shoppingListRepo, recipeRepo)
+	foodRecognitionService := service.NewFoodRecognitionService(zhipuClient)
 
 	// 创建 Router 并注入依赖
 	r := router.NewRouter(router.RouterDeps{
-		UserService:         userService,
-		RecipeService:       recipeService,
-		IntakeService:       intakeService,
-		ShoppingListService: shoppingListService,
+		UserService:            userService,
+		RecipeService:          recipeService,
+		IntakeService:          intakeService,
+		ShoppingListService:    shoppingListService,
+		FoodRecognitionService: foodRecognitionService,
 	})
 
 	// 根据环境设置 Gin 模式

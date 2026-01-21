@@ -31,3 +31,6 @@ nutrients:
   gain_calorie_surplus: 300    # 增肌热量盈余 (kcal)
   control_calorie_deficit: 100 # 控糖热量赤字 (kcal)
   min_calorie: 1200            # 最低安全热量 (kcal)
+
+zhipu:
+  api_key: 9e6b6f2f45f9461cad14595542222864.lUFszudafvb2IIjc

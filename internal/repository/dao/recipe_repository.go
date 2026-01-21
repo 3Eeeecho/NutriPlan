@@ -2,6 +2,7 @@ package dao
 
 import (
 	"NutriPlan/internal/repository/models"
+	"strings"
 	"time"
 
 	"gorm.io/gorm"
@@ -48,6 +49,9 @@ type RecipeRepository interface {
 
 	// DeleteTodayAllPlans 删除用户当天的所有计划
 	DeleteTodayAllPlans(userID uint) error
+
+	// FindFuzzyByName 根据菜品名称模糊查询最匹配的一个食谱
+	FindFuzzyByName(keyword string) (*models.Recipe, error)
 }
 
 // GormRecipeRepository GORM 实现
@@ -228,4 +232,21 @@ func (r *GormRecipeRepository) DeleteTodayAllPlans(userID uint) error {
 	return r.db.Unscoped().
 		Where("user_id = ? AND plan_date = ?", userID, today).
 		Delete(&models.DailyRecipePlan{}).Error
+}
+
+// FindFuzzyByName 根据菜品名称模糊查询最匹配的一个食谱
+func (r *GormRecipeRepository) FindFuzzyByName(keyword string) (*models.Recipe, error) {
+	var recipe *models.Recipe
+
+	// 去除首尾空格
+	keyword = strings.TrimSpace(keyword)
+	if keyword == "" {
+		return nil, nil
+	}
+
+	err := r.db.Where("name LIKE ?", "%"+keyword+"%").
+		Order("LENGTH(name) ASC").
+		Find(recipe).Error
+
+	return recipe, err
 }

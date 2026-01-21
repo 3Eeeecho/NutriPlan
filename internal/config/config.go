@@ -11,6 +11,7 @@ type Config struct {
 	Server    ServerConfig    `mapstructure:"server"`
 	Database  DatabaseConfig  `mapstructure:"database"`
 	Nutrients NutrientsConfig `mapstructure:"nutrients"`
+	Zhipu     ZhipuConfig     `mapstructure:"zhipu"`
 }
 
 // ServerConfig 包含了服务器相关的配置
@@ -41,6 +42,10 @@ type NutrientsConfig struct {
 	GainCalorieSurplus    float64 `mapstructure:"gain_calorie_surplus"`    // 增肌盈余 (如 300)
 	ControlCalorieDeficit float64 `mapstructure:"control_calorie_deficit"` // 控糖赤字 (如 200)
 	MinCalorie            float64 `mapstructure:"min_calorie"`             // 最低安全热量 (如 1200)
+}
+
+type ZhipuConfig struct {
+	APIKey string `mapstructure:"api_key"`
 }
 
 // 全局配置实例

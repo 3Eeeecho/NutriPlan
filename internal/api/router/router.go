@@ -10,10 +10,11 @@ import (
 
 // RouterDeps 结构体用于接收所有需要的依赖服务
 type RouterDeps struct {
-	UserService         service.UserService
-	RecipeService       service.RecipeService
-	IntakeService       service.IntakeService
-	ShoppingListService service.ShoppingListService
+	UserService            service.UserService
+	RecipeService          service.RecipeService
+	IntakeService          service.IntakeService
+	ShoppingListService    service.ShoppingListService
+	FoodRecognitionService service.FoodRecognitionService
 }
 
 // NewRouter 初始化并配置 Gin 路由
@@ -29,6 +30,7 @@ func NewRouter(deps RouterDeps) *gin.Engine {
 	recipeHandler := handler.NewRecipeHandler(deps.RecipeService, deps.UserService)
 	intakeHandler := handler.NewIntakeHandler(deps.IntakeService)
 	shoppingListHandler := handler.NewShoppingListHandler(deps.ShoppingListService)
+	foodRecognitionHandler := handler.NewFoodRecognitionHandler(deps.FoodRecognitionService)
 
 	// 基础路由组
 	v1 := r.Group("/api/v1")
@@ -111,6 +113,14 @@ func NewRouter(deps RouterDeps) *gin.Engine {
 			shopping.PUT("/lists/:id", shoppingListHandler.UpdateShoppingList)
 			shopping.DELETE("/lists/:id", shoppingListHandler.DeleteShoppingList)
 			shopping.PUT("/lists/:id/complete", shoppingListHandler.CompleteShoppingList)
+		}
+
+		// --- 食物识别路由 ---
+		food := v1.Group("/food")
+		food.Use(jwt.AuthMiddleware()) // 需要认证
+		{
+			// 上传图片进行菜品识别 (POST /api/v1/food/recognize)
+			food.POST("/recognize", foodRecognitionHandler.RecognizeFood)
 		}
 
 	}
