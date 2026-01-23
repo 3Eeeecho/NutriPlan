@@ -1,222 +1,218 @@
 <template>
   <div class="profile-view-container">
-    <el-container>
-      <el-header class="header">
-        <div class="header-content">
-          <el-button text @click="goBack">
-            <el-icon><ArrowLeft /></el-icon>
-            返回
-          </el-button>
-          <h1 class="page-title">个人档案</h1>
-          <el-button type="primary" @click="goToEdit">
-            <el-icon><Edit /></el-icon>
+    <TopNavigation />
+    
+    <div class="page-header">
+      <BackButton />
+      <h1 class="page-title">个人档案</h1>
+      <n-button type="primary" @click="goToEdit">
+        <template #icon>
+          <n-icon><CreateOutline /></n-icon>
+        </template>
+        更新档案
+      </n-button>
+    </div>
+
+    <div class="main-content">
+      <div v-if="loading" class="loading-container">
+        <n-skeleton text :repeat="10" />
+      </div>
+
+      <div v-else-if="!authStore.hasProfile" class="empty-state">
+        <n-empty description="您还没有完善健康档案">
+          <template #extra>
+            <n-button type="primary" @click="goToEdit">立即完善档案</n-button>
+          </template>
+        </n-empty>
+      </div>
+
+      <div v-else class="profile-content">
+        <!-- 顶部：营养需求（最重要，突出显示） -->
+        <div class="top-section" v-if="nutritionData">
+          <n-card class="nutrition-card highlight-card">
+            <template #header>
+              <div class="card-header">
+                <span class="card-icon">🔥</span>
+                <span>每日营养需求</span>
+              </div>
+            </template>
+            <div class="nutrition-content">
+              <div class="target-calorie">
+                <div class="target-label">目标热量</div>
+                <div class="target-value">{{ nutritionData.target_calorie }} <span class="unit">kcal</span></div>
+              </div>
+              <div class="macros-grid">
+                <div class="macro-item protein">
+                  <div class="macro-icon">🥩</div>
+                  <div class="macro-info">
+                    <div class="macro-name">蛋白质</div>
+                    <div class="macro-value">{{ nutritionData.protein_gram }}g</div>
+                    <div class="macro-ratio">{{ nutritionData.protein_ratio.toFixed(0) }}%</div>
+                  </div>
+                </div>
+                <div class="macro-item carb">
+                  <div class="macro-icon">🍚</div>
+                  <div class="macro-info">
+                    <div class="macro-name">碳水化合物</div>
+                    <div class="macro-value">{{ nutritionData.carb_gram }}g</div>
+                    <div class="macro-ratio">{{ nutritionData.carb_ratio.toFixed(0) }}%</div>
+                  </div>
+                </div>
+                <div class="macro-item fat">
+                  <div class="macro-icon">🥑</div>
+                  <div class="macro-info">
+                    <div class="macro-name">脂肪</div>
+                    <div class="macro-value">{{ nutritionData.fat_gram }}g</div>
+                    <div class="macro-ratio">{{ nutritionData.fat_ratio.toFixed(0) }}%</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </n-card>
+        </div>
+
+        <!-- 中间：两列布局 - 基础信息和健康指标 -->
+        <div class="middle-section">
+          <n-card class="info-card">
+            <template #header>
+              <div class="card-header">
+                <span class="card-icon">👤</span>
+                <span>基础信息</span>
+              </div>
+            </template>
+            <n-descriptions :column="2" bordered label-placement="left">
+              <n-descriptions-item label="用户名">
+                <n-tag type="primary" round>{{ authStore.user?.username }}</n-tag>
+              </n-descriptions-item>
+              <n-descriptions-item label="邮箱">
+                {{ authStore.profile?.email || '未设置' }}
+              </n-descriptions-item>
+              <n-descriptions-item label="性别">
+                <n-tag :type="authStore.profile?.gender === '男' ? 'info' : 'error'" round>
+                  {{ authStore.profile?.gender }}
+                </n-tag>
+              </n-descriptions-item>
+              <n-descriptions-item label="年龄">
+                {{ authStore.profile?.age }} 岁
+              </n-descriptions-item>
+              <n-descriptions-item label="身高">
+                {{ authStore.profile?.height }} cm
+              </n-descriptions-item>
+              <n-descriptions-item label="体重">
+                {{ authStore.profile?.weight }} kg
+              </n-descriptions-item>
+            </n-descriptions>
+          </n-card>
+
+          <n-card class="info-card">
+            <template #header>
+              <div class="card-header">
+                <span class="card-icon">📊</span>
+                <span>健康指标</span>
+              </div>
+            </template>
+            <div class="health-metrics">
+              <div class="metric-item">
+                <div class="metric-label">BMI</div>
+                <div class="metric-value" :class="getBMIClass(authStore.profile?.bmi)">
+                  {{ authStore.profile?.bmi || '--' }}
+                </div>
+                <div class="metric-desc">{{ getBMIDesc(authStore.profile?.bmi) }}</div>
+              </div>
+              <div class="metric-item">
+                <div class="metric-label">BMR</div>
+                <div class="metric-value primary">{{ authStore.profile?.bmr || '--' }}</div>
+                <div class="metric-desc">基础代谢率</div>
+              </div>
+              <div class="metric-item">
+                <div class="metric-label">TDEE</div>
+                <div class="metric-value primary">{{ authStore.profile?.tdee || '--' }}</div>
+                <div class="metric-desc">每日总消耗</div>
+              </div>
+            </div>
+          </n-card>
+        </div>
+
+        <!-- 底部：两列布局 - 健康目标和个性化设置 -->
+        <div class="bottom-section">
+          <n-card class="info-card">
+            <template #header>
+              <div class="card-header">
+                <span class="card-icon">🎯</span>
+                <span>健康目标</span>
+              </div>
+            </template>
+            <n-descriptions :column="1" bordered label-placement="left">
+              <n-descriptions-item label="健康目标">
+                <n-tag :type="getGoalTagType(authStore.profile?.health_goal)" round size="large">
+                  {{ authStore.profile?.health_goal || '未设置' }}
+                </n-tag>
+              </n-descriptions-item>
+              <n-descriptions-item label="目标体重">
+                {{ authStore.profile?.target_weight ? `${authStore.profile.target_weight} kg` : '未设置' }}
+              </n-descriptions-item>
+              <n-descriptions-item label="活动水平">
+                <n-tag type="info" round>{{ authStore.profile?.activity_level || '未设置' }}</n-tag>
+              </n-descriptions-item>
+              <n-descriptions-item label="每日用餐次数">
+                {{ authStore.profile?.meal_times_per_day || 3 }} 次
+              </n-descriptions-item>
+            </n-descriptions>
+          </n-card>
+
+          <n-card class="info-card">
+            <template #header>
+              <div class="card-header">
+                <span class="card-icon">⚙️</span>
+                <span>个性化设置</span>
+              </div>
+            </template>
+            <n-descriptions :column="1" bordered label-placement="left">
+              <n-descriptions-item label="过敏源">
+                <div class="text-content">
+                  {{ authStore.profile?.allergies || '无' }}
+                </div>
+              </n-descriptions-item>
+              <n-descriptions-item label="饮食偏好">
+                <div class="text-content">
+                  {{ authStore.profile?.dietary_prefs || '无' }}
+                </div>
+              </n-descriptions-item>
+              <n-descriptions-item label="健康问题">
+                <div class="text-content">
+                  {{ authStore.profile?.health_conditions || '无' }}
+                </div>
+              </n-descriptions-item>
+            </n-descriptions>
+          </n-card>
+        </div>
+
+        <!-- 操作按钮 -->
+        <div class="action-buttons">
+          <n-button type="primary" size="large" @click="goToEdit">
+            <template #icon>
+              <n-icon><CreateOutline /></n-icon>
+            </template>
             更新档案
-          </el-button>
+          </n-button>
+          <n-button size="large" @click="goBack">
+            返回首页
+          </n-button>
         </div>
-      </el-header>
-
-      <el-main class="main-content">
-        <div v-if="loading" class="loading-container">
-          <el-skeleton :rows="10" animated />
-        </div>
-
-        <div v-else-if="!authStore.hasProfile" class="empty-state">
-          <el-empty description="您还没有完善健康档案">
-            <el-button type="primary" @click="goToEdit">立即完善档案</el-button>
-          </el-empty>
-        </div>
-
-        <div v-else class="profile-content">
-          <!-- 顶部：营养需求（最重要，突出显示） -->
-          <div class="top-section" v-if="nutritionData">
-            <el-card shadow="hover" class="nutrition-card highlight-card">
-              <template #header>
-                <div class="card-header highlight-header">
-                  <el-icon class="card-icon"><Food /></el-icon>
-                  <span>每日营养需求</span>
-                </div>
-              </template>
-              <div class="nutrition-content">
-                <div class="target-calorie">
-                  <div class="target-label">目标热量</div>
-                  <div class="target-value">{{ nutritionData.target_calorie }} kcal</div>
-                </div>
-                <div class="macros-grid">
-                  <div class="macro-item protein">
-                    <div class="macro-icon">🥩</div>
-                    <div class="macro-info">
-                      <div class="macro-name">蛋白质</div>
-                      <div class="macro-value">{{ nutritionData.protein_gram }}g</div>
-                      <div class="macro-ratio">{{ nutritionData.protein_ratio.toFixed(0) }}%</div>
-                    </div>
-                  </div>
-                  <div class="macro-item carb">
-                    <div class="macro-icon">🍚</div>
-                    <div class="macro-info">
-                      <div class="macro-name">碳水化合物</div>
-                      <div class="macro-value">{{ nutritionData.carb_gram }}g</div>
-                      <div class="macro-ratio">{{ nutritionData.carb_ratio.toFixed(0) }}%</div>
-                    </div>
-                  </div>
-                  <div class="macro-item fat">
-                    <div class="macro-icon">🥑</div>
-                    <div class="macro-info">
-                      <div class="macro-name">脂肪</div>
-                      <div class="macro-value">{{ nutritionData.fat_gram }}g</div>
-                      <div class="macro-ratio">{{ nutritionData.fat_ratio.toFixed(0) }}%</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </el-card>
-          </div>
-
-          <!-- 中间：两列布局 - 基础信息和健康指标 -->
-          <div class="middle-section">
-            <el-card shadow="hover" class="info-card">
-              <template #header>
-                <div class="card-header">
-                  <el-icon class="card-icon"><User /></el-icon>
-                  <span>基础信息</span>
-                </div>
-              </template>
-              <el-descriptions :column="2" border>
-                <el-descriptions-item label="用户名">
-                  <el-tag>{{ authStore.user?.username }}</el-tag>
-                </el-descriptions-item>
-                <el-descriptions-item label="邮箱">
-                  {{ authStore.profile?.email || '未设置' }}
-                </el-descriptions-item>
-                <el-descriptions-item label="性别">
-                  <el-tag :type="authStore.profile?.gender === '男' ? 'primary' : 'danger'">
-                    {{ authStore.profile?.gender }}
-                  </el-tag>
-                </el-descriptions-item>
-                <el-descriptions-item label="年龄">
-                  {{ authStore.profile?.age }} 岁
-                </el-descriptions-item>
-                <el-descriptions-item label="身高">
-                  {{ authStore.profile?.height }} cm
-                </el-descriptions-item>
-                <el-descriptions-item label="体重">
-                  {{ authStore.profile?.weight }} kg
-                </el-descriptions-item>
-              </el-descriptions>
-            </el-card>
-
-            <el-card shadow="hover" class="info-card">
-              <template #header>
-                <div class="card-header">
-                  <el-icon class="card-icon"><DataAnalysis /></el-icon>
-                  <span>健康指标</span>
-                </div>
-              </template>
-              <div class="health-metrics">
-                <div class="metric-item">
-                  <div class="metric-label">BMI</div>
-                  <div class="metric-value" :class="getBMIClass(authStore.profile?.bmi)">
-                    {{ authStore.profile?.bmi || '--' }}
-                  </div>
-                  <div class="metric-desc">{{ getBMIDesc(authStore.profile?.bmi) }}</div>
-                </div>
-                <div class="metric-item">
-                  <div class="metric-label">BMR</div>
-                  <div class="metric-value primary">{{ authStore.profile?.bmr || '--' }}</div>
-                  <div class="metric-desc">基础代谢率</div>
-                </div>
-                <div class="metric-item">
-                  <div class="metric-label">TDEE</div>
-                  <div class="metric-value primary">{{ authStore.profile?.tdee || '--' }}</div>
-                  <div class="metric-desc">每日总消耗</div>
-                </div>
-              </div>
-            </el-card>
-          </div>
-
-          <!-- 底部：两列布局 - 健康目标和个性化设置 -->
-          <div class="bottom-section">
-            <el-card shadow="hover" class="info-card">
-              <template #header>
-                <div class="card-header">
-                  <el-icon class="card-icon"><Aim /></el-icon>
-                  <span>健康目标</span>
-                </div>
-              </template>
-              <el-descriptions :column="1" border>
-                <el-descriptions-item label="健康目标">
-                  <el-tag :type="getGoalTagType(authStore.profile?.health_goal)" size="large">
-                    {{ authStore.profile?.health_goal || '未设置' }}
-                  </el-tag>
-                </el-descriptions-item>
-                <el-descriptions-item label="目标体重">
-                  {{ authStore.profile?.target_weight ? `${authStore.profile.target_weight} kg` : '未设置' }}
-                </el-descriptions-item>
-                <el-descriptions-item label="活动水平">
-                  <el-tag type="info">{{ authStore.profile?.activity_level || '未设置' }}</el-tag>
-                </el-descriptions-item>
-                <el-descriptions-item label="每日用餐次数">
-                  {{ authStore.profile?.meal_times_per_day || 3 }} 次
-                </el-descriptions-item>
-              </el-descriptions>
-            </el-card>
-
-            <el-card shadow="hover" class="info-card">
-              <template #header>
-                <div class="card-header">
-                  <el-icon class="card-icon"><Setting /></el-icon>
-                  <span>个性化设置</span>
-                </div>
-              </template>
-              <el-descriptions :column="1" border>
-                <el-descriptions-item label="过敏源">
-                  <div class="text-content">
-                    {{ authStore.profile?.allergies || '无' }}
-                  </div>
-                </el-descriptions-item>
-                <el-descriptions-item label="饮食偏好">
-                  <div class="text-content">
-                    {{ authStore.profile?.dietary_prefs || '无' }}
-                  </div>
-                </el-descriptions-item>
-                <el-descriptions-item label="健康问题">
-                  <div class="text-content">
-                    {{ authStore.profile?.health_conditions || '无' }}
-                  </div>
-                </el-descriptions-item>
-              </el-descriptions>
-            </el-card>
-          </div>
-
-          <!-- 操作按钮 -->
-          <div class="action-buttons">
-            <el-button type="primary" size="large" @click="goToEdit">
-              <el-icon><Edit /></el-icon>
-              更新档案
-            </el-button>
-            <el-button size="large" @click="goBack">
-              返回首页
-            </el-button>
-          </div>
-        </div>
-      </el-main>
-    </el-container>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import {
-  ArrowLeft,
-  Edit,
-  User,
-  DataAnalysis,
-  Aim,
-  Setting,
-  Food
-} from '@element-plus/icons-vue'
+import { NCard, NButton, NIcon, NSkeleton, NEmpty, NDescriptions, NDescriptionsItem, NTag } from 'naive-ui'
+import { CreateOutline } from '@vicons/ionicons5'
 import { useAuthStore } from '@/store/auth'
 import { getNutritionRequirements } from '@/api/user'
+import TopNavigation from '@/components/layout/TopNavigation.vue'
+import BackButton from '@/components/layout/BackButton.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -280,45 +276,41 @@ const getBMIDesc = (bmi) => {
 
 const getGoalTagType = (goal) => {
   const goalMap = {
-    '减脂': 'danger',
+    '减脂': 'error',
     '增肌': 'success',
     '控糖': 'warning',
     '维持健康': 'info'
   }
-  return goalMap[goal] || ''
+  return goalMap[goal] || 'default'
 }
 </script>
 
 <style scoped>
 .profile-view-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  background: var(--bg-secondary);
 }
 
-.header {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-  padding: 0;
-}
-
-.header-content {
+.page-header {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: var(--spacing-lg) var(--spacing-xl);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  height: 100%;
-  padding: 0 30px;
 }
 
 .page-title {
-  font-size: 20px;
-  font-weight: 600;
-  color: #333;
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
   margin: 0;
+  flex: 1;
+  text-align: center;
 }
 
 .main-content {
-  padding: 30px;
+  padding: 0 var(--spacing-xl) var(--spacing-3xl);
   max-width: 1400px;
   margin: 0 auto;
 }
@@ -354,18 +346,18 @@ const getGoalTagType = (goal) => {
 }
 
 .loading-container {
-  padding: 40px;
+  padding: var(--spacing-3xl);
 }
 
 .empty-state {
-  padding: 60px 20px;
+  padding: var(--spacing-4xl) var(--spacing-lg);
 }
 
 .profile-content {
   animation: fadeIn 0.5s ease-out;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: var(--spacing-lg);
 }
 
 @keyframes fadeIn {
@@ -385,183 +377,157 @@ const getGoalTagType = (goal) => {
 }
 
 .nutrition-card {
-  border-radius: 16px;
+  border-radius: var(--radius-xl);
   overflow: hidden;
-  border: 2px solid #667eea;
-  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2);
 }
 
 .highlight-card {
   background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
-}
-
-.highlight-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 12px 20px;
-  margin: -20px -20px 20px -20px;
-}
-
-.highlight-header .card-icon {
-  color: white;
-}
-
-.highlight-header span {
-  color: white;
+  box-shadow: var(--shadow-lg);
 }
 
 /* 中间区域：两列布局 */
 .middle-section {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
+  gap: var(--spacing-lg);
 }
 
 /* 底部区域：两列布局 */
 .bottom-section {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
+  gap: var(--spacing-lg);
 }
 
 .info-card {
-  border-radius: 12px;
+  border-radius: var(--radius-xl);
   overflow: hidden;
-  transition: all 0.3s ease;
-}
-
-.info-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  transition: var(--transition-normal);
 }
 
 .card-header {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 18px;
-  font-weight: 600;
+  gap: var(--spacing-sm);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
 }
 
 .card-icon {
-  font-size: 20px;
-  color: #667eea;
+  font-size: 24px;
 }
 
 .health-metrics {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  padding: 20px 0;
+  gap: var(--spacing-md);
+  padding: var(--spacing-lg) 0;
 }
 
 .metric-item {
   text-align: center;
-  padding: 16px;
-  background: linear-gradient(135deg, #f5f7fa 0%, #ffffff 100%);
-  border-radius: 10px;
-  border: 1px solid #e4e7ed;
-  transition: all 0.3s ease;
+  padding: var(--spacing-md);
+  background: linear-gradient(135deg, var(--bg-secondary) 0%, #ffffff 100%);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  transition: var(--transition-normal);
 }
 
 .metric-item:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
 }
 
 .metric-label {
-  font-size: 14px;
-  color: #666;
-  margin-bottom: 10px;
-  font-weight: 500;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-sm);
+  font-weight: var(--font-weight-medium);
 }
 
 .metric-value {
   font-size: 28px;
-  font-weight: 700;
-  margin-bottom: 6px;
-  color: #333;
+  font-weight: var(--font-weight-bold);
+  margin-bottom: var(--spacing-xs);
+  color: var(--text-primary);
 }
 
 .metric-value.primary {
-  color: #667eea;
+  color: var(--color-primary);
 }
 
 .metric-value.normal {
-  color: #67c23a;
+  color: var(--color-success);
 }
 
 .metric-value.underweight {
-  color: #409eff;
+  color: var(--color-info);
 }
 
 .metric-value.overweight {
-  color: #e6a23c;
+  color: var(--color-warning);
 }
 
 .metric-value.obese {
-  color: #f56c6c;
+  color: var(--color-error);
 }
 
 .metric-desc {
-  font-size: 12px;
-  color: #999;
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
 }
 
 .text-content {
-  color: #666;
+  color: var(--text-secondary);
   line-height: 1.6;
   white-space: pre-wrap;
 }
 
 .action-buttons {
   display: flex;
-  gap: 12px;
+  gap: var(--spacing-md);
   justify-content: center;
-  margin-top: 30px;
-  padding-top: 30px;
-  border-top: 1px solid #e4e7ed;
-}
-
-:deep(.el-descriptions__label) {
-  font-weight: 600;
-  width: 120px;
-}
-
-:deep(.el-descriptions__content) {
-  color: #333;
+  margin-top: var(--spacing-2xl);
+  padding-top: var(--spacing-2xl);
+  border-top: 1px solid var(--border-color);
 }
 
 .nutrition-content {
-  padding: 20px 0;
+  padding: var(--spacing-lg) 0;
 }
 
 .target-calorie {
   text-align: center;
-  padding: 24px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 12px;
-  margin-bottom: 24px;
+  padding: var(--spacing-xl);
+  background: linear-gradient(135deg, var(--color-primary) 0%, #764ba2 100%);
+  border-radius: var(--radius-xl);
+  margin-bottom: var(--spacing-xl);
   color: white;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  box-shadow: var(--shadow-lg);
 }
 
 .target-label {
-  font-size: 14px;
+  font-size: var(--font-size-sm);
   opacity: 0.9;
-  margin-bottom: 8px;
+  margin-bottom: var(--spacing-xs);
 }
 
 .target-value {
   font-size: 42px;
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.target-value .unit {
+  font-size: var(--font-size-lg);
+  margin-left: var(--spacing-xs);
 }
 
 .macros-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
+  gap: var(--spacing-md);
 }
 
 .macro-item {
@@ -569,35 +535,35 @@ const getGoalTagType = (goal) => {
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: 8px;
-  padding: 20px 16px;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-lg) var(--spacing-md);
   background: #ffffff;
-  border-radius: 12px;
+  border-radius: var(--radius-xl);
   border: 2px solid transparent;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: var(--transition-normal);
+  box-shadow: var(--shadow-sm);
 }
 
 .macro-item:hover {
   transform: translateY(-4px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
 }
 
 .macro-item.protein {
-  border-color: #409eff;
+  border-color: var(--color-protein);
 }
 
 .macro-item.carb {
-  border-color: #67c23a;
+  border-color: var(--color-carb);
 }
 
 .macro-item.fat {
-  border-color: #e6a23c;
+  border-color: var(--color-fat);
 }
 
 .macro-icon {
   font-size: 40px;
-  margin-bottom: 4px;
+  margin-bottom: var(--spacing-xs);
 }
 
 .macro-info {
@@ -605,26 +571,60 @@ const getGoalTagType = (goal) => {
 }
 
 .macro-name {
-  font-size: 13px;
-  color: #666;
-  margin-bottom: 6px;
-  font-weight: 500;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-xs);
+  font-weight: var(--font-weight-medium);
 }
 
 .macro-value {
-  font-size: 24px;
-  font-weight: 700;
-  color: #333;
-  margin-bottom: 4px;
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-xs);
 }
 
 .macro-ratio {
-  font-size: 12px;
-  color: #999;
-  background: #f0f0f0;
-  padding: 2px 8px;
-  border-radius: 10px;
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+  background: var(--bg-secondary);
+  padding: 2px var(--spacing-xs);
+  border-radius: var(--radius-full);
   display: inline-block;
+}
+
+/* 响应式布局 */
+@media (max-width: 1024px) {
+  .middle-section,
+  .bottom-section {
+    grid-template-columns: 1fr;
+  }
+  
+  .health-metrics {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  .macros-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .page-header {
+    padding: var(--spacing-md);
+  }
+
+  .main-content {
+    padding: 0 var(--spacing-md) var(--spacing-2xl);
+  }
+
+  .health-metrics {
+    grid-template-columns: 1fr;
+  }
+  
+  .macros-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
 

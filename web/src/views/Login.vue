@@ -2,56 +2,63 @@
   <div class="login-container">
     <div class="login-box">
       <div class="login-header">
+        <div class="logo">🥗</div>
         <h1 class="title">NutriPlan</h1>
         <p class="subtitle">智能营养计划系统</p>
       </div>
 
-      <el-form
+      <n-form
         ref="loginFormRef"
         :model="loginForm"
         :rules="loginRules"
-        class="login-form"
-        @submit.prevent="handleLogin"
+        size="large"
       >
-        <el-form-item prop="username">
-          <el-input
-            v-model="loginForm.username"
+        <n-form-item path="username">
+          <n-input
+            v-model:value="loginForm.username"
             placeholder="请输入用户名"
-            size="large"
-            :prefix-icon="User"
             clearable
-          />
-        </el-form-item>
+          >
+            <template #prefix>
+              <n-icon :component="PersonOutline" />
+            </template>
+          </n-input>
+        </n-form-item>
 
-        <el-form-item prop="password">
-          <el-input
-            v-model="loginForm.password"
+        <n-form-item path="password">
+          <n-input
+            v-model:value="loginForm.password"
             type="password"
             placeholder="请输入密码"
-            size="large"
-            :prefix-icon="Lock"
-            show-password
+            show-password-on="click"
             @keyup.enter="handleLogin"
-          />
-        </el-form-item>
+          >
+            <template #prefix>
+              <n-icon :component="LockClosedOutline" />
+            </template>
+          </n-input>
+        </n-form-item>
 
-        <el-form-item>
-          <el-button
+        <n-form-item>
+          <n-button
             type="primary"
             size="large"
-            class="login-button"
+            block
             :loading="loading"
             @click="handleLogin"
+            class="login-button"
           >
             {{ loading ? '登录中...' : '登录' }}
-          </el-button>
-        </el-form-item>
+          </n-button>
+        </n-form-item>
 
         <div class="login-footer">
           <span>还没有账号？</span>
-          <el-link type="primary" @click="goToRegister">立即注册</el-link>
+          <n-button text type="primary" @click="goToRegister">
+            立即注册
+          </n-button>
         </div>
-      </el-form>
+      </n-form>
     </div>
   </div>
 </template>
@@ -59,12 +66,13 @@
 <script setup>
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import { User, Lock } from '@element-plus/icons-vue'
+import { NForm, NFormItem, NInput, NButton, NIcon, useMessage } from 'naive-ui'
+import { PersonOutline, LockClosedOutline } from '@vicons/ionicons5'
 import { useAuthStore } from '@/store/auth'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const message = useMessage()
 
 const loginFormRef = ref(null)
 const loading = ref(false)
@@ -87,23 +95,25 @@ const loginRules = {
 const handleLogin = async () => {
   if (!loginFormRef.value) return
 
-  await loginFormRef.value.validate(async (valid) => {
-    if (valid) {
-      loading.value = true
-      try {
-        await authStore.login(loginForm.username, loginForm.password)
-        ElMessage.success('登录成功')
-        
-        // 获取重定向路径
-        const redirect = router.currentRoute.value.query.redirect || '/home'
-        router.push(redirect)
-      } catch (error) {
-        console.error('登录失败:', error)
-      } finally {
-        loading.value = false
-      }
+  try {
+    await loginFormRef.value.validate()
+    loading.value = true
+    
+    await authStore.login(loginForm.username, loginForm.password)
+    message.success('登录成功')
+    
+    // 获取重定向路径
+    const redirect = router.currentRoute.value.query.redirect || '/home'
+    router.push(redirect)
+  } catch (error) {
+    if (error.errors) {
+      // 表单验证错误
+      return
     }
-  })
+    console.error('登录失败:', error)
+  } finally {
+    loading.value = false
+  }
 }
 
 const goToRegister = () => {
@@ -117,18 +127,18 @@ const goToRegister = () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: var(--spacing-lg);
+  background: linear-gradient(135deg, var(--color-primary) 0%, #764ba2 100%);
 }
 
 .login-box {
   width: 100%;
   max-width: 420px;
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.98);
   backdrop-filter: blur(10px);
-  border-radius: 20px;
-  padding: 40px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  border-radius: var(--radius-2xl);
+  padding: var(--spacing-3xl);
+  box-shadow: var(--shadow-2xl);
   animation: slideUp 0.5s ease-out;
 }
 
@@ -145,68 +155,61 @@ const goToRegister = () => {
 
 .login-header {
   text-align: center;
-  margin-bottom: 40px;
+  margin-bottom: var(--spacing-3xl);
+}
+
+.logo {
+  font-size: 64px;
+  margin-bottom: var(--spacing-md);
 }
 
 .title {
-  font-size: 36px;
-  font-weight: 700;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  background: linear-gradient(135deg, var(--color-primary) 0%, #764ba2 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  margin-bottom: 10px;
+  margin: 0 0 var(--spacing-sm) 0;
 }
 
 .subtitle {
-  color: #666;
-  font-size: 14px;
-}
-
-.login-form {
-  margin-top: 30px;
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+  margin: 0;
 }
 
 .login-button {
-  width: 100%;
   height: 48px;
-  font-size: 16px;
-  font-weight: 600;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border: none;
-}
-
-.login-button:hover {
-  opacity: 0.9;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-  transition: all 0.3s ease;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  border-radius: var(--radius-lg);
+  margin-top: var(--spacing-md);
 }
 
 .login-footer {
   text-align: center;
-  margin-top: 20px;
-  color: #666;
-  font-size: 14px;
+  margin-top: var(--spacing-lg);
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
 }
 
-.login-footer .el-link {
-  margin-left: 8px;
-  font-weight: 600;
-}
-
-:deep(.el-input__wrapper) {
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-:deep(.el-input__wrapper:hover) {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-:deep(.el-input.is-focus .el-input__wrapper) {
-  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+@media (max-width: 480px) {
+  .login-box {
+    padding: var(--spacing-xl);
+  }
+  
+  .logo {
+    font-size: 48px;
+  }
+  
+  .title {
+    font-size: var(--font-size-2xl);
+  }
 }
 </style>
 

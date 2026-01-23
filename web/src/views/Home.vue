@@ -1,41 +1,12 @@
 <template>
   <div class="home-container">
-    <!-- 顶部导航 -->
-    <div class="top-bar">
-      <div class="top-bar-content">
-        <div class="brand">
-          <span class="brand-icon">🥗</span>
-          <span class="brand-name">NutriPlan</span>
-        </div>
-        <el-dropdown @command="handleCommand" trigger="click">
-          <div class="user-menu">
-            <el-avatar
-              :size="36"
-              :icon="UserFilled"
-              style="background: #10b981"
-            />
-            <span class="user-name">{{ authStore.user?.username }}</span>
-            <el-icon class="dropdown-icon"><ArrowDown /></el-icon>
-          </div>
-          <template #dropdown>
-            <el-dropdown-menu>
-              <el-dropdown-item command="profile">个人档案</el-dropdown-item>
-              <el-dropdown-item command="favorites">我的收藏</el-dropdown-item>
-              <el-dropdown-item command="intake">饮食记录</el-dropdown-item>
-              <el-dropdown-item command="weekly">周报告</el-dropdown-item>
-              <el-dropdown-item divided command="logout"
-                >退出登录</el-dropdown-item
-              >
-            </el-dropdown-menu>
-          </template>
-        </el-dropdown>
-      </div>
-    </div>
+    <!-- 顶部导航 - 使用新组件 -->
+    <TopNavigation />
 
     <!-- 主内容区 -->
     <div class="main-wrapper">
       <!-- 欢迎区域 -->
-      <div class="hero-section">
+      <n-card class="hero-card" :bordered="false">
         <div class="hero-content">
           <h1 class="hero-title">
             {{ getGreeting() }}，<span class="highlight">{{
@@ -49,31 +20,21 @@
           class="quick-stats"
           v-if="authStore.hasProfile && authStore.profile"
         >
-          <div class="stat-item">
-            <div class="stat-icon">🔥</div>
-            <div class="stat-info">
-              <div class="stat-value">
-                {{
-                  authStore.profile.tdee
-                    ? Math.floor(authStore.profile.tdee)
-                    : "--"
-                }}
-              </div>
-              <div class="stat-label">每日目标热量</div>
-            </div>
-          </div>
+          <StatCard
+            icon="🔥"
+            :value="authStore.profile.tdee ? Math.floor(authStore.profile.tdee).toString() : '--'"
+            label="每日目标热量"
+            subtitle="kcal"
+          />
           <div class="stat-divider"></div>
-          <div class="stat-item">
-            <div class="stat-icon">⚖️</div>
-            <div class="stat-info">
-              <div class="stat-value">
-                {{ authStore.profile.weight || "--" }}
-              </div>
-              <div class="stat-label">当前体重 (kg)</div>
-            </div>
-          </div>
+          <StatCard
+            icon="⚖️"
+            :value="authStore.profile.weight?.toString() || '--'"
+            label="当前体重"
+            subtitle="kg"
+          />
         </div>
-      </div>
+      </n-card>
 
       <!-- 功能卡片区 -->
       <div class="content-section">
@@ -81,8 +42,9 @@
           <!-- 主要功能卡片区 (顶层双巨头) -->
           <div class="big-cards-row">
             <!-- 1. 今日食谱 (Big Card) -->
-            <div
-              class="main-card big-card recipe-card"
+            <n-card
+              class="feature-card big-card recipe-card"
+              hoverable
               @click="goToRecipes"
               :class="{ disabled: !authStore.hasProfile }"
             >
@@ -99,16 +61,18 @@
                   }}
                 </p>
                 <div class="card-action">
-                  <span class="action-text"
-                    >查看今日推荐 <el-icon><ArrowRight /></el-icon
-                  ></span>
+                  <span class="action-text">
+                    查看今日推荐 
+                    <n-icon><ArrowForwardOutline /></n-icon>
+                  </span>
                 </div>
               </div>
-            </div>
+            </n-card>
 
             <!-- 2. 营养分析 (Big Card - 原个人档案升级) -->
-            <div
-              class="main-card big-card nutrition-card"
+            <n-card
+              class="feature-card big-card nutrition-card"
+              hoverable
               @click="goToNutrition"
             >
               <div class="card-content">
@@ -132,88 +96,77 @@
                     <span class="unit">kcal</span>
                   </div>
                   <div class="macros-mini">
-                    <div class="macro-mini-item">
-                      <span class="macro-label">碳水</span>
-                      <span class="macro-val"
-                        >{{ nutritionData.carb_ratio?.toFixed(0) }}%</span
-                      >
-                    </div>
-                    <div class="macro-mini-item">
-                      <span class="macro-label">蛋白</span>
-                      <span class="macro-val"
-                        >{{ nutritionData.protein_ratio?.toFixed(0) }}%</span
-                      >
-                    </div>
-                    <div class="macro-mini-item">
-                      <span class="macro-label">脂肪</span>
-                      <span class="macro-val"
-                        >{{ nutritionData.fat_ratio?.toFixed(0) }}%</span
-                      >
-                    </div>
+                    <n-tag round size="small" :bordered="false" class="macro-tag">
+                      碳水 {{ nutritionData.carb_ratio?.toFixed(0) }}%
+                    </n-tag>
+                    <n-tag round size="small" :bordered="false" class="macro-tag">
+                      蛋白 {{ nutritionData.protein_ratio?.toFixed(0) }}%
+                    </n-tag>
+                    <n-tag round size="small" :bordered="false" class="macro-tag">
+                      脂肪 {{ nutritionData.fat_ratio?.toFixed(0) }}%
+                    </n-tag>
                   </div>
                 </div>
                 <p v-else class="card-desc">完善档案，获取专属营养分析</p>
 
                 <div class="card-status" v-if="!authStore.hasProfile">
-                  <el-tag type="warning" size="small" effect="plain"
-                    >待完善</el-tag
-                  >
+                  <n-tag type="warning" size="small" round>待完善</n-tag>
                 </div>
               </div>
-            </div>
+            </n-card>
           </div>
 
           <!-- 次级功能卡片区 (小卡片网格) -->
           <div class="secondary-grid">
             <!-- 饮食记录 -->
-            <div class="main-card small-card" @click="goToIntake">
+            <n-card class="feature-card small-card" hoverable @click="goToIntake">
               <div class="card-content-center">
                 <span class="card-emoji-small">📝</span>
                 <h3 class="card-title-small">饮食记录</h3>
                 <p class="card-desc-mini">记录每餐摄入</p>
               </div>
-            </div>
+            </n-card>
 
             <!-- 周报告 -->
-            <div class="main-card small-card" @click="goToWeekly">
+            <n-card class="feature-card small-card" hoverable @click="goToWeekly">
               <div class="card-content-center">
                 <span class="card-emoji-small">📈</span>
                 <h3 class="card-title-small">周报告</h3>
                 <p class="card-desc-mini">查看长期趋势</p>
               </div>
-            </div>
+            </n-card>
 
             <!-- 收藏夹 -->
-            <div class="main-card small-card" @click="goToFavorites">
+            <n-card class="feature-card small-card" hoverable @click="goToFavorites">
               <div class="card-content-center">
                 <span class="card-emoji-small">⭐</span>
                 <h3 class="card-title-small">我的收藏</h3>
                 <p class="card-desc-mini">喜爱的食谱</p>
               </div>
-            </div>
+            </n-card>
 
             <!-- 购物清单 -->
-            <div class="main-card small-card" @click="goToShopping">
+            <n-card class="feature-card small-card" hoverable @click="goToShopping">
               <div class="card-content-center">
                 <span class="card-emoji-small">🛒</span>
                 <h3 class="card-title-small">购物清单</h3>
                 <p class="card-desc-mini">食材采购助手</p>
               </div>
-            </div>
+            </n-card>
           </div>
         </div>
 
         <!-- 提示信息 (当没有档案时显示) -->
-        <div class="tip-card" v-if="!authStore.hasProfile">
+        <n-card v-if="!authStore.hasProfile" class="tip-card" :bordered="false">
           <div class="tip-icon">💡</div>
           <div class="tip-content">
             <h4 class="tip-title">开始您的健康之旅</h4>
             <p class="tip-text">完善个人档案，获取专属营养方案</p>
-            <el-button type="primary" size="small" @click="goToProfile" round>
+            <n-button type="primary" size="small" round @click="goToProfile">
               立即完善
-            </el-button>
+            </n-button>
           </div>
-        </div>
+        </n-card>
       </div>
     </div>
   </div>
@@ -222,23 +175,13 @@
 <script setup>
 import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
-import { ElMessage, ElMessageBox } from "element-plus";
-import {
-  UserFilled,
-  User,
-  ArrowDown,
-  ArrowRight,
-  SwitchButton,
-  Document,
-  KnifeFork,
-  TrendCharts,
-  DataLine,
-  Medal,
-  PieChart,
-  Star,
-} from "@element-plus/icons-vue";
+import { NCard, NTag, NButton, NIcon } from "naive-ui";
+import { ArrowForwardOutline } from "@vicons/ionicons5";
+import { ElMessage } from "element-plus";
 import { useAuthStore } from "@/store/auth";
 import { getNutritionRequirements } from "@/api/user";
+import TopNavigation from "@/components/layout/TopNavigation.vue";
+import StatCard from "@/components/ui/StatCard.vue";
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -345,148 +288,61 @@ const handleCommand = async (command) => {
 <style scoped>
 .home-container {
   min-height: 100vh;
-  background: transparent;
-  position: relative;
-}
-
-/* 顶部导航栏 */
-.top-bar {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid #e8eaed;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-}
-
-.top-bar-content {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 16px 24px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 600;
-}
-
-.brand-icon {
-  font-size: 24px;
-}
-
-.brand-name {
-  font-size: 20px;
-  color: #1a1a1a;
-  letter-spacing: -0.5px;
-}
-
-.user-menu {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 6px 12px;
-  border-radius: 20px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.user-menu:hover {
-  background: #f0f2f5;
-}
-
-.user-name {
-  font-size: 14px;
-  font-weight: 500;
-  color: #2c3e50;
-}
-
-.dropdown-icon {
-  font-size: 14px;
-  color: #8b95a5;
+  background: linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 50%, #fef3c7 100%);
 }
 
 /* 主内容包装 */
 .main-wrapper {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 32px 24px;
+  padding: var(--spacing-2xl) var(--spacing-lg);
 }
 
-/* Hero区域 */
-.hero-section {
-  background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
-  border-radius: 20px;
-  padding: 40px;
-  margin-bottom: 32px;
+/* Hero卡片 */
+.hero-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  border-radius: var(--radius-2xl);
+  margin-bottom: var(--spacing-2xl);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.8);
 }
 
 .hero-content {
-  margin-bottom: 24px;
+  margin-bottom: var(--spacing-lg);
 }
 
 .hero-title {
-  font-size: 32px;
-  font-weight: 700;
-  color: #1a1a1a;
-  margin: 0 0 8px 0;
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+  margin: 0 0 var(--spacing-xs) 0;
   line-height: 1.2;
 }
 
 .highlight {
-  color: #10b981;
+  color: var(--color-primary);
 }
 
 .hero-subtitle {
-  font-size: 16px;
-  color: #6b7280;
+  font-size: var(--font-size-base);
+  color: var(--text-secondary);
   margin: 0;
 }
 
 /* 快速统计 */
 .quick-stats {
   display: flex;
-  gap: 24px;
-  padding-top: 24px;
-  border-top: 1px solid #e5e7eb;
-}
-
-.stat-item {
-  display: flex;
+  gap: var(--spacing-lg);
+  padding-top: var(--spacing-lg);
+  border-top: 1px solid var(--border-color);
   align-items: center;
-  gap: 12px;
-}
-
-.stat-icon {
-  font-size: 32px;
-}
-
-.stat-info {
-  display: flex;
-  flex-direction: column;
-}
-
-.stat-value {
-  font-size: 24px;
-  font-weight: 700;
-  color: #1a1a1a;
-  line-height: 1;
-}
-
-.stat-label {
-  font-size: 13px;
-  color: #6b7280;
-  margin-top: 4px;
 }
 
 .stat-divider {
   width: 1px;
-  background: #e5e7eb;
+  height: 60px;
+  background: var(--border-color);
 }
 
 /* 功能区布局 */
@@ -494,76 +350,89 @@ const handleCommand = async (command) => {
   animation: fadeIn 0.5s ease-out;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: var(--spacing-lg);
 }
 
 .features-grid {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: var(--spacing-lg);
 }
 
 /* 顶部大卡片行 */
 .big-cards-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 24px;
+  gap: var(--spacing-lg);
 }
 
 /* 次级小卡片网格 */
 .secondary-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
+  gap: var(--spacing-md);
 }
 
 /* 卡片通用样式 */
-.main-card {
-  background: #ffffff;
-  border-radius: 20px;
+.feature-card {
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  border: 1px solid #eef2f6;
-  position: relative;
-  overflow: hidden;
+  transition: all var(--transition-normal);
+  border-radius: var(--radius-xl);
 }
 
-.main-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
-  border-color: #10b981;
+.feature-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
 }
 
-.main-card:active {
+.feature-card:active {
   transform: scale(0.98);
 }
 
 /* 大卡片样式 */
 .big-card {
-  height: 220px;
-  padding: 28px;
-  /* background: linear-gradient(145deg, #ffffff 0%, #f9fafb 100%); */
+  min-height: 220px;
+}
+
+.big-card :deep(.n-card__content) {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .recipe-card {
-  background: linear-gradient(135deg, #e6fffa 0%, #ffffff 100%);
-  border-color: #b2f5ea;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.recipe-card:hover {
+  background: rgba(255, 255, 255, 0.75);
+  border-color: var(--color-primary);
 }
 
 .nutrition-card {
-  background: linear-gradient(135deg, #ebf8ff 0%, #ffffff 100%);
-  border-color: #bee3f8;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(59, 130, 246, 0.2);
 }
 
 .nutrition-card:hover {
-  border-color: #3182ce;
+  background: rgba(255, 255, 255, 0.75);
+  border-color: #3b82f6;
+}
+
+.card-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .card-header {
   display: flex;
   align-items: flex-start;
-  gap: 16px;
-  margin-bottom: 16px;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
 }
 
 .header-text {
@@ -572,9 +441,9 @@ const handleCommand = async (command) => {
 }
 
 .card-subtitle {
-  font-size: 13px;
-  color: #64748b;
-  margin-top: 4px;
+  font-size: var(--font-size-sm);
+  color: var(--text-tertiary);
+  margin-top: var(--spacing-xs);
 }
 
 .card-emoji {
@@ -583,25 +452,25 @@ const handleCommand = async (command) => {
 }
 
 .card-title-big {
-  font-size: 24px;
-  font-weight: 700;
-  color: #1e293b;
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
   margin: 0;
   line-height: 1.2;
 }
 
 .card-desc {
-  font-size: 15px;
-  color: #64748b;
+  font-size: var(--font-size-base);
+  color: var(--text-secondary);
   line-height: 1.6;
   margin-bottom: auto;
 }
 
 .card-action {
   margin-top: auto;
-  color: #10b981;
-  font-weight: 600;
-  font-size: 14px;
+  color: var(--color-primary);
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-sm);
   display: flex;
   align-items: center;
 }
@@ -609,94 +478,148 @@ const handleCommand = async (command) => {
 .action-text {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--spacing-xs);
 }
 
 /* 营养数据预览 */
 .nutrition-preview {
-  margin-top: 10px;
+  margin-top: var(--spacing-sm);
 }
 
 .target-cal {
   display: flex;
   align-items: baseline;
-  gap: 6px;
-  margin-bottom: 12px;
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-md);
 }
 
 .target-cal .label {
-  font-size: 13px;
-  color: #64748b;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
 }
 
 .target-cal .value {
   font-size: 28px;
-  font-weight: 800;
+  font-weight: var(--font-weight-bold);
   color: #2c5282;
   font-family: "DIN Alternate", sans-serif;
 }
 
 .target-cal .unit {
-  font-size: 13px;
-  color: #64748b;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
 }
 
 .macros-mini {
   display: flex;
-  gap: 12px;
+  gap: var(--spacing-sm);
 }
 
-.macro-mini-item {
-  background: rgba(255, 255, 255, 0.6);
-  padding: 4px 8px;
-  border-radius: 8px;
-  font-size: 12px;
-  border: 1px solid rgba(0, 0, 0, 0.05);
-}
-
-.macro-label {
-  color: #94a3b8;
-  margin-right: 4px;
-}
-
-.macro-val {
-  color: #334155;
-  font-weight: 600;
+.macro-tag {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
 }
 
 /* 小卡片样式 */
 .small-card {
-  padding: 20px;
+  min-height: 140px;
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+.small-card:hover {
+  background: rgba(255, 255, 255, 0.7);
+  border-color: var(--color-primary);
+}
+
+.small-card :deep(.n-card__content) {
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  text-align: center;
-  height: 140px;
 }
 
 .card-content-center {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: var(--spacing-xs);
+  text-align: center;
 }
 
 .card-emoji-small {
   font-size: 32px;
-  margin-bottom: 4px;
+  margin-bottom: var(--spacing-xs);
 }
 
 .card-title-small {
-  font-size: 16px;
-  font-weight: 600;
-  color: #334155;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
   margin: 0;
 }
 
 .card-desc-mini {
-  font-size: 12px;
-  color: #94a3b8;
+  font-size: var(--font-size-sm);
+  color: var(--text-tertiary);
   margin: 0;
+}
+
+/* 提示卡片 */
+.tip-card {
+  background: rgba(254, 243, 199, 0.5);
+  backdrop-filter: blur(8px);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 4px 20px rgba(251, 191, 36, 0.15);
+  border: 1px solid rgba(251, 191, 36, 0.2);
+}
+
+.tip-card :deep(.n-card__content) {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-lg);
+}
+
+.tip-icon {
+  font-size: 48px;
+}
+
+.tip-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.tip-title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.tip-text {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* 动画 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* 响应式设计 */
@@ -707,67 +630,52 @@ const handleCommand = async (command) => {
 }
 
 @media (max-width: 768px) {
-  .top-bar-content {
-    padding: 12px 16px;
-  }
-
   .main-wrapper {
-    padding: 16px;
-  }
-
-  .hero-section {
-    padding: 24px;
-    margin-bottom: 24px;
+    padding: var(--spacing-md);
   }
 
   .hero-title {
-    font-size: 24px;
+    font-size: var(--font-size-2xl);
   }
 
   /* 移动端改为单列 */
   .big-cards-row {
     grid-template-columns: 1fr;
-    gap: 16px;
+    gap: var(--spacing-md);
   }
 
   .secondary-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
+    gap: var(--spacing-sm);
   }
 
   .big-card {
-    height: auto;
     min-height: 180px;
   }
 
   .small-card {
-    height: 120px;
-    padding: 16px;
+    min-height: 120px;
   }
 
   .quick-stats {
     flex-direction: column;
-    gap: 16px;
+    gap: var(--spacing-md);
+    align-items: stretch;
   }
 
   .stat-divider {
     display: none;
   }
 
-  .tip-card {
+  .tip-card :deep(.n-card__content) {
     flex-direction: column;
     text-align: center;
   }
 }
 
 @media (max-width: 480px) {
-  /* 极窄屏幕 */
   .hero-title {
-    font-size: 20px;
-  }
-
-  .stat-value {
-    font-size: 20px;
+    font-size: var(--font-size-xl);
   }
 }
 </style>

@@ -2,77 +2,88 @@
   <div class="register-container">
     <div class="register-box">
       <div class="register-header">
+        <div class="logo">🥗</div>
         <h1 class="title">创建账号</h1>
         <p class="subtitle">加入 NutriPlan，开启健康之旅</p>
       </div>
 
-      <el-form
+      <n-form
         ref="registerFormRef"
         :model="registerForm"
         :rules="registerRules"
-        class="register-form"
-        @submit.prevent="handleRegister"
+        size="large"
       >
-        <el-form-item prop="username">
-          <el-input
-            v-model="registerForm.username"
+        <n-form-item path="username">
+          <n-input
+            v-model:value="registerForm.username"
             placeholder="请输入用户名"
-            size="large"
-            :prefix-icon="User"
             clearable
-          />
-        </el-form-item>
+          >
+            <template #prefix>
+              <n-icon :component="PersonOutline" />
+            </template>
+          </n-input>
+        </n-form-item>
 
-        <el-form-item prop="password">
-          <el-input
-            v-model="registerForm.password"
+        <n-form-item path="password">
+          <n-input
+            v-model:value="registerForm.password"
             type="password"
             placeholder="请输入密码（至少6位）"
-            size="large"
-            :prefix-icon="Lock"
-            show-password
-          />
-        </el-form-item>
+            show-password-on="click"
+          >
+            <template #prefix>
+              <n-icon :component="LockClosedOutline" />
+            </template>
+          </n-input>
+        </n-form-item>
 
-        <el-form-item prop="confirmPassword">
-          <el-input
-            v-model="registerForm.confirmPassword"
+        <n-form-item path="confirmPassword">
+          <n-input
+            v-model:value="registerForm.confirmPassword"
             type="password"
             placeholder="请确认密码"
-            size="large"
-            :prefix-icon="Lock"
-            show-password
+            show-password-on="click"
             @keyup.enter="handleRegister"
-          />
-        </el-form-item>
+          >
+            <template #prefix>
+              <n-icon :component="LockClosedOutline" />
+            </template>
+          </n-input>
+        </n-form-item>
 
-        <el-form-item prop="email">
-          <el-input
-            v-model="registerForm.email"
+        <n-form-item path="email">
+          <n-input
+            v-model:value="registerForm.email"
             placeholder="请输入邮箱（可选）"
-            size="large"
-            :prefix-icon="Message"
             clearable
-          />
-        </el-form-item>
+          >
+            <template #prefix>
+              <n-icon :component="MailOutline" />
+            </template>
+          </n-input>
+        </n-form-item>
 
-        <el-form-item>
-          <el-button
+        <n-form-item>
+          <n-button
             type="primary"
             size="large"
-            class="register-button"
+            block
             :loading="loading"
             @click="handleRegister"
+            class="register-button"
           >
             {{ loading ? '注册中...' : '立即注册' }}
-          </el-button>
-        </el-form-item>
+          </n-button>
+        </n-form-item>
 
         <div class="register-footer">
           <span>已有账号？</span>
-          <el-link type="primary" @click="goToLogin">立即登录</el-link>
+          <n-button text type="primary" @click="goToLogin">
+            立即登录
+          </n-button>
         </div>
-      </el-form>
+      </n-form>
     </div>
   </div>
 </template>
@@ -80,11 +91,12 @@
 <script setup>
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import { User, Lock, Message } from '@element-plus/icons-vue'
+import { NForm, NFormItem, NInput, NButton, NIcon, useMessage } from 'naive-ui'
+import { PersonOutline, LockClosedOutline, MailOutline } from '@vicons/ionicons5'
 import { register } from '@/api/user'
 
 const router = useRouter()
+const message = useMessage()
 
 const registerFormRef = ref(null)
 const loading = ref(false)
@@ -96,12 +108,11 @@ const registerForm = reactive({
   email: ''
 })
 
-const validateConfirmPassword = (rule, value, callback) => {
+const validateConfirmPassword = (rule, value) => {
   if (value !== registerForm.password) {
-    callback(new Error('两次输入的密码不一致'))
-  } else {
-    callback()
+    return new Error('两次输入的密码不一致')
   }
+  return true
 }
 
 const registerRules = {
@@ -125,28 +136,30 @@ const registerRules = {
 const handleRegister = async () => {
   if (!registerFormRef.value) return
 
-  await registerFormRef.value.validate(async (valid) => {
-    if (valid) {
-      loading.value = true
-      try {
-        const data = {
-          username: registerForm.username,
-          password: registerForm.password
-        }
-        if (registerForm.email) {
-          data.email = registerForm.email
-        }
-        
-        await register(data)
-        ElMessage.success('注册成功，请登录')
-        router.push('/login')
-      } catch (error) {
-        console.error('注册失败:', error)
-      } finally {
-        loading.value = false
-      }
+  try {
+    await registerFormRef.value.validate()
+    loading.value = true
+    
+    const data = {
+      username: registerForm.username,
+      password: registerForm.password
     }
-  })
+    if (registerForm.email) {
+      data.email = registerForm.email
+    }
+    
+    await register(data)
+    message.success('注册成功，请登录')
+    router.push('/login')
+  } catch (error) {
+    if (error.errors) {
+      // 表单验证错误
+      return
+    }
+    console.error('注册失败:', error)
+  } finally {
+    loading.value = false
+  }
 }
 
 const goToLogin = () => {
@@ -160,18 +173,18 @@ const goToLogin = () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: var(--spacing-lg);
+  background: linear-gradient(135deg, var(--color-primary) 0%, #764ba2 100%);
 }
 
 .register-box {
   width: 100%;
   max-width: 420px;
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.98);
   backdrop-filter: blur(10px);
-  border-radius: 20px;
-  padding: 40px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  border-radius: var(--radius-2xl);
+  padding: var(--spacing-3xl);
+  box-shadow: var(--shadow-2xl);
   animation: slideUp 0.5s ease-out;
 }
 
@@ -188,59 +201,63 @@ const goToLogin = () => {
 
 .register-header {
   text-align: center;
-  margin-bottom: 40px;
+  margin-bottom: var(--spacing-3xl);
+}
+
+.logo {
+  font-size: 64px;
+  margin-bottom: var(--spacing-md);
 }
 
 .title {
-  font-size: 36px;
-  font-weight: 700;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  background: linear-gradient(135deg, var(--color-primary) 0%, #764ba2 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  margin-bottom: 10px;
+  margin: 0 0 var(--spacing-sm) 0;
 }
 
 .subtitle {
-  color: #666;
-  font-size: 14px;
-}
-
-.register-form {
-  margin-top: 30px;
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+  margin: 0;
 }
 
 .register-button {
-  width: 100%;
   height: 48px;
-  font-size: 16px;
-  font-weight: 600;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border: none;
-}
-
-.register-button:hover {
-  opacity: 0.9;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-  transition: all 0.3s ease;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  border-radius: var(--radius-lg);
+  margin-top: var(--spacing-md);
 }
 
 .register-footer {
   text-align: center;
-  margin-top: 20px;
-  color: #666;
-  font-size: 14px;
+  margin-top: var(--spacing-lg);
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
 }
 
-.register-footer .el-link {
-  margin-left: 8px;
-  font-weight: 600;
+@media (max-width: 480px) {
+  .register-box {
+    padding: var(--spacing-xl);
+  }
+  
+  .logo {
+    font-size: 48px;
+  }
+  
+  .title {
+    font-size: var(--font-size-2xl);
+  }
 }
-
-:deep(.el-input__wrapper) {
-  border-radius: 8px;
+</style>
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
