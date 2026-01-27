@@ -4,13 +4,23 @@
  */
 
 :root {
-  /* ============ 品牌色 ============ */
-  --color-primary: #10b981;
-  --color-primary-hover: #059669;
-  --color-primary-pressed: #047857;
-  --color-primary-light: #6ee7b7;
-  --color-primary-lighter: #d1fae5;
-  --color-primary-supperlight: #ecfdf5;
+  /* ============ 品牌色 (Updated) ============ */
+  --color-primary: #059669; /* Emerald 600 */
+  --color-primary-hover: #047857; /* Emerald 700 */
+  --color-primary-pressed: #065f46; /* Emerald 800 */
+  --color-primary-light: #34d399; /* Emerald 400 */
+  --color-primary-lighter: #a7f3d0; /* Emerald 200 */
+  --color-primary-supperlight: #ecfdf5; /* Emerald 50 */
+
+  /* ============ 辅助色 (New) ============ */
+  --color-accent-warm: #f59e0b; /* Amber 500 */
+  --color-accent-warm-light: #fef3c7; /* Amber 100 */
+  --color-accent-cool: #3b82f6; /* Blue 500 */
+  --color-accent-cool-light: #dbeafe; /* Blue 100 */
+  --color-accent-pink: #ec4899; /* Pink 500 */
+  --color-accent-pink-light: #fce7f3; /* Pink 100 */
+  --color-accent-purple: #8b5cf6; /* Violet 500 */
+  --color-accent-purple-light: #ede9fe; /* Violet 100 */
 
   /* ============ 功能色 ============ */
   --color-success: #10b981;
@@ -23,49 +33,49 @@
   --color-info-light: #dbeafe;
 
   /* ============ 中性色 ============ */
-  --color-text-primary: #1a1a1a;
-  --color-text-secondary: #64748b;
-  --color-text-tertiary: #94a3b8;
-  --color-text-disabled: #cbd5e1;
+  --color-text-primary: #111827; /* Gray 900 */
+  --color-text-secondary: #4b5563; /* Gray 600 */
+  --color-text-tertiary: #9ca3af; /* Gray 400 */
+  --color-text-disabled: #d1d5db; /* Gray 300 */
+  --color-text-inverse: #ffffff;
 
-  --color-bg-primary: #ffffff;
+  --color-bg-primary: #ffffff; /* 纯白用于不透明场景 */
+  --color-bg-glass: rgba(255, 255, 255, 0.8); /* 毛玻璃背景 */
   --color-bg-secondary: #f8fafc;
   --color-bg-tertiary: #f1f5f9;
-  --color-bg-hover: #f8fafc;
+  --color-bg-hover: #f1f5f9;
 
   --color-border-primary: #e2e8f0;
   --color-border-secondary: #f1f5f9;
 
   /* ============ 营养素色彩 ============ */
-  --color-protein: #ef4444; /* 蛋白质 - 红色 */
-  --color-protein-light: #fee2e2;
-  --color-carb: #f59e0b; /* 碳水化合物 - 橙色 */
-  --color-carb-light: #fef3c7;
-  --color-fat: #8b5cf6; /* 脂肪 - 紫色 */
-  --color-fat-light: #ede9fe;
-  --color-fiber: #10b981; /* 膳食纤维 - 绿色 */
-  --color-fiber-light: #d1fae5;
+  --color-protein: #ef4444;
+  --color-carb: #f59e0b;
+  --color-fat: #8b5cf6;
+  --color-fiber: #10b981;
 
-  /* ============ 渐变色 ============ */
-  --gradient-primary: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  --gradient-hero: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
-  --gradient-card: linear-gradient(145deg, #ffffff 0%, #f9fafb 100%);
+  /* ============ 阴影 (Refined) ============ */
+  /* 基础阴影 */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 
-  /* ============ 阴影 ============ */
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.05);
-  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
-  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1), 0 10px 10px rgba(0, 0, 0, 0.04);
-  --shadow-2xl: 0 25px 50px rgba(0, 0, 0, 0.15);
+  /* 彩色阴影 glow */
+  --shadow-primary-sm: 0 4px 14px 0 rgba(16, 185, 129, 0.39);
+  --shadow-primary-md: 0 6px 20px rgba(16, 185, 129, 0.23);
 
-  /* ============ 圆角 ============ */
+  /* ============ 圆角 (Updated) ============ */
   --radius-xs: 4px;
   --radius-sm: 6px;
   --radius-md: 8px;
   --radius-lg: 12px;
   --radius-xl: 16px;
-  --radius-2xl: 20px;
+  --radius-2xl: 24px; /* Slightly larger */
+  --radius-3xl: 32px;
   --radius-full: 9999px;
 
   /* ============ 间距 ============ */
@@ -79,12 +89,12 @@
   --spacing-4xl: 64px;
 
   /* ============ 字体 ============ */
-  --font-family-base: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
-    'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji',
-    'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
-  --font-family-mono: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono',
-    Consolas, 'Courier New', monospace;
-  --font-family-number: 'DIN Alternate', 'SF Pro Display', -apple-system, sans-serif;
+  --font-family-base:
+    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  --font-family-mono: "SF Mono", Monaco, "Cascadia Code", monospace;
+  --font-family-number:
+    "Oswald", "DIN Alternate", "Inter", sans-serif; /* For big numbers */
 
   --font-size-xs: 12px;
   --font-size-sm: 13px;
@@ -94,52 +104,34 @@
   --font-size-xl: 18px;
   --font-size-2xl: 20px;
   --font-size-3xl: 24px;
-  --font-size-4xl: 32px;
-  --font-size-5xl: 40px;
+  --font-size-4xl: 30px;
+  --font-size-5xl: 36px;
+  --font-size-huge: 48px;
 
   --font-weight-normal: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
 
   --line-height-tight: 1.2;
   --line-height-normal: 1.5;
   --line-height-relaxed: 1.75;
 
-  /* ============ 层级 ============ */
-  --z-index-dropdown: 1000;
-  --z-index-sticky: 1020;
-  --z-index-fixed: 1030;
-  --z-index-modal-backdrop: 1040;
-  --z-index-modal: 1050;
-  --z-index-popover: 1060;
-  --z-index-tooltip: 1070;
-
   /* ============ 过渡 ============ */
   --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-slower: 500ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
 
-  /* ============ 断点 ============ */
-  --breakpoint-xs: 480px;
-  --breakpoint-sm: 640px;
-  --breakpoint-md: 768px;
-  --breakpoint-lg: 1024px;
-  --breakpoint-xl: 1280px;
-  --breakpoint-2xl: 1536px;
+  /* ============ 毛玻璃变量 ============ */
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: 1px solid rgba(255, 255, 255, 0.5);
+  --glass-backdrop-blur: blur(12px);
 }
 
 /* ============ 暗色模式（预留） ============ */
-[data-theme='dark'] {
+[data-theme="dark"] {
   --color-text-primary: #f8fafc;
   --color-text-secondary: #cbd5e1;
-  --color-text-tertiary: #94a3b8;
-
   --color-bg-primary: #0f172a;
-  --color-bg-secondary: #1e293b;
-  --color-bg-tertiary: #334155;
-
-  --color-border-primary: #334155;
-  --color-border-secondary: #475569;
 }

@@ -1,173 +1,184 @@
 <template>
   <div class="home-container">
-    <!-- 顶部导航 - 使用新组件 -->
+    <!-- 顶部导航 -->
     <TopNavigation />
 
     <!-- 主内容区 -->
     <div class="main-wrapper">
-      <!-- 欢迎区域 -->
-      <n-card class="hero-card" :bordered="false">
-        <div class="hero-content">
-          <h1 class="hero-title">
-            {{ getGreeting() }}，<span class="highlight">{{
-              authStore.user?.username
-            }}</span>
-            👋
-          </h1>
-          <p class="hero-subtitle">今天想吃点什么呢？</p>
-        </div>
-        <div
-          class="quick-stats"
-          v-if="authStore.hasProfile && authStore.profile"
-        >
-          <StatCard
-            icon="🔥"
-            :value="authStore.profile.tdee ? Math.floor(authStore.profile.tdee).toString() : '--'"
-            label="每日目标热量"
-            subtitle="kcal"
-          />
-          <div class="stat-divider"></div>
-          <StatCard
-            icon="⚖️"
-            :value="authStore.profile.weight?.toString() || '--'"
-            label="当前体重"
-            subtitle="kg"
-          />
-        </div>
-      </n-card>
+      <n-grid :x-gap="16" :y-gap="16" cols="1">
+        <!-- Hero Card: Greeting + Calorie Ring -->
+        <n-gi>
+          <n-card :bordered="false" class="hero-card">
+            <n-grid :x-gap="24" :cols="2" responsive="screen" :collapsed-rows="1" item-responsive>
+              <!-- Left: Greeting -->
+              <n-gi span="2 m:1">
+                <div class="greeting-section">
+                  <h1 class="greeting-text">
+                    {{ getGreeting() }}，<span class="username">{{ authStore.user?.username }}</span> 👋
+                  </h1>
+                  <p class="greeting-subtitle">{{ getCurrentDateText() }}</p>
+                </div>
+              </n-gi>
 
-      <!-- 功能卡片区 -->
-      <div class="content-section">
-        <div class="features-grid">
-          <!-- 主要功能卡片区 (顶层双巨头) -->
-          <div class="big-cards-row">
-            <!-- 1. 今日食谱 (Big Card) -->
-            <n-card
-              class="feature-card big-card recipe-card"
-              hoverable
-              @click="goToRecipes"
-              :class="{ disabled: !authStore.hasProfile }"
-            >
-              <div class="card-content">
-                <div class="card-header">
-                  <span class="card-emoji">🍳</span>
-                  <h2 class="card-title-big">今日食谱</h2>
+              <!-- Right: Calorie Ring -->
+              <n-gi span="2 m:1">
+                <div class="calorie-ring-container" v-if="authStore.hasProfile && authStore.profile">
+                  <n-progress
+                    type="circle"
+                    :percentage="getCaloriePercentage()"
+                    :stroke-width="12"
+                    :color="getCalorieColor()"
+                    :show-indicator="false"
+                    :style="{ width: '180px', height: '180px' }"
+                  >
+                  </n-progress>
+                  <div class="calorie-overlay">
+                    <div class="calorie-number">{{ getCaloriesRemaining() }}</div>
+                    <div class="calorie-label">卡路里剩余</div>
+                    <div class="calorie-detail">已摄入 {{ getCaloriesConsumed() }} / 目标 {{ Math.floor(authStore.profile.tdee) }}</div>
+                  </div>
                 </div>
-                <p class="card-desc">
-                  {{
-                    authStore.hasProfile
-                      ? "获取推荐的营养均衡食谱"
-                      : "完善档案后开启智能推荐"
-                  }}
-                </p>
-                <div class="card-action">
-                  <span class="action-text">
-                    查看今日推荐 
-                    <n-icon><ArrowForwardOutline /></n-icon>
-                  </span>
+                <div v-else class="empty-ring">
+                  <n-button type="primary" size="large" @click="goToProfile">
+                    完善档案开始
+                  </n-button>
                 </div>
+              </n-gi>
+            </n-grid>
+          </n-card>
+        </n-gi>
+
+        <!-- Today's Recipe Card: Magazine Cover Style -->
+        <n-gi>
+          <n-card 
+            :bordered="false" 
+            class="recipe-magazine-card" 
+            hoverable
+            @click="goToRecipes"
+            :class="{ disabled: !authStore.hasProfile }"
+          >
+            <div class="recipe-bg-image"></div>
+            <div class="recipe-overlay"></div>
+            <div class="recipe-content">
+              <div class="recipe-tag">
+                <n-tag type="success" round size="small">今日推荐</n-tag>
               </div>
-            </n-card>
-
-            <!-- 2. 营养分析 (Big Card - 原个人档案升级) -->
-            <n-card
-              class="feature-card big-card nutrition-card"
-              hoverable
-              @click="goToNutrition"
-            >
-              <div class="card-content">
-                <div class="card-header">
-                  <span class="card-emoji">📊</span>
-                  <div class="header-text">
-                    <h2 class="card-title-big">营养分析</h2>
-                    <span class="card-subtitle">目标追踪 & 档案管理</span>
-                  </div>
-                </div>
-
-                <div
-                  v-if="authStore.hasProfile && nutritionData"
-                  class="nutrition-preview"
-                >
-                  <div class="target-cal">
-                    <span class="label">今日目标</span>
-                    <span class="value">{{
-                      nutritionData.target_calorie || "--"
-                    }}</span>
-                    <span class="unit">kcal</span>
-                  </div>
-                  <div class="macros-mini">
-                    <n-tag round size="small" :bordered="false" class="macro-tag">
-                      碳水 {{ nutritionData.carb_ratio?.toFixed(0) }}%
-                    </n-tag>
-                    <n-tag round size="small" :bordered="false" class="macro-tag">
-                      蛋白 {{ nutritionData.protein_ratio?.toFixed(0) }}%
-                    </n-tag>
-                    <n-tag round size="small" :bordered="false" class="macro-tag">
-                      脂肪 {{ nutritionData.fat_ratio?.toFixed(0) }}%
-                    </n-tag>
-                  </div>
-                </div>
-                <p v-else class="card-desc">完善档案，获取专属营养分析</p>
-
-                <div class="card-status" v-if="!authStore.hasProfile">
-                  <n-tag type="warning" size="small" round>待完善</n-tag>
-                </div>
+              <h2 class="recipe-title">今日营养食谱</h2>
+              <p class="recipe-description">
+                {{ authStore.hasProfile ? '为您精心挑选的营养均衡食谱' : '完善档案后开启智能推荐' }}
+              </p>
+              <div class="recipe-action">
+                <n-icon size="24" color="white">
+                  <ArrowForwardOutline />
+                </n-icon>
               </div>
-            </n-card>
-          </div>
+            </div>
+          </n-card>
+        </n-gi>
 
-          <!-- 次级功能卡片区 (小卡片网格) -->
-          <div class="secondary-grid">
+        <!-- Action Cards Grid: 4 columns -->
+        <n-gi>
+          <n-grid :x-gap="16" :y-gap="16" :cols="'2 m:4'" responsive="screen">
             <!-- 饮食记录 -->
-            <n-card class="feature-card small-card" hoverable @click="goToIntake">
-              <div class="card-content-center">
-                <span class="card-emoji-small">📝</span>
-                <h3 class="card-title-small">饮食记录</h3>
-                <p class="card-desc-mini">记录每餐摄入</p>
-              </div>
-            </n-card>
+            <n-gi>
+              <n-card 
+                :bordered="false" 
+                class="action-card" 
+                hoverable
+                @click="goToIntake"
+              >
+                <div class="action-icon-wrapper bg-red-100">
+                  <n-icon size="36" color="#dc2626">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M21 6.5c0 1.38-1.12 2.5-2.5 2.5S16 7.88 16 6.5 17.12 4 18.5 4 21 5.12 21 6.5zM9 4h6v2H9V4zm11 6h-2c0 1.1-.9 2-2 2h-5v11c0 .55-.45 1-1 1s-1-.45-1-1V12H4c-1.1 0-2-.9-2-2H0V6h2c0-1.1.9-2 2-2h1V2c0-.55.45-1 1-1s1 .45 1 1v2h1c1.1 0 2 .9 2 2v4h8V6c0-1.1.9-2 2-2h1V2c0-.55.45-1 1-1s1 .45 1 1v2h1c1.1 0 2 .9 2 2v4z"/>
+                    </svg>
+                  </n-icon>
+                </div>
+                <h3 class="action-title">饮食记录</h3>
+                <p class="action-desc">记录每餐摄入</p>
+              </n-card>
+            </n-gi>
 
             <!-- 周报告 -->
-            <n-card class="feature-card small-card" hoverable @click="goToWeekly">
-              <div class="card-content-center">
-                <span class="card-emoji-small">📈</span>
-                <h3 class="card-title-small">周报告</h3>
-                <p class="card-desc-mini">查看长期趋势</p>
-              </div>
-            </n-card>
+            <n-gi>
+              <n-card 
+                :bordered="false" 
+                class="action-card" 
+                hoverable
+                @click="goToWeekly"
+              >
+                <div class="action-icon-wrapper bg-blue-100">
+                  <n-icon size="36" color="#2563eb">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/>
+                    </svg>
+                  </n-icon>
+                </div>
+                <h3 class="action-title">周报告</h3>
+                <p class="action-desc">查看长期趋势</p>
+              </n-card>
+            </n-gi>
 
-            <!-- 收藏夹 -->
-            <n-card class="feature-card small-card" hoverable @click="goToFavorites">
-              <div class="card-content-center">
-                <span class="card-emoji-small">⭐</span>
-                <h3 class="card-title-small">我的收藏</h3>
-                <p class="card-desc-mini">喜爱的食谱</p>
-              </div>
-            </n-card>
+            <!-- 我的收藏 -->
+            <n-gi>
+              <n-card 
+                :bordered="false" 
+                class="action-card" 
+                hoverable
+                @click="goToFavorites"
+              >
+                <div class="action-icon-wrapper bg-yellow-100">
+                  <n-icon size="36" color="#ca8a04">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                    </svg>
+                  </n-icon>
+                </div>
+                <h3 class="action-title">我的收藏</h3>
+                <p class="action-desc">喜爱的食谱</p>
+              </n-card>
+            </n-gi>
 
             <!-- 购物清单 -->
-            <n-card class="feature-card small-card" hoverable @click="goToShopping">
-              <div class="card-content-center">
-                <span class="card-emoji-small">🛒</span>
-                <h3 class="card-title-small">购物清单</h3>
-                <p class="card-desc-mini">食材采购助手</p>
-              </div>
-            </n-card>
-          </div>
-        </div>
+            <n-gi>
+              <n-card 
+                :bordered="false" 
+                class="action-card" 
+                hoverable
+                @click="goToShopping"
+              >
+                <div class="action-icon-wrapper bg-green-100">
+                  <n-icon size="36" color="#16a34a">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/>
+                    </svg>
+                  </n-icon>
+                </div>
+                <h3 class="action-title">购物清单</h3>
+                <p class="action-desc">食材采购助手</p>
+              </n-card>
+            </n-gi>
+          </n-grid>
+        </n-gi>
 
-        <!-- 提示信息 (当没有档案时显示) -->
-        <n-card v-if="!authStore.hasProfile" class="tip-card" :bordered="false">
-          <div class="tip-icon">💡</div>
-          <div class="tip-content">
-            <h4 class="tip-title">开始您的健康之旅</h4>
-            <p class="tip-text">完善个人档案，获取专属营养方案</p>
-            <n-button type="primary" size="small" round @click="goToProfile">
-              立即完善
-            </n-button>
-          </div>
-        </n-card>
-      </div>
+        <!-- Tip Card (if no profile) -->
+        <n-gi v-if="!authStore.hasProfile">
+          <n-card :bordered="false" class="tip-card">
+            <div class="tip-content">
+              <n-icon size="48" color="#f59e0b">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.85 11.1l-.85.6V16h-4v-2.3l-.85-.6C7.8 12.16 7 10.63 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.16-2.15 4.1z"/>
+                </svg>
+              </n-icon>
+              <h3 class="tip-title">开始您的健康之旅</h3>
+              <p class="tip-text">完善个人档案，获取专属营养方案</p>
+              <n-button type="primary" size="large" @click="goToProfile">
+                立即完善档案
+              </n-button>
+            </div>
+          </n-card>
+        </n-gi>
+      </n-grid>
     </div>
   </div>
 </template>
@@ -175,13 +186,12 @@
 <script setup>
 import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
-import { NCard, NTag, NButton, NIcon } from "naive-ui";
+import { NCard, NGrid, NGi, NTag, NButton, NIcon, NProgress } from "naive-ui";
 import { ArrowForwardOutline } from "@vicons/ionicons5";
 import { ElMessage } from "element-plus";
 import { useAuthStore } from "@/store/auth";
 import { getNutritionRequirements } from "@/api/user";
 import TopNavigation from "@/components/layout/TopNavigation.vue";
-import StatCard from "@/components/ui/StatCard.vue";
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -234,7 +244,6 @@ const goToNutrition = () => {
     ElMessage.warning("请先完善健康档案");
     return;
   }
-  // 可以创建一个专门的营养需求展示页面
   router.push("/profile/view");
 };
 
@@ -243,7 +252,6 @@ const goToFavorites = () => {
 };
 
 const goToShopping = () => {
-  console.log("点击购物清单卡片");
   router.push("/shopping");
 };
 
@@ -259,358 +267,383 @@ const getGreeting = () => {
   return "夜深了";
 };
 
-const handleCommand = async (command) => {
-  if (command === "profile") {
-    router.push("/profile/view");
-  } else if (command === "favorites") {
-    goToFavorites();
-  } else if (command === "intake") {
-    goToIntake();
-  } else if (command === "weekly") {
-    goToWeekly();
-  } else if (command === "logout") {
-    try {
-      await ElMessageBox.confirm("确定要退出登录吗？", "提示", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning",
-      });
-      authStore.logout();
-      ElMessage.success("已退出登录");
-      router.push("/login");
-    } catch {
-      // 用户取消
-    }
-  }
+// 获取当前日期文本
+const getCurrentDateText = () => {
+  const today = new Date();
+  const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  return today.toLocaleDateString('zh-CN', options);
+};
+
+// 计算卡路里百分比（假设消耗了一些）
+const getCaloriePercentage = () => {
+  if (!authStore.profile?.tdee) return 0;
+  // 这里可以根据实际摄入计算，暂时返回随机值作为演示
+  const remaining = getCaloriesRemaining();
+  const total = Math.floor(authStore.profile.tdee);
+  return Math.min(100, Math.max(0, (remaining / total) * 100));
+};
+
+// 获取剩余卡路里
+const getCaloriesRemaining = () => {
+  if (!authStore.profile?.tdee) return 0;
+  // 这里应该从实际摄入数据计算，暂时返回目标值
+  return Math.floor(authStore.profile.tdee);
+};
+
+// 获取已摄入卡路里
+const getCaloriesConsumed = () => {
+  if (!authStore.profile?.tdee) return 0;
+  // 这里应该从实际摄入数据计算，暂时返回示例值
+  const total = Math.floor(authStore.profile.tdee);
+  const remaining = getCaloriesRemaining();
+  return total - remaining;
+};
+
+// 根据剩余卡路里返回颜色
+const getCalorieColor = () => {
+  const percentage = getCaloriePercentage();
+  if (percentage > 70) return '#10b981'; // 绿色
+  if (percentage > 30) return '#f59e0b'; // 黄色
+  return '#ef4444'; // 红色
 };
 </script>
 
 <style scoped>
+/* Container */
 .home-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 50%, #fef3c7 100%);
+  background: #F5F7FA;
 }
 
-/* 主内容包装 */
 .main-wrapper {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
-  padding: var(--spacing-2xl) var(--spacing-lg);
+  padding: 24px;
 }
 
-/* Hero卡片 */
+/* Hero Card */
 .hero-card {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(10px);
-  border-radius: var(--radius-2xl);
-  margin-bottom: var(--spacing-2xl);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.8);
+  padding: 32px;
+  background: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
-.hero-content {
-  margin-bottom: var(--spacing-lg);
+.greeting-section {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100%;
 }
 
-.hero-title {
-  font-size: var(--font-size-3xl);
-  font-weight: var(--font-weight-bold);
-  color: var(--text-primary);
-  margin: 0 0 var(--spacing-xs) 0;
+.greeting-text {
+  font-size: 2.25rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 8px 0;
   line-height: 1.2;
 }
 
-.highlight {
-  color: var(--color-primary);
+.username {
+  color: #10b981;
 }
 
-.hero-subtitle {
-  font-size: var(--font-size-base);
-  color: var(--text-secondary);
+.greeting-subtitle {
+  font-size: 0.95rem;
+  color: #6b7280;
   margin: 0;
 }
 
-/* 快速统计 */
-.quick-stats {
-  display: flex;
-  gap: var(--spacing-lg);
-  padding-top: var(--spacing-lg);
-  border-top: 1px solid var(--border-color);
-  align-items: center;
-}
-
-.stat-divider {
-  width: 1px;
-  height: 60px;
-  background: var(--border-color);
-}
-
-/* 功能区布局 */
-.content-section {
-  animation: fadeIn 0.5s ease-out;
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-lg);
-}
-
-.features-grid {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-lg);
-}
-
-/* 顶部大卡片行 */
-.big-cards-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--spacing-lg);
-}
-
-/* 次级小卡片网格 */
-.secondary-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: var(--spacing-md);
-}
-
-/* 卡片通用样式 */
-.feature-card {
-  cursor: pointer;
-  transition: all var(--transition-normal);
-  border-radius: var(--radius-xl);
-}
-
-.feature-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-lg);
-}
-
-.feature-card:active {
-  transform: scale(0.98);
-}
-
-/* 大卡片样式 */
-.big-card {
-  min-height: 220px;
-}
-
-.big-card :deep(.n-card__content) {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.recipe-card {
-  background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(16, 185, 129, 0.2);
-}
-
-.recipe-card:hover {
-  background: rgba(255, 255, 255, 0.75);
-  border-color: var(--color-primary);
-}
-
-.nutrition-card {
-  background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(59, 130, 246, 0.2);
-}
-
-.nutrition-card:hover {
-  background: rgba(255, 255, 255, 0.75);
-  border-color: #3b82f6;
-}
-
-.card-content {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-
-.card-header {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--spacing-md);
-  margin-bottom: var(--spacing-md);
-}
-
-.header-text {
-  display: flex;
-  flex-direction: column;
-}
-
-.card-subtitle {
-  font-size: var(--font-size-sm);
-  color: var(--text-tertiary);
-  margin-top: var(--spacing-xs);
-}
-
-.card-emoji {
-  font-size: 42px;
-  line-height: 1;
-}
-
-.card-title-big {
-  font-size: var(--font-size-2xl);
-  font-weight: var(--font-weight-bold);
-  color: var(--text-primary);
-  margin: 0;
-  line-height: 1.2;
-}
-
-.card-desc {
-  font-size: var(--font-size-base);
-  color: var(--text-secondary);
-  line-height: 1.6;
-  margin-bottom: auto;
-}
-
-.card-action {
-  margin-top: auto;
-  color: var(--color-primary);
-  font-weight: var(--font-weight-semibold);
-  font-size: var(--font-size-sm);
-  display: flex;
-  align-items: center;
-}
-
-.action-text {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-xs);
-}
-
-/* 营养数据预览 */
-.nutrition-preview {
-  margin-top: var(--spacing-sm);
-}
-
-.target-cal {
-  display: flex;
-  align-items: baseline;
-  gap: var(--spacing-xs);
-  margin-bottom: var(--spacing-md);
-}
-
-.target-cal .label {
-  font-size: var(--font-size-sm);
-  color: var(--text-secondary);
-}
-
-.target-cal .value {
-  font-size: 28px;
-  font-weight: var(--font-weight-bold);
-  color: #2c5282;
-  font-family: "DIN Alternate", sans-serif;
-}
-
-.target-cal .unit {
-  font-size: var(--font-size-sm);
-  color: var(--text-secondary);
-}
-
-.macros-mini {
-  display: flex;
-  gap: var(--spacing-sm);
-}
-
-.macro-tag {
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-}
-
-/* 小卡片样式 */
-.small-card {
-  min-height: 140px;
-  background: rgba(255, 255, 255, 0.5);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-}
-
-.small-card:hover {
-  background: rgba(255, 255, 255, 0.7);
-  border-color: var(--color-primary);
-}
-
-.small-card :deep(.n-card__content) {
-  height: 100%;
+/* Calorie Ring */
+.calorie-ring-container {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
+  height: 100%;
 }
 
-.card-content-center {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--spacing-xs);
+.calorie-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   text-align: center;
 }
 
-.card-emoji-small {
-  font-size: 32px;
-  margin-bottom: var(--spacing-xs);
+.calorie-number {
+  font-size: 3rem;
+  font-weight: 700;
+  color: #10b981;
+  line-height: 1;
+  font-family: 'Inter', -apple-system, sans-serif;
 }
 
-.card-title-small {
-  font-size: var(--font-size-base);
-  font-weight: var(--font-weight-semibold);
-  color: var(--text-primary);
-  margin: 0;
+.calorie-label {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-top: 4px;
+  font-weight: 500;
 }
 
-.card-desc-mini {
-  font-size: var(--font-size-sm);
-  color: var(--text-tertiary);
-  margin: 0;
+.calorie-detail {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  margin-top: 8px;
+  font-weight: 400;
 }
 
-/* 提示卡片 */
-.tip-card {
-  background: rgba(254, 243, 199, 0.5);
-  backdrop-filter: blur(8px);
-  border-radius: var(--radius-xl);
-  box-shadow: 0 4px 20px rgba(251, 191, 36, 0.15);
-  border: 1px solid rgba(251, 191, 36, 0.2);
-}
-
-.tip-card :deep(.n-card__content) {
+.empty-ring {
   display: flex;
   align-items: center;
-  gap: var(--spacing-lg);
+  justify-content: center;
+  height: 100%;
 }
 
-.tip-icon {
-  font-size: 48px;
+/* Recipe Magazine Card */
+.recipe-magazine-card {
+  position: relative;
+  min-height: 320px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.3s ease;
 }
 
-.tip-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
+.recipe-magazine-card:hover {
+  transform: translateY(-4px);
 }
 
-.tip-title {
-  font-size: var(--font-size-lg);
-  font-weight: var(--font-weight-semibold);
-  color: var(--text-primary);
-  margin: 0;
-}
-
-.tip-text {
-  font-size: var(--font-size-sm);
-  color: var(--text-secondary);
-  margin: 0;
-}
-
-.disabled {
+.recipe-magazine-card.disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
-/* 动画 */
+.recipe-bg-image {
+  position: absolute;
+  inset: 0;
+  background-image: url('https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=1200&q=80');
+  background-size: cover;
+  background-position: center;
+  z-index: 0;
+}
+
+.recipe-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.3) 100%);
+  z-index: 1;
+}
+
+.recipe-content {
+  position: relative;
+  z-index: 2;
+  height: 100%;
+  min-height: 280px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 32px 32px 32px 40px;
+  color: white;
+}
+
+.recipe-tag {
+  margin-bottom: 16px;
+}
+
+.recipe-title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0 0 12px 0;
+  color: white;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.recipe-description {
+  font-size: 1.125rem;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0 0 24px 0;
+  line-height: 1.6;
+}
+
+.recipe-action {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+/* Action Cards */
+.action-card {
+  padding: 24px;
+  background: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+.action-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.action-icon-wrapper {
+  width: 72px;
+  height: 72px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+}
+
+.bg-red-100 {
+  background-color: #fee2e2;
+}
+
+.bg-blue-100 {
+  background-color: #dbeafe;
+}
+
+.bg-yellow-100 {
+  background-color: #fef3c7;
+}
+
+.bg-green-100 {
+  background-color: #d1fae5;
+}
+
+.action-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 8px 0;
+}
+
+.action-desc {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* Tip Card */
+.tip-card {
+  padding: 32px;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.tip-content {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.tip-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #78350f;
+  margin: 0;
+}
+
+.tip-text {
+  font-size: 1rem;
+  color: #92400e;
+  margin: 0;
+  max-width: 500px;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .calorie-ring-container :deep(.n-progress) {
+    width: 140px !important;
+    height: 140px !important;
+  }
+  
+  .calorie-number {
+    font-size: 2.25rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .main-wrapper {
+    padding: 16px;
+  }
+
+  .hero-card {
+    padding: 24px;
+  }
+
+  /* Hero卡片移动端居中 */
+  .greeting-section {
+    text-align: center;
+  }
+
+  .greeting-text {
+    font-size: 1.75rem;
+  }
+
+  .greeting-subtitle {
+    font-size: 0.875rem;
+  }
+
+  /* 卡路里圆环居中 */
+  .calorie-ring-container {
+    justify-content: center;
+    padding: 24px 0;
+  }
+
+  .calorie-ring-container :deep(.n-progress) {
+    width: 160px !important;
+    height: 160px !important;
+  }
+
+  .calorie-number {
+    font-size: 2.25rem;
+  }
+
+  .calorie-detail {
+    font-size: 0.7rem;
+  }
+
+  /* Banner高度增加 */
+  .recipe-magazine-card {
+    min-height: 400px;
+  }
+
+  .recipe-content {
+    min-height: 360px;
+    padding: 28px;
+  }
+
+  .recipe-title {
+    font-size: 1.75rem;
+  }
+
+  .recipe-description {
+    font-size: 1rem;
+  }
+
+  /* Action卡片调整 */
+  .action-card {
+    padding: 20px;
+  }
+
+  .action-icon-wrapper {
+    width: 64px;
+    height: 64px;
+  }
+
+  .action-title {
+    font-size: 1rem;
+  }
+
+  .action-desc {
+    font-size: 0.8125rem;
+  }
+}
+
+/* Animation */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -622,60 +655,7 @@ const handleCommand = async (command) => {
   }
 }
 
-/* 响应式设计 */
-@media (max-width: 1024px) {
-  .secondary-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 768px) {
-  .main-wrapper {
-    padding: var(--spacing-md);
-  }
-
-  .hero-title {
-    font-size: var(--font-size-2xl);
-  }
-
-  /* 移动端改为单列 */
-  .big-cards-row {
-    grid-template-columns: 1fr;
-    gap: var(--spacing-md);
-  }
-
-  .secondary-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: var(--spacing-sm);
-  }
-
-  .big-card {
-    min-height: 180px;
-  }
-
-  .small-card {
-    min-height: 120px;
-  }
-
-  .quick-stats {
-    flex-direction: column;
-    gap: var(--spacing-md);
-    align-items: stretch;
-  }
-
-  .stat-divider {
-    display: none;
-  }
-
-  .tip-card :deep(.n-card__content) {
-    flex-direction: column;
-    text-align: center;
-  }
-}
-
-@media (max-width: 480px) {
-  .hero-title {
-    font-size: var(--font-size-xl);
-  }
+.home-container > * {
+  animation: fadeIn 0.5s ease-out;
 }
 </style>
