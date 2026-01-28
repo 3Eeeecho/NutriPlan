@@ -1,67 +1,54 @@
 <template>
-  <div class="favorite-page">
-    <!-- 顶部导航栏 -->
-    <div class="top-nav">
-      <el-button @click="goBack" class="back-button" circle>
-        <el-icon><ArrowLeft /></el-icon>
-      </el-button>
-      <div class="user-info-nav">
-        <el-dropdown @command="handleCommand">
-          <span class="user-info-display">
-            <el-avatar :size="32" :icon="UserFilled" />
-            <span class="username">{{ authStore.user?.username || '用户' }}</span>
-            <el-icon><ArrowDown /></el-icon>
-          </span>
-          <template #dropdown>
-            <el-dropdown-menu>
-              <el-dropdown-item command="home">
-                <el-icon><HomeFilled /></el-icon>
-                返回首页
-              </el-dropdown-item>
-              <el-dropdown-item command="profile">
-                <el-icon><User /></el-icon>
-                个人档案
-              </el-dropdown-item>
-              <el-dropdown-item command="intake">
-                <el-icon><DataLine /></el-icon>
-                饮食记录
-              </el-dropdown-item>
-            </el-dropdown-menu>
-          </template>
-        </el-dropdown>
+  <PageLayout>
+    <TopNavigation />
+    
+    <div class="favorite-container">
+      <div class="page-header">
+        <div class="header-left">
+          <BackButton />
+        </div>
+        <h1 class="page-title">我的收藏</h1>
+        <div class="header-right"></div>
       </div>
-    </div>
 
-    <div class="top-bar">
-      <h1>我的收藏</h1>
-    </div>
+      <n-spin :show="loading">
+        <div v-if="!loading && favorites.length === 0" class="empty-state">
+          <n-empty description="还没有收藏食谱，去推荐页看看吧～">
+            <template #extra>
+              <n-button type="primary" @click="router.push('/recommend')">
+                去逛逛
+              </n-button>
+            </template>
+          </n-empty>
+        </div>
 
-    <div v-if="loading" class="loading">加载中…</div>
-    <div v-else-if="favorites.length === 0" class="empty">还没有收藏食谱，去推荐页看看吧～</div>
-    <div v-else class="grid">
-      <RecipeCard
-        v-for="item in favorites"
-        :key="item.id"
-        :title="item.meal_type || '食谱'"
-        :recipe="item"
-        :icon="pickIcon(item.meal_type)"
-      />
+        <div v-else class="recipe-grid">
+          <RecipeCard
+            v-for="item in favorites"
+            :key="item.id"
+            :title="formatMealType(item.meal_type)"
+            :recipe="item"
+            :icon="pickIcon(item.meal_type)"
+          />
+        </div>
+      </n-spin>
     </div>
-  </div>
+  </PageLayout>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { ArrowLeft, UserFilled, ArrowDown, HomeFilled, User, DataLine } from '@element-plus/icons-vue'
-import RecipeCard from '@/components/RecipeCard.vue'
-import { getFavoriteList } from '@/api/recipeApi'
 import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/store/auth'
+import { NSpin, NEmpty, NButton } from 'naive-ui'
+import { getFavoriteList } from '@/api/recipeApi'
+import PageLayout from '@/components/layout/PageLayout.vue'
+import TopNavigation from '@/components/layout/TopNavigation.vue'
+import BackButton from '@/components/layout/BackButton.vue'
+import RecipeCard from '@/components/RecipeCard.vue'
 
+const router = useRouter()
 const favorites = ref([])
 const loading = ref(false)
-const router = useRouter()
-const authStore = useAuthStore()
 
 const loadFavorites = async () => {
   loading.value = true
@@ -75,22 +62,6 @@ const loadFavorites = async () => {
   }
 }
 
-const goBack = () => router.back()
-
-const handleCommand = (command) => {
-  switch (command) {
-    case 'home':
-      router.push('/home')
-      break
-    case 'profile':
-      router.push('/profile/view')
-      break
-    case 'intake':
-      router.push('/intake')
-      break
-  }
-}
-
 const pickIcon = (meal) => {
   const map = {
     breakfast: '🥞',
@@ -101,63 +72,69 @@ const pickIcon = (meal) => {
   return map[meal] || '🍽️'
 }
 
+const formatMealType = (type) => {
+  const map = {
+    breakfast: '早餐',
+    lunch: '午餐',
+    dinner: '晚餐',
+    snack: '加餐'
+  }
+  return map[type] || '食谱'
+}
+
 onMounted(loadFavorites)
 </script>
 
 <style scoped>
-.favorite-page { max-width: 1080px; margin: 1.5rem auto; padding: 1rem; }
+.favorite-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+}
 
-/* 顶部导航栏样式 */
-.top-nav {
+.page-header {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  padding: 10px 0;
+  margin-bottom: 32px;
 }
 
-.back-button {
-  background-color: #f5f5f5;
-  color: #333;
-  border: none;
-  width: 40px;
-  height: 40px;
-  transition: all 0.3s;
+.header-left, .header-right {
+  width: 80px;
 }
 
-.back-button:hover {
-  background-color: #e0e0e0;
-  transform: translateX(-3px);
+.page-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0;
+  text-align: center;
 }
 
-.user-info-nav {
+.empty-state {
+  padding: 60px 0;
   display: flex;
-  align-items: center;
-  gap: 10px;
+  justify-content: center;
 }
 
-.user-info-display {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  padding: 6px 12px;
-  border-radius: 20px;
-  transition: all 0.3s;
+.recipe-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
 }
 
-.user-info-display:hover {
-  background-color: #f5f5f5;
+@media (max-width: 768px) {
+  .favorite-container {
+    padding: 16px;
+  }
+  
+  .page-header {
+    margin-bottom: 24px;
+  }
+  
+  .recipe-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
 }
-
-.username {
-  font-size: 14px;
-  font-weight: 500;
-  color: #333;
-}
-
-.top-bar { display:flex; align-items:center; justify-content:center; gap:1rem; margin-bottom:1rem; }
-.back-btn { background: none; border: none; color: #555; cursor: pointer; }
-.loading, .empty { text-align:center; color:#666; margin-top:2rem; }
-.grid { display:grid; gap:1rem; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
 </style>

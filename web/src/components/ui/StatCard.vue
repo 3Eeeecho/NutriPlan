@@ -4,9 +4,11 @@
       <span class="stat-icon">{{ icon }}</span>
     </div>
     <div class="stat-content">
-      <div class="stat-value">{{ value }}</div>
+      <div class="stat-value-row">
+        <span class="stat-value">{{ value }}</span>
+        <span v-if="subtitle" class="stat-subtitle">{{ subtitle }}</span>
+      </div>
       <div class="stat-label">{{ label }}</div>
-      <div v-if="subtitle" class="stat-subtitle">{{ subtitle }}</div>
     </div>
   </div>
 </template>
@@ -92,11 +94,17 @@ const handleClick = () => {
   min-width: 0;
 }
 
+.stat-value-row {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  line-height: 1.2;
+}
+
 .stat-value {
   font-size: var(--font-size-3xl);
   font-weight: var(--font-weight-bold);
   color: var(--color-text-primary);
-  line-height: 1.2;
   font-family: var(--font-family-number);
 }
 
@@ -107,12 +115,13 @@ const handleClick = () => {
 }
 
 .stat-subtitle {
-  font-size: var(--font-size-xs);
+  font-size: var(--font-size-sm);
   color: var(--color-text-tertiary);
-  margin-top: 2px;
+  font-weight: normal;
 }
 
 @media (max-width: 768px) {
+
   .stat-card {
     padding: var(--spacing-lg);
   }

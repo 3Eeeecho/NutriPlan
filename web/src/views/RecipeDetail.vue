@@ -79,27 +79,35 @@
         <div class="nutrition-grid">
           <!-- Calories -->
           <div class="nutrition-card">
+            <div class="nutri-value-row">
+              <span class="nutri-value text-emerald">{{ Math.floor(recipe.energy) }}</span>
+              <span class="nutri-unit">kcal</span>
+            </div>
             <div class="nutri-label">热量</div>
-            <div class="nutri-value text-emerald">{{ Math.floor(recipe.energy) }}</div>
-            <div class="nutri-unit">kcal</div>
           </div>
           <!-- Protein -->
           <div class="nutrition-card">
+            <div class="nutri-value-row">
+              <span class="nutri-value text-red">{{ Math.floor(recipe.protein) }}</span>
+              <span class="nutri-unit">g</span>
+            </div>
             <div class="nutri-label">蛋白质</div>
-            <div class="nutri-value text-red">{{ Math.floor(recipe.protein) }}</div>
-            <div class="nutri-unit">g</div>
           </div>
           <!-- Carbs -->
           <div class="nutrition-card">
+            <div class="nutri-value-row">
+              <span class="nutri-value text-amber">{{ Math.floor(recipe.carbohydrate) }}</span>
+              <span class="nutri-unit">g</span>
+            </div>
             <div class="nutri-label">碳水</div>
-            <div class="nutri-value text-amber">{{ Math.floor(recipe.carbohydrate) }}</div>
-            <div class="nutri-unit">g</div>
           </div>
           <!-- Fat -->
           <div class="nutrition-card">
+            <div class="nutri-value-row">
+              <span class="nutri-value text-purple">{{ Math.floor(recipe.fat) }}</span>
+              <span class="nutri-unit">g</span>
+            </div>
             <div class="nutri-label">脂肪</div>
-            <div class="nutri-value text-purple">{{ Math.floor(recipe.fat) }}</div>
-            <div class="nutri-unit">g</div>
           </div>
         </div>
 
@@ -442,14 +450,22 @@ onMounted(() => {
   font-size: 0.75rem;
   color: #9ca3af;
   font-weight: 500;
-  margin-bottom: 4px;
+  margin-top: 4px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
+.nutri-value-row {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
 .nutri-value {
-  font-size: 1.5rem;
+  font-size: 1.75rem;
   font-weight: 700;
+  line-height: 1;
+  font-family: var(--font-family-number);
 }
 
 .text-emerald { color: #10b981; }
@@ -458,8 +474,9 @@ onMounted(() => {
 .text-purple { color: #8b5cf6; }
 
 .nutri-unit {
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   color: #9ca3af;
+  font-weight: normal;
 }
 
 /* Details Grid */
