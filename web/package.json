@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "dev:all": "concurrently \"npm run dev\" \"cd .. && go run cmd/server/main.go\" --names \"VUE,GO\" --prefix-colors \"green,blue\""
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.1",
@@ -24,6 +25,7 @@
   "devDependencies": {
     "@css-render/vue3-ssr": "^0.15.14",
     "@vitejs/plugin-vue": "^6.0.3",
+    "concurrently": "^9.2.1",
     "vfonts": "^0.0.3",
     "vite": "^7.3.1"
   }

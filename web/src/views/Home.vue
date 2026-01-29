@@ -25,17 +25,17 @@
                 <div class="calorie-ring-container" v-if="authStore.hasProfile && authStore.profile">
                   <n-progress
                     type="circle"
-                    :percentage="getCaloriePercentage()"
+                    :percentage="caloriePercentage"
                     :stroke-width="12"
-                    :color="getCalorieColor()"
+                    :color="calorieColor"
                     :show-indicator="false"
                     :style="{ width: '180px', height: '180px' }"
                   >
                   </n-progress>
                   <div class="calorie-overlay">
-                    <div class="calorie-number">{{ getCaloriesRemaining() }}</div>
+                    <div class="calorie-number">{{ caloriesRemaining }}</div>
                     <div class="calorie-label">卡路里剩余</div>
-                    <div class="calorie-detail">已摄入 {{ getCaloriesConsumed() }} / 目标 {{ Math.floor(authStore.profile.tdee) }}</div>
+                    <div class="calorie-detail">已摄入 {{ caloriesConsumed }} / 目标 {{ calorieTarget }}</div>
                   </div>
                 </div>
                 <div v-else class="empty-ring">
@@ -184,18 +184,20 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from "vue";
+import { onMounted, ref, computed } from "vue";
 import { useRouter } from "vue-router";
-import { NCard, NGrid, NGi, NTag, NButton, NIcon, NProgress } from "naive-ui";
+import { NCard, NGrid, NGi, NTag, NButton, NIcon, NProgress, useMessage } from "naive-ui";
 import { ArrowForwardOutline } from "@vicons/ionicons5";
-import { ElMessage } from "element-plus";
 import { useAuthStore } from "@/store/auth";
 import { getNutritionRequirements } from "@/api/user";
+import { getTodayStatus } from "@/api/intakeApi";
 import TopNavigation from "@/components/layout/TopNavigation.vue";
 
 const router = useRouter();
+const message = useMessage();
 const authStore = useAuthStore();
 const nutritionData = ref(null);
+const todayIntake = ref(null);
 
 onMounted(async () => {
   if (authStore.isAuthenticated) {
@@ -207,13 +209,17 @@ onMounted(async () => {
       }
     }
 
-    // 加载营养需求数据
+    // 加载营养需求数据和今日摄入
     if (authStore.hasProfile) {
       try {
-        const response = await getNutritionRequirements();
-        nutritionData.value = response;
+        const [reqRes, statusRes] = await Promise.all([
+          getNutritionRequirements(),
+          getTodayStatus()
+        ]);
+        nutritionData.value = reqRes;
+        todayIntake.value = statusRes;
       } catch (error) {
-        console.log("营养需求数据不可用:", error);
+        console.log("数据加载失败:", error);
       }
     }
   }
@@ -225,7 +231,7 @@ const goToProfile = () => {
 
 const goToRecipes = () => {
   if (!authStore.hasProfile) {
-    ElMessage.warning("请先完善健康档案");
+    message.warning("请先完善健康档案");
     return;
   }
   router.push("/recipes");
@@ -241,7 +247,7 @@ const goToWeekly = () => {
 
 const goToNutrition = () => {
   if (!authStore.hasProfile) {
-    ElMessage.warning("请先完善健康档案");
+    message.warning("请先完善健康档案");
     return;
   }
   router.push("/profile/view");
@@ -274,38 +280,36 @@ const getCurrentDateText = () => {
   return today.toLocaleDateString('zh-CN', options);
 };
 
-// 计算卡路里百分比（假设消耗了一些）
-const getCaloriePercentage = () => {
-  if (!authStore.profile?.tdee) return 0;
-  // 这里可以根据实际摄入计算，暂时返回随机值作为演示
-  const remaining = getCaloriesRemaining();
-  const total = Math.floor(authStore.profile.tdee);
-  return Math.min(100, Math.max(0, (remaining / total) * 100));
-};
+// 计算属性
+const calorieTarget = computed(() => {
+  if (nutritionData.value && nutritionData.value.target_calorie) {
+    return Math.floor(nutritionData.value.target_calorie);
+  }
+  return Math.floor(authStore.profile?.tdee || 0);
+});
 
-// 获取剩余卡路里
-const getCaloriesRemaining = () => {
-  if (!authStore.profile?.tdee) return 0;
-  // 这里应该从实际摄入数据计算，暂时返回目标值
-  return Math.floor(authStore.profile.tdee);
-};
+const caloriesConsumed = computed(() => Math.floor(todayIntake.value?.total_energy || 0));
 
-// 获取已摄入卡路里
-const getCaloriesConsumed = () => {
-  if (!authStore.profile?.tdee) return 0;
-  // 这里应该从实际摄入数据计算，暂时返回示例值
-  const total = Math.floor(authStore.profile.tdee);
-  const remaining = getCaloriesRemaining();
-  return total - remaining;
-};
+const caloriesRemaining = computed(() => {
+  if (!calorieTarget.value) return 0;
+  return Math.max(0, calorieTarget.value - caloriesConsumed.value);
+});
 
-// 根据剩余卡路里返回颜色
-const getCalorieColor = () => {
-  const percentage = getCaloriePercentage();
-  if (percentage > 70) return '#10b981'; // 绿色
-  if (percentage > 30) return '#f59e0b'; // 黄色
-  return '#ef4444'; // 红色
-};
+const caloriePercentage = computed(() => {
+  if (!calorieTarget.value) return 0;
+  return Math.min(100, Math.max(0, (caloriesConsumed.value / calorieTarget.value) * 100));
+});
+
+const calorieColor = computed(() => {
+  const p = caloriePercentage.value;
+  if (p >= 100) return '#ef4444'; // 红色（超标）
+  if (p > 80) return '#f59e0b'; // 黄色（接近）
+  return '#10b981'; // 绿色（健康）
+});
+
+// Remove duplicated function definitions below this line if any
+
+
 </script>
 
 <style scoped>
@@ -420,7 +424,7 @@ const getCalorieColor = () => {
 .recipe-bg-image {
   position: absolute;
   inset: 0;
-  background-image: url('https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=1200&q=80');
+  background-image: url('https://images.unsplash.com/photo-1498837167922-ddd27525d352?w=1200&q=80');
   background-size: cover;
   background-position: center;
   z-index: 0;

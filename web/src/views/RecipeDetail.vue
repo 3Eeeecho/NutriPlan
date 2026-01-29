@@ -75,6 +75,11 @@
           </div>
         </div>
 
+        <!-- Hero Visual Section -->
+        <div class="hero-visual" :style="{ background: getHeroBackground(recipe.name) }">
+          <span class="hero-emoji">{{ getHeroEmoji(recipe.name) }}</span>
+        </div>
+
         <!-- Nutrition Grid -->
         <div class="nutrition-grid">
           <!-- Calories -->
@@ -265,12 +270,62 @@ const parseIngredientAmount = (ing) => {
   return '';
 };
 
+// Hero helpers
+const getHeroEmoji = (name) => {
+  if (!name) return '🥘';
+  const map = {
+    '鸡': '🍗', '牛': '🥩', '猪': '🍖', '鱼': '🐟', '虾': '🦐', 
+    '蛋': '🥚', '菜': '🥬', '饭': '🍚', '面': '🍜', '汤': '🍲',
+    '沙拉': '🥗', '面包': '🍞', '奶': '🥛', '果': '🍎'
+  };
+  for (const key in map) {
+    if (name.includes(key)) return map[key];
+  }
+  return '🥘';
+};
+
+const getHeroBackground = (name) => {
+  const colors = [
+    'linear-gradient(135deg, #fef3c7 0%, #fffbeb 100%)', // amber-100
+    'linear-gradient(135deg, #fee2e2 0%, #fef2f2 100%)', // red-100
+    'linear-gradient(135deg, #d1fae5 0%, #ecfdf5 100%)', // emerald-100
+    'linear-gradient(135deg, #dbeafe 0%, #eff6ff 100%)', // blue-100
+    'linear-gradient(135deg, #f3e8ff 0%, #faf5ff 100%)'  // purple-100
+  ];
+  if (!name) return colors[0];
+  const index = name.length % colors.length;
+  return colors[index];
+};
+
 onMounted(() => {
   load();
 });
 </script>
 
 <style scoped>
+/* Hero Visual */
+.hero-visual {
+  height: 192px; /* h-48 */
+  border-radius: 16px; /* rounded-2xl */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.hero-emoji {
+  font-size: 6rem; /* text-8xl approx */
+  line-height: 1;
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
 .page-container {
   min-height: 100vh;
   /* background-color: #F5F7FA; */ /* Removed solid color */

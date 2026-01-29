@@ -500,7 +500,7 @@ const getGoalTagType = (goal) => {
 .target-calorie {
   text-align: center;
   padding: var(--spacing-xl);
-  background: linear-gradient(135deg, var(--color-primary) 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--color-primary) 0%, #34d399 100%);
   border-radius: var(--radius-xl);
   margin-bottom: var(--spacing-xl);
   color: white;

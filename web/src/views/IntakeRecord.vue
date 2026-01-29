@@ -91,13 +91,25 @@
             <!-- 2. 快捷操作入口 -->
             <n-card :bordered="false" title="快捷操作" class="actions-card">
               <div class="quick-actions">
-                <n-button block type="primary" size="large" @click="showAddModal = true">
-                  <template #icon><n-icon><Add /></n-icon></template>
-                  手动记一笔
-                </n-button>
-                <n-button block secondary type="success" size="large" @click="triggerAIUpload">
+                <n-button 
+                  block 
+                  type="primary" 
+                  size="large" 
+                  class="camera-btn"
+                  @click="triggerAIUpload"
+                >
                   <template #icon><n-icon><Camera /></n-icon></template>
                   拍照识别
+                </n-button>
+                <n-button 
+                  block 
+                  ghost 
+                  type="primary" 
+                  size="large" 
+                  @click="showAddModal = true"
+                >
+                  <template #icon><n-icon><Add /></n-icon></template>
+                  手动记一笔
                 </n-button>
                 <input 
                   type="file" 
@@ -127,7 +139,10 @@
             <div v-else-if="!nutritionStatus.records || nutritionStatus.records.length === 0" class="empty-state">
               <n-empty description="今天还没有记录哦，快去吃点什么吧~">
                 <template #extra>
-                  <n-button type="primary" @click="showAddModal = true">开始记录</n-button>
+                  <n-button type="primary" @click="triggerAIUpload">
+                    <template #icon><n-icon><Camera /></n-icon></template>
+                    拍照识别
+                  </n-button>
                 </template>
               </n-empty>
             </div>
@@ -565,6 +580,16 @@ const formatTime = (isoString) => {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.camera-btn {
+  box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.3), 0 4px 6px -2px rgba(16, 185, 129, 0.1);
+  transition: transform 0.2s;
+}
+
+.camera-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 25px -5px rgba(16, 185, 129, 0.4), 0 10px 10px -5px rgba(16, 185, 129, 0.1);
 }
 
 /* Timeline Card */

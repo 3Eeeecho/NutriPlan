@@ -1,7 +1,7 @@
 <template>
   <div class="recipe-card" @click="viewDetail">
-    <div class="card-image-placeholder" :style="{ background: getGradient(icon) }">
-      <span class="meal-icon">{{ icon }}</span>
+    <div class="card-image-placeholder" :style="getVisuals(recipe.name).style">
+      <span class="meal-icon">{{ getVisuals(recipe.name).emoji }}</span>
     </div>
     
     <div class="card-content">
@@ -97,9 +97,44 @@ const router = useRouter()
 const message = useMessage()
 const localFavorite = ref(props.recipe.is_favorite || false)
 
-function getGradient(icon) {
-  // 根据图标或类型生成柔和的背景渐变
-  return 'linear-gradient(135deg, #e0f2fe 0%, #f0fdf4 100%)'
+function getVisuals(name) {
+  if (!name) return { emoji: '🥘', style: { backgroundColor: '#f3f4f6' } };
+
+  const n = name;
+  let emoji = '🥘';
+  let bg = '#f3f4f6'; // gray-100 default
+
+  // Keyword Matching
+  if (n.includes('鸡') || n.includes('鸭')) {
+    emoji = '🍗';
+    bg = '#ffedd5'; // orange-100
+  } else if (n.includes('牛') || n.includes('羊') || n.includes('猪') || n.includes('肉')) {
+    emoji = '🥩';
+    bg = '#fee2e2'; // red-100
+  } else if (n.includes('蛋')) {
+    emoji = '🍳';
+    bg = '#fef3c7'; // amber-100
+  } else if (n.includes('鱼') || n.includes('虾') || n.includes('海鲜')) {
+    emoji = '🍤';
+    bg = '#dbeafe'; // blue-100
+  } else if (n.includes('菜') || n.includes('沙拉') || n.includes('素')) {
+    emoji = '🥗';
+    bg = '#d1fae5'; // emerald-100
+  } else if (n.includes('饭') || n.includes('面') || n.includes('粥') || n.includes('饼')) {
+    emoji = '🍜';
+    bg = '#fef9c3'; // yellow-100
+  } else if (n.includes('奶') || n.includes('拿铁') || n.includes('咖啡')) {
+    emoji = '☕';
+    bg = '#f3e8ff'; // purple-100
+  } else if (n.includes('果') || n.includes('莓')) {
+    emoji = '🍎';
+    bg = '#ffe4e6'; // rose-100
+  }
+
+  return { 
+    emoji, 
+    style: { backgroundColor: bg } 
+  };
 }
 
 function getDifficultyEmoji(difficulty) {
@@ -153,12 +188,17 @@ async function toggleFavorite(e) {
 }
 
 .card-image-placeholder {
-  height: 120px;
+  height: 140px; /* Increased height for better proportion */
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 48px;
+  font-size: 72px; /* Increased emoji size */
   position: relative;
+  transition: all 0.3s;
+}
+
+.recipe-card:hover .card-image-placeholder {
+  transform: scale(1.05);
 }
 
 .card-content {
