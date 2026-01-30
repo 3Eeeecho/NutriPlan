@@ -38,7 +38,12 @@
             </template>
             <div class="nutrition-content">
               <div class="target-calorie">
-                <div class="target-label">目标热量</div>
+                <div class="target-label">
+                  目标热量 
+                  <span class="goal-hint" v-if="authStore.profile?.health_goal">
+                    ({{ authStore.profile.health_goal }})
+                  </span>
+                </div>
                 <div class="target-value">{{ nutritionData.target_calorie }} <span class="unit">kcal</span></div>
               </div>
               <div class="macros-grid">
@@ -127,7 +132,7 @@
               <div class="metric-item">
                 <div class="metric-label">TDEE</div>
                 <div class="metric-value primary">{{ authStore.profile?.tdee || '--' }}</div>
-                <div class="metric-desc">每日总消耗</div>
+                <div class="metric-desc">维持体重所需热量</div>
               </div>
             </div>
           </n-card>
@@ -507,10 +512,20 @@ const getGoalTagType = (goal) => {
   box-shadow: var(--shadow-lg);
 }
 
+.goal-hint {
+  font-size: 0.8em;
+  opacity: 0.8;
+  font-weight: normal;
+  margin-left: 4px;
+}
+
 .target-label {
   font-size: var(--font-size-sm);
   opacity: 0.9;
   margin-bottom: var(--spacing-xs);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .target-value {

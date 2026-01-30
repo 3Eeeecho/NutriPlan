@@ -432,7 +432,7 @@ const resetForm = () => {
 };
 
 const goBack = () => {
-  router.back();
+  router.push("/home");
 };
 
 const goToHome = () => {
