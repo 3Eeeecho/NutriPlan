@@ -56,7 +56,9 @@ const (
 			"carbs_100g": 0.0,     // 单位：克 (g/100g)，保留1位小数
 			"estimated_weight": 0, // 估算图这一整份食物的大致重量(克)
 			"reasoning": "简短的分析理由，例如：'这是西红柿鸡蛋面，面条看起来较宽，汤汁浓郁，且有明显油光，因此每100g热量略高于清汤面。'"
-		}`
+		}
+		
+		注意：直接返回 JSON 对象，不要输出任何免责声明、前缀或后缀。`
 
 	promptTextAnalysis = `你是一位经验丰富的临床营养师。请根据用户提供的食物描述进行分析。
 		核心任务：
@@ -109,7 +111,7 @@ func (c *zhipuAIClientImpl) RecognizeFood(ctx context.Context, imageReader io.Re
 
 	// 构建发送给智谱API的请求体。
 	requestPayload := zhipuRequest{
-		Model: "glm-4v", // Update to correct vision model name if needed, usually glm-4v or glm-4v-plus
+		Model: "glm-4.6v",
 		Messages: []zhipuMessage{
 			{
 				Role: "user",
@@ -180,7 +182,7 @@ func (c *zhipuAIClientImpl) RecognizeFood(ctx context.Context, imageReader io.Re
 	// 将清理后的内容反序列化到最终的ZhipuAIResponse结构体中
 	var nutritionInfo ZhipuAIResponse
 	if err := json.Unmarshal([]byte(content), &nutritionInfo); err != nil {
-		fmt.Printf("Zhipu Unmarshal Error. Raw Content: %s\n", content)
+		fmt.Printf("Zhipu Unmarshal Error (Vision). Raw Content: %s\n", content)
 		return nil, fmt.Errorf("AI返回数据格式错误，无法解析为营养信息")
 	}
 
@@ -190,7 +192,6 @@ func (c *zhipuAIClientImpl) RecognizeFood(ctx context.Context, imageReader io.Re
 // AnalyzeFoodText 实现了根据文本描述分析食物并获取营养信息的核心逻辑。
 func (c *zhipuAIClientImpl) AnalyzeFoodText(ctx context.Context, text string) (*ZhipuAIResponse, error) {
 	// 构建发送给智谱API的请求体。
-	// 使用 glm-4-flash 时，建议使用 system + user 的简单字符串格式，以获得最佳遵循效果。
 	requestPayload := zhipuRequest{
 		Model: "glm-4-flash",
 		Messages: []zhipuMessage{

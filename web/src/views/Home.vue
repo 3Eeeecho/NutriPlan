@@ -317,7 +317,7 @@ const calorieColor = computed(() => {
 /* Container */
 .home-container {
   min-height: 100vh;
-  background: #F5F7FA;
+  background: linear-gradient(180deg, #ecfdf5 0%, #f5f7fa 20%, #f5f7fa 100%);
 }
 
 .main-wrapper {
@@ -381,6 +381,8 @@ const calorieColor = computed(() => {
   font-weight: 800;
   line-height: 1;
   font-family: 'Inter', -apple-system, sans-serif;
+  white-space: nowrap; /* Prevent wrapping */
+  letter-spacing: -1px; /* Tighter tracking */
 }
 
 .ring-label {
