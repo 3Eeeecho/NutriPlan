@@ -154,10 +154,10 @@
             <n-gi span="2">
               <n-card title="每日菜单" :bordered="false">
                 <div class="meal-timeline">
-                  <MealItem title="早餐" icon="🌅" :recipe="currentSelectedPlan.breakfast" />
-                  <MealItem title="午餐" icon="☀️" :recipe="currentSelectedPlan.lunch" />
-                  <MealItem title="晚餐" icon="🌙" :recipe="currentSelectedPlan.dinner" />
-                  <MealItem v-if="currentSelectedPlan.snack" title="加餐" icon="🍎" :recipe="currentSelectedPlan.snack" />
+                  <MealItem title="早餐" icon="🌅" :recipe="currentSelectedPlan.breakfast" :is-synced="isMealSynced('早餐', currentSelectedPlan.breakfast)" @sync="handleSyncMeal" />
+                  <MealItem title="午餐" icon="☀️" :recipe="currentSelectedPlan.lunch" :is-synced="isMealSynced('午餐', currentSelectedPlan.lunch)" @sync="handleSyncMeal" />
+                  <MealItem title="晚餐" icon="🌙" :recipe="currentSelectedPlan.dinner" :is-synced="isMealSynced('晚餐', currentSelectedPlan.dinner)" @sync="handleSyncMeal" />
+                  <MealItem v-if="currentSelectedPlan.snack" title="加餐" icon="🍎" :recipe="currentSelectedPlan.snack" :is-synced="isMealSynced('加餐', currentSelectedPlan.snack)" @sync="handleSyncMeal" />
                 </div>
               </n-card>
             </n-gi>
@@ -264,7 +264,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onActivated } from 'vue';
 import { useRouter } from 'vue-router';
 import { 
   NButton, NIcon, NSpin, NResult, NGrid, NGi, NCard, NTag, NProgress, NAlert, useMessage, NImage 
@@ -275,6 +275,7 @@ import {
 import TopNavigation from '@/components/layout/TopNavigation.vue';
 import MealItem from '@/components/MealItem.vue';
 import { getRecipeRecommendations, selectRecipePlan, getSelectedRecipePlan } from '@/api/recipeApi';
+import { addIntakeRecord, getTodayStatus } from '@/api/intakeApi';
 import { getNutritionRequirements } from '@/api/user';
 import { useAuthStore } from '@/store/auth';
 
@@ -288,11 +289,37 @@ const plans = ref([]);
 const selectedPlanIndex = ref(null);
 const currentSelectedPlan = ref(null);
 const targetNutrition = ref({});
+const todayRecords = ref([]); // Store today's intake records
 
 // 初始化
 onMounted(async () => {
   await fetchRecommendations();
+  await loadTodayRecords();
 });
+
+// 当页面被缓存时，每次进入都需要刷新记录状态
+onActivated(async () => {
+  await loadTodayRecords();
+});
+
+const loadTodayRecords = async () => {
+  try {
+    const res = await getTodayStatus(); // Reusing the API from IntakeRecord
+    if (res && res.records) {
+      todayRecords.value = res.records;
+    }
+  } catch (e) {
+    console.error('Failed to load today records', e);
+  }
+};
+
+const isMealSynced = (title, recipe) => {
+  if (!recipe || !todayRecords.value) return false;
+  const typeMap = { '早餐': 'breakfast', '午餐': 'lunch', '晚餐': 'dinner', '加餐': 'snack' };
+  const mealType = typeMap[title];
+  // Simple check: if we have a record with same meal_type and food_name
+  return todayRecords.value.some(r => r.mealType === mealType && r.foodName === recipe.name);
+};
 
 const fetchRecommendations = async (forceRefresh = false) => {
   loading.value = true;
@@ -361,6 +388,38 @@ const reselectPlan = () => {
   // 此时 plans 还有数据，可以直接显示推荐列表，或者重新获取
   if (plans.value.length === 0) {
     fetchRecommendations(true);
+  }
+};
+
+const handleSyncMeal = async ({ recipe, type }) => {
+  console.log('RecipeRecommend handleSyncMeal triggered', recipe, type);
+  if (!recipe) return;
+  
+  const typeMap = {
+    '早餐': 'breakfast',
+    '午餐': 'lunch',
+    '晚餐': 'dinner',
+    '加餐': 'snack'
+  };
+  
+  const mealType = typeMap[type] || 'snack';
+  
+  try {
+    await addIntakeRecord({
+      meal_type: mealType,
+      food_name: recipe.name,
+      intake_amount: 100, // Assuming 1 serving = 100% or similar logic. Backend expects amount in g usually, but for recipe we might not have weight. Defaulting to 100g or 1 serving context. Ideally recipe has weight.
+      // If recipe doesn't have weight, we send estimated nutrition directly.
+      calculated_energy: recipe.energy,
+      calculated_protein: recipe.protein,
+      calculated_carb: recipe.carbohydrate,
+      calculated_fat: recipe.fat
+    });
+    message.success(`已将 ${type} (${recipe.name}) 同步到饮食记录`);
+    await loadTodayRecords(); // Refresh status
+  } catch (err) {
+    console.error(err);
+    message.error('同步失败，请重试');
   }
 };
 

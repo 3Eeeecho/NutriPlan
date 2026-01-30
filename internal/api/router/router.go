@@ -121,6 +121,9 @@ func NewRouter(deps RouterDeps) *gin.Engine {
 		{
 			// 上传图片进行菜品识别 (POST /api/v1/food/recognize)
 			food.POST("/recognize", foodRecognitionHandler.RecognizeFood)
+
+			// 根据文本描述分析食物 (POST /api/v1/food/analyze-text)
+			food.POST("/analyze-text", foodRecognitionHandler.AnalyzeFoodText)
 		}
 
 	}

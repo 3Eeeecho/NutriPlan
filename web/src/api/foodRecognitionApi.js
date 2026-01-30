@@ -25,3 +25,20 @@ export const recognizeFood = (imageFile) => {
     timeout: 60000 // 60秒
   })
 }
+
+/**
+ * 根据文本描述分析食物
+ * @param {String} text - 用户输入的食物描述
+ * @returns {Promise<any>} - 包含识别结果的 Promise
+ */
+export const analyzeFoodText = (text) => {
+  return request({
+    url: '/food/analyze-text',
+    method: 'post',
+    data: {
+      text: text
+    },
+    timeout: 60000 // 60秒
+  })
+}
+

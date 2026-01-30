@@ -22,6 +22,29 @@ func NewFoodRecognitionHandler(svc service.FoodRecognitionService) *FoodRecognit
 // RegisterRoutes 在Gin路由中注册食物识别相关的端点。
 func (h *FoodRecognitionHandler) RegisterRoutes(rg *gin.RouterGroup) {
 	rg.POST("/recognize", h.RecognizeFood)
+	rg.POST("/analyze-text", h.AnalyzeFoodText)
+}
+
+// AnalyzeTextRequest 定义了文本分析请求的结构体。
+type AnalyzeTextRequest struct {
+	Text string `json:"text" binding:"required"`
+}
+
+// AnalyzeFoodText 处理根据文本描述分析食物的请求。
+func (h *FoodRecognitionHandler) AnalyzeFoodText(c *gin.Context) {
+	var req AnalyzeTextRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的请求参数: " + err.Error()})
+		return
+	}
+
+	nutritionInfo, err := h.svc.AnalyzeFoodText(c.Request.Context(), req.Text)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "食物分析失败: " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, nutritionInfo)
 }
 
 // RecognizeFood 处理菜品图片上传和识别的请求。

@@ -27,6 +27,24 @@
 
     <!-- Action -->
     <div class="meal-action">
+      <n-button 
+        v-if="recipe"
+        circle 
+        secondary 
+        :type="isSynced ? 'default' : 'success'" 
+        class="sync-btn" 
+        :class="{ 'synced': isSynced }"
+        @click.stop="handleSync"
+        :title="isSynced ? '已打卡' : '打卡并同步到饮食记录'"
+        :disabled="isSynced"
+      >
+        <template #icon>
+          <n-icon>
+            <CheckmarkCircle v-if="isSynced" />
+            <CheckmarkCircleOutline v-else />
+          </n-icon>
+        </template>
+      </n-button>
       <n-button text class="action-btn" @click.stop="viewDetail">
         <n-icon size="24" color="#d1d5db"><ChevronForward /></n-icon>
       </n-button>
@@ -36,20 +54,31 @@
 
 <script setup>
 import { NButton, NIcon } from 'naive-ui';
-import { ChevronForward } from '@vicons/ionicons5';
+import { ChevronForward, CheckmarkCircleOutline, CheckmarkCircle } from '@vicons/ionicons5';
 import { useRouter } from 'vue-router';
 
 const props = defineProps({
   title: String, // 早餐, 午餐...
   icon: String, // Optional, backward compatibility
-  recipe: Object
+  recipe: Object,
+  isSynced: Boolean // New prop
 });
+
+const emit = defineEmits(['sync']);
 
 const router = useRouter();
 
 const viewDetail = () => {
   if (props.recipe?.id) {
     router.push(`/recipes/${props.recipe.id}`);
+  }
+};
+
+const handleSync = () => {
+  if (props.isSynced) return;
+  console.log('MealItem handleSync clicked', props.recipe);
+  if (props.recipe) {
+    emit('sync', { recipe: props.recipe, type: props.title });
   }
 };
 
@@ -151,11 +180,17 @@ const getIcon = (title) => {
 
 .meal-action {
   margin-left: 12px;
-  opacity: 0;
-  transition: opacity 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  opacity: 1; /* Always visible for better UX, or keep hover effect */
 }
 
-.meal-item:hover .meal-action {
-  opacity: 1;
+.sync-btn {
+  transition: all 0.2s;
+}
+
+.sync-btn:hover {
+  transform: scale(1.1);
 }
 </style>

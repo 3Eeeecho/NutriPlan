@@ -28,14 +28,17 @@
                     :percentage="caloriePercentage"
                     :stroke-width="12"
                     :color="calorieColor"
-                    :show-indicator="false"
-                    :style="{ width: '180px', height: '180px' }"
+                    :rail-color="'#f1f5f9'"
+                    :show-indicator="true"
+                    :style="{ width: '130px', height: '130px' }"
                   >
+                    <div class="ring-inner">
+                      <span class="ring-number" :style="{ color: calorieColor }">{{ caloriesRemaining }}</span>
+                      <span class="ring-label">kcal 剩余</span>
+                    </div>
                   </n-progress>
-                  <div class="calorie-overlay">
-                    <div class="calorie-number">{{ caloriesRemaining }}</div>
-                    <div class="calorie-label">卡路里剩余</div>
-                    <div class="calorie-detail">已摄入 {{ caloriesConsumed }} / 目标 {{ calorieTarget }}</div>
+                  <div class="ring-footer">
+                    已摄入 {{ caloriesConsumed }} / 目标 {{ calorieTarget }}
                   </div>
                 </div>
                 <div v-else class="empty-ring">
@@ -68,9 +71,7 @@
                 {{ authStore.hasProfile ? '为您精心挑选的营养均衡食谱' : '完善档案后开启智能推荐' }}
               </p>
               <div class="recipe-action">
-                <n-icon size="24" color="white">
-                  <ArrowForwardOutline />
-                </n-icon>
+                <!-- Arrow removed -->
               </div>
             </div>
           </n-card>
@@ -359,41 +360,64 @@ const calorieColor = computed(() => {
 
 /* Calorie Ring */
 .calorie-ring-container {
-  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 12px 0;
+}
+
+.ring-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.ring-number {
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1;
+  font-family: 'Inter', -apple-system, sans-serif;
+}
+
+.ring-label {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  margin-top: 4px;
+}
+
+.ring-footer {
+  margin-top: 12px;
+  font-size: 0.8rem;
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+.empty-ring {
   display: flex;
   align-items: center;
   justify-content: center;
   height: 100%;
 }
 
-.calorie-overlay {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+.calorie-footer {
   text-align: center;
-}
-
-.calorie-number {
-  font-size: 3rem;
-  font-weight: 700;
-  color: #10b981;
-  line-height: 1;
-  font-family: 'Inter', -apple-system, sans-serif;
-}
-
-.calorie-label {
-  font-size: 0.875rem;
-  color: #6b7280;
-  margin-top: 4px;
-  font-weight: 500;
+  margin-top: -16px; /* Pull up closer to ring */
+  position: relative;
+  z-index: 10;
 }
 
 .calorie-detail {
-  font-size: 0.75rem;
-  color: #9ca3af;
-  margin-top: 8px;
-  font-weight: 400;
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 4px 12px;
+  border-radius: 20px;
+  display: inline-block;
 }
 
 .empty-ring {

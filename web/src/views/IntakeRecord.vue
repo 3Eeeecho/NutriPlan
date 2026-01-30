@@ -182,7 +182,7 @@
                       </div>
                     </div>
                     <div class="record-actions">
-                      <n-popconfirm @positive-click="handleDelete(record.ID)">
+                      <n-popconfirm @positive-click="handleDelete(record.ID)" positive-text="确定" negative-text="取消">
                         <template #trigger>
                           <n-button size="small" quaternary circle type="error">
                             <template #icon><n-icon><Trash /></n-icon></template>
@@ -210,8 +210,14 @@
             </n-form-item>
           </n-gi>
           <n-gi :span="2">
-            <n-form-item label="食物名称" path="food_name">
-              <n-input v-model:value="recordForm.food_name" placeholder="例如：燕麦拿铁" />
+            <n-form-item label="食物描述/名称" path="food_name">
+              <n-input-group>
+                <n-input v-model:value="recordForm.food_name" placeholder="例如：一碗牛肉面，少辣" />
+                <n-button type="primary" ghost @click="handleAIAnalyze" :loading="analyzingText" :disabled="!recordForm.food_name">
+                  <template #icon><n-icon><Sparkles /></n-icon></template>
+                  AI 估算
+                </n-button>
+              </n-input-group>
             </n-form-item>
           </n-gi>
           <n-gi :span="2">
@@ -278,15 +284,15 @@ import { useRouter } from 'vue-router';
 import { 
   NButton, NIcon, NGrid, NGi, NCard, NProgress, NTimeline, NTimelineItem, 
   NTag, NEmpty, NSpin, NModal, NForm, NFormItem, NInput, NInputNumber, 
-  NSelect, NDivider, useMessage, NPopconfirm
+  NSelect, NDivider, useMessage, NPopconfirm, NInputGroup
 } from 'naive-ui';
 import { 
-  ArrowBack, Refresh, Add, Camera, Trash 
+  ArrowBack, Refresh, Add, Camera, Trash, Sparkles
 } from '@vicons/ionicons5';
 import TopNavigation from '@/components/layout/TopNavigation.vue';
 import { useAuthStore } from '@/store/auth';
 import { getTodayStatus, addIntakeRecord, deleteIntakeRecord } from '@/api/intakeApi';
-import { recognizeFood } from '@/api/foodRecognitionApi'; // Assuming this exists or using the one from old file
+import { recognizeFood, analyzeFoodText } from '@/api/foodRecognitionApi';
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -296,6 +302,7 @@ const message = useMessage();
 const loading = ref(false);
 const adding = ref(false);
 const recognizing = ref(false);
+const analyzingText = ref(false);
 const showAddModal = ref(false);
 const nutritionStatus = ref({});
 const currentDate = ref('');
@@ -408,6 +415,38 @@ const handleImageSelect = async (event) => {
     recognizing.value = false;
     // Reset input
     event.target.value = '';
+  }
+};
+
+const handleAIAnalyze = async () => {
+  if (!recordForm.value.food_name) {
+    message.warning('请输入食物描述');
+    return;
+  }
+  analyzingText.value = true;
+  try {
+    const res = await analyzeFoodText(recordForm.value.food_name);
+    // Populate Form
+    recordForm.value.food_name = res.dish_name; // API returns dish_name
+    recordForm.value.intake_amount = res.estimated_weight;
+    recordForm.value.calculated_energy = Math.floor(res.total_calories);
+    recordForm.value.calculated_protein = Math.floor(res.total_protein);
+    recordForm.value.calculated_carb = Math.floor(res.total_carbs);
+    recordForm.value.calculated_fat = Math.floor(res.total_fat);
+
+    // Cache per 100g data
+    aiData.value = {
+      calories: res.calories_per_100g,
+      protein: res.protein_per_100g,
+      carb: res.carbs_per_100g,
+      fat: res.fat_per_100g
+    };
+
+    message.success(`AI 分析完成`);
+  } catch (e) {
+    message.error('分析失败，请重试');
+  } finally {
+    analyzingText.value = false;
   }
 };
 
@@ -527,15 +566,17 @@ const formatTime = (isoString) => {
 }
 
 .ring-val {
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 800;
   color: #1f2937;
+  white-space: nowrap;
 }
 
 .ring-label {
   font-size: 12px;
   color: #9ca3af;
   margin-top: 2px;
+  white-space: nowrap;
 }
 
 .dashboard-title {
