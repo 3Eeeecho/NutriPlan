@@ -23,22 +23,43 @@
               <!-- Right: Calorie Ring -->
               <n-gi span="2 m:1">
                 <div class="calorie-ring-container" v-if="authStore.hasProfile && authStore.profile">
-                  <n-progress
-                    type="circle"
-                    :percentage="caloriePercentage"
-                    :stroke-width="12"
-                    :color="calorieColor"
-                    :rail-color="'#f1f5f9'"
-                    :show-indicator="true"
-                    :style="{ width: '130px', height: '130px' }"
-                  >
-                    <div class="ring-inner">
-                      <span class="ring-number" :style="{ color: calorieColor }">{{ caloriesRemaining }}</span>
-                      <span class="ring-label">kcal 剩余</span>
+                  <!-- 达标完成状态 -->
+                  <div v-if="isGoalAchieved" class="goal-achieved">
+                    <div class="achievement-icon">
+                      <n-icon size="80" color="#10b981">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                        </svg>
+                      </n-icon>
                     </div>
-                  </n-progress>
-                  <div class="ring-footer">
-                    已摄入 {{ caloriesConsumed }} / 目标 {{ calorieTarget }}
+                    <div class="achievement-text">
+                      <div class="achievement-title">🎉 目标达成！</div>
+                      <div class="achievement-subtitle">今日营养摄入完成</div>
+                    </div>
+                    <div class="achievement-stats">
+                      {{ caloriesConsumed }} / {{ calorieTarget }} kcal
+                    </div>
+                  </div>
+                  
+                  <!-- 未达标进度状态 -->
+                  <div v-else>
+                    <n-progress
+                      type="circle"
+                      :percentage="caloriePercentage"
+                      :stroke-width="12"
+                      :color="calorieColor"
+                      :rail-color="'#f1f5f9'"
+                      :show-indicator="true"
+                      :style="{ width: '130px', height: '130px' }"
+                    >
+                      <div class="ring-inner">
+                        <span class="ring-number" :style="{ color: calorieColor }">{{ caloriesRemaining }}</span>
+                        <span class="ring-label">kcal 剩余</span>
+                      </div>
+                    </n-progress>
+                    <div class="ring-footer">
+                      已摄入 {{ caloriesConsumed }} / 目标 {{ calorieTarget }}
+                    </div>
                   </div>
                 </div>
                 <div v-else class="empty-ring">
@@ -308,6 +329,13 @@ const calorieColor = computed(() => {
   return '#10b981'; // 绿色（健康）
 });
 
+// 判断是否达成目标（摄入量在目标的90%-110%之间）
+const isGoalAchieved = computed(() => {
+  if (!calorieTarget.value) return false;
+  const percentage = caloriePercentage.value;
+  return percentage >= 90 && percentage <= 110;
+});
+
 // Remove duplicated function definitions below this line if any
 
 
@@ -396,6 +424,78 @@ const calorieColor = computed(() => {
   font-size: 0.8rem;
   color: #9ca3af;
   font-weight: 500;
+}
+
+/* Goal Achieved State */
+.goal-achieved {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  text-align: center;
+  animation: celebrate 0.6s ease-out;
+}
+
+@keyframes celebrate {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.achievement-icon {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  border-radius: 50%;
+  width: 120px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  box-shadow: 0 10px 30px rgba(16, 185, 129, 0.2);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 10px 30px rgba(16, 185, 129, 0.2);
+  }
+  50% {
+    box-shadow: 0 15px 40px rgba(16, 185, 129, 0.3);
+  }
+}
+
+.achievement-text {
+  margin-bottom: 12px;
+}
+
+.achievement-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #10b981;
+  margin-bottom: 4px;
+}
+
+.achievement-subtitle {
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+.achievement-stats {
+  font-size: 0.85rem;
+  color: #9ca3af;
+  font-weight: 500;
+  padding: 8px 16px;
+  background: #f0fdf4;
+  border-radius: 12px;
 }
 
 .empty-ring {
@@ -628,12 +728,34 @@ const calorieColor = computed(() => {
     height: 160px !important;
   }
 
-  .calorie-number {
+  .ring-number {
     font-size: 2.25rem;
   }
 
   .calorie-detail {
     font-size: 0.7rem;
+  }
+
+  /* 达成状态移动端适配 */
+  .achievement-icon {
+    width: 100px;
+    height: 100px;
+  }
+
+  .achievement-icon :deep(.n-icon) {
+    font-size: 64px !important;
+  }
+
+  .achievement-title {
+    font-size: 1.3rem;
+  }
+
+  .achievement-subtitle {
+    font-size: 0.85rem;
+  }
+
+  .achievement-stats {
+    font-size: 0.8rem;
   }
 
   /* Banner高度增加 */
