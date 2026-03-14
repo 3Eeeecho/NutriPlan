@@ -258,15 +258,5 @@ const goToLogin = () => {
   }
 }
 </style>
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
-
-:deep(.el-input__wrapper:hover) {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-:deep(.el-input.is-focus .el-input__wrapper) {
-  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
-}
-</style>
 

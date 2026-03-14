@@ -1,208 +1,131 @@
 <template>
-  <div class="home-container">
+  <div v-if="authStore.isAuthenticated" class="home-container grid-layout">
     <!-- 顶部导航 -->
     <TopNavigation />
 
-    <!-- 主内容区 -->
+    <!-- 主内容区：使用 Tailwind Grid 重构，打破传统死板行结构 -->
     <div class="main-wrapper">
-      <n-grid :x-gap="16" :y-gap="16" cols="1">
-        <!-- Hero Card: Greeting + Calorie Ring -->
-        <n-gi>
-          <n-card :bordered="false" class="hero-card">
-            <n-grid :x-gap="24" :cols="2" responsive="screen" :collapsed-rows="1" item-responsive>
-              <!-- Left: Greeting -->
-              <n-gi span="2 m:1">
-                <div class="greeting-section">
-                  <h1 class="greeting-text">
-                    {{ getGreeting() }}，<span class="username">{{ authStore.user?.username }}</span> 👋
-                  </h1>
-                  <p class="greeting-subtitle">{{ getCurrentDateText() }}</p>
-                </div>
-              </n-gi>
-
-              <!-- Right: Calorie Ring -->
-              <n-gi span="2 m:1">
-                <div class="calorie-ring-container" v-if="authStore.hasProfile && authStore.profile">
-                  <!-- 达标完成状态 -->
-                  <div v-if="isGoalAchieved" class="goal-achieved">
-                    <div class="achievement-icon">
-                      <n-icon size="80" color="#10b981">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                        </svg>
-                      </n-icon>
-                    </div>
-                    <div class="achievement-text">
-                      <div class="achievement-title">🎉 目标达成！</div>
-                      <div class="achievement-subtitle">今日营养摄入完成</div>
-                    </div>
-                    <div class="achievement-stats">
-                      {{ caloriesConsumed }} / {{ calorieTarget }} kcal
-                    </div>
-                  </div>
-                  
-                  <!-- 未达标进度状态 -->
-                  <div v-else>
-                    <n-progress
-                      type="circle"
-                      :percentage="caloriePercentage"
-                      :stroke-width="12"
-                      :color="calorieColor"
-                      :rail-color="'#f1f5f9'"
-                      :show-indicator="true"
-                      :style="{ width: '130px', height: '130px' }"
-                    >
-                      <div class="ring-inner">
-                        <span class="ring-number" :style="{ color: calorieColor }">{{ caloriesRemaining }}</span>
-                        <span class="ring-label">kcal 剩余</span>
-                      </div>
-                    </n-progress>
-                    <div class="ring-footer">
-                      已摄入 {{ caloriesConsumed }} / 目标 {{ calorieTarget }}
-                    </div>
+      <div class="dashboard-grid">
+        
+        <!-- 视觉第一层级：核心状态与高频操作 -->
+        
+        <!-- 概览卡片（大占比）：问候语 + 热量环形图 -->
+        <div class="overview-card grid-card">
+          <div class="overview-content">
+            <div class="greeting-section">
+              <h1 class="greeting-text">
+                {{ getGreeting() }}<br/><span class="username">{{ authStore.user?.username }}</span>
+              </h1>
+              <p class="greeting-subtitle font-sans">{{ getCurrentDateText() }}</p>
+            </div>
+            
+            <div class="calorie-section">
+              <div v-if="authStore.hasProfile && authStore.profile" class="calorie-ring-container">
+                <!-- 达标完成状态 -->
+                <div v-if="isGoalAchieved" class="goal-achieved">
+                  <div class="achievement-icon">✓</div>
+                  <div class="achievement-text">
+                    <div class="achievement-title font-serif">目标达成</div>
+                    <div class="achievement-subtitle">{{ calorieTarget }} kcal</div>
                   </div>
                 </div>
-                <div v-else class="empty-ring">
-                  <n-button type="primary" size="large" @click="goToProfile">
-                    完善档案开始
-                  </n-button>
+                <!-- 未达标进度状态 -->
+                <div v-else class="progress-container">
+                  <n-progress
+                    type="circle"
+                    :percentage="caloriePercentage"
+                    :stroke-width="8"
+                    :color="calorieColor"
+                    :rail-color="'rgba(0,0,0,0.05)'"
+                    :show-indicator="true"
+                    :style="{ width: '120px', height: '120px' }"
+                  >
+                    <div class="ring-inner">
+                      <span class="ring-number font-serif">{{ caloriesRemaining }}</span>
+                      <span class="ring-label">kcal 剩余</span>
+                    </div>
+                  </n-progress>
+                  <div class="progress-details mt-4 text-sm text-gray-500">
+                    已摄入 <span class="font-serif font-semibold text-gray-800">{{ caloriesConsumed }}</span> 
+                  </div>
                 </div>
-              </n-gi>
-            </n-grid>
-          </n-card>
-        </n-gi>
-
-        <!-- Today's Recipe Card: Magazine Cover Style -->
-        <n-gi>
-          <n-card 
-            :bordered="false" 
-            class="recipe-magazine-card" 
-            hoverable
-            @click="goToRecipes"
-            :class="{ disabled: !authStore.hasProfile }"
-          >
-            <div class="recipe-bg-image"></div>
-            <div class="recipe-overlay"></div>
-            <div class="recipe-content">
-              <div class="recipe-tag">
-                <n-tag type="success" round size="small">今日推荐</n-tag>
               </div>
-              <h2 class="recipe-title">今日营养食谱</h2>
-              <p class="recipe-description">
-                {{ authStore.hasProfile ? '为您精心挑选的营养均衡食谱' : '完善档案后开启智能推荐' }}
-              </p>
-              <div class="recipe-action">
-                <!-- Arrow removed -->
+              <div v-else class="empty-ring">
+                <n-button type="primary" size="large" class="organic-btn" @click="goToProfile">
+                  完善档案
+                </n-button>
               </div>
             </div>
-          </n-card>
-        </n-gi>
+          </div>
+        </div>
 
-        <!-- Action Cards Grid: 4 columns -->
-        <n-gi>
-          <n-grid :x-gap="16" :y-gap="16" :cols="'2 m:4'" responsive="screen">
-            <!-- 饮食记录 -->
-            <n-gi>
-              <n-card 
-                :bordered="false" 
-                class="action-card" 
-                hoverable
-                @click="goToIntake"
-              >
-                <div class="action-icon-wrapper bg-red-100">
-                  <n-icon size="36" color="#dc2626">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M21 6.5c0 1.38-1.12 2.5-2.5 2.5S16 7.88 16 6.5 17.12 4 18.5 4 21 5.12 21 6.5zM9 4h6v2H9V4zm11 6h-2c0 1.1-.9 2-2 2h-5v11c0 .55-.45 1-1 1s-1-.45-1-1V12H4c-1.1 0-2-.9-2-2H0V6h2c0-1.1.9-2 2-2h1V2c0-.55.45-1 1-1s1 .45 1 1v2h1c1.1 0 2 .9 2 2v4h8V6c0-1.1.9-2 2-2h1V2c0-.55.45-1 1-1s1 .45 1 1v2h1c1.1 0 2 .9 2 2v4z"/>
-                    </svg>
-                  </n-icon>
-                </div>
-                <h3 class="action-title">饮食记录</h3>
-                <p class="action-desc">记录每餐摄入</p>
-              </n-card>
-            </n-gi>
-
-            <!-- 周报告 -->
-            <n-gi>
-              <n-card 
-                :bordered="false" 
-                class="action-card" 
-                hoverable
-                @click="goToWeekly"
-              >
-                <div class="action-icon-wrapper bg-blue-100">
-                  <n-icon size="36" color="#2563eb">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/>
-                    </svg>
-                  </n-icon>
-                </div>
-                <h3 class="action-title">周报告</h3>
-                <p class="action-desc">查看长期趋势</p>
-              </n-card>
-            </n-gi>
-
-            <!-- 我的收藏 -->
-            <n-gi>
-              <n-card 
-                :bordered="false" 
-                class="action-card" 
-                hoverable
-                @click="goToFavorites"
-              >
-                <div class="action-icon-wrapper bg-yellow-100">
-                  <n-icon size="36" color="#ca8a04">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
-                    </svg>
-                  </n-icon>
-                </div>
-                <h3 class="action-title">我的收藏</h3>
-                <p class="action-desc">喜爱的食谱</p>
-              </n-card>
-            </n-gi>
-
-            <!-- 购物清单 -->
-            <n-gi>
-              <n-card 
-                :bordered="false" 
-                class="action-card" 
-                hoverable
-                @click="goToShopping"
-              >
-                <div class="action-icon-wrapper bg-green-100">
-                  <n-icon size="36" color="#16a34a">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/>
-                    </svg>
-                  </n-icon>
-                </div>
-                <h3 class="action-title">购物清单</h3>
-                <p class="action-desc">食材采购助手</p>
-              </n-card>
-            </n-gi>
-          </n-grid>
-        </n-gi>
-
-        <!-- Tip Card (if no profile) -->
-        <n-gi v-if="!authStore.hasProfile">
-          <n-card :bordered="false" class="tip-card">
-            <div class="tip-content">
-              <n-icon size="48" color="#f59e0b">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.85 11.1l-.85.6V16h-4v-2.3l-.85-.6C7.8 12.16 7 10.63 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.16-2.15 4.1z"/>
-                </svg>
-              </n-icon>
-              <h3 class="tip-title">开始您的健康之旅</h3>
-              <p class="tip-text">完善个人档案，获取专属营养方案</p>
-              <n-button type="primary" size="large" @click="goToProfile">
-                立即完善档案
-              </n-button>
+        <!-- 记录卡片（强调色）：独立卡片，纵向鲜明视觉 -->
+        <div class="record-card grid-card highlight-card cursor-pointer group" @click="goToIntake">
+          <div class="card-glass-effect"></div>
+          <div class="record-content">
+            <div class="record-icon group-hover:scale-110 transition-transform duration-500">
+               +
             </div>
-          </n-card>
-        </n-gi>
-      </n-grid>
+            <h3 class="record-title font-serif">饮食记录</h3>
+            <p class="record-desc font-sans text-sm opacity-80 mt-2">记录每餐摄入，追踪您的健康轨迹</p>
+          </div>
+        </div>
+
+        <!-- 视觉第二层级：内容推荐与数据统计 -->
+        
+        <!-- 食谱卡片（宽幅大图）：今日营养食谱 -->
+        <div class="recipe-card grid-card has-bg cursor-pointer group" @click="goToRecipes" :class="{ 'opacity-50 pointer-events-none': !authStore.hasProfile }">
+          <div class="recipe-bg-image group-hover:scale-105 transition-transform duration-700"></div>
+          <div class="recipe-overlay"></div>
+          <div class="recipe-content relative z-10 flex flex-col justify-end h-full p-6">
+            <div class="recipe-tag mb-4">
+              <span class="editorial-tag">Editor's Pick</span>
+            </div>
+            <h2 class="recipe-title font-serif text-3xl text-white mb-2">今日营养食谱</h2>
+            <p class="recipe-description font-sans text-white/80 max-w-xs">
+              {{ authStore.hasProfile ? '探索精心调配的地中海风味与全谷物组合。' : '完善档案后为您推荐。' }}
+            </p>
+          </div>
+        </div>
+
+        <!-- 报告卡片（数据微展示）：周报告微型折线图 -->
+        <div class="report-card grid-card cursor-pointer group" @click="goToWeekly">
+          <div class="report-header flex justify-between items-start mb-4">
+            <h3 class="report-title font-serif text-xl">周报告</h3>
+            <span class="report-icon text-gray-400 group-hover:text-gray-800 transition-colors">↗</span>
+          </div>
+          <div class="report-sparkline mt-auto h-16 w-full flex items-end gap-1 opacity-70 group-hover:opacity-100 transition-opacity">
+            <div class="bar h-[40%]"></div>
+            <div class="bar h-[60%]"></div>
+            <div class="bar h-[30%]"></div>
+            <div class="bar h-[80%]"></div>
+            <div class="bar h-[50%]"></div>
+            <div class="bar h-[90%]"></div>
+            <div class="bar h-[70%] active"></div>
+          </div>
+          <p class="mt-4 text-xs text-gray-500 font-sans tracking-wide uppercase">TRENDS & INSIGHTS</p>
+        </div>
+
+        <!-- 视觉第三层级：辅助工具 -->
+        
+        <!-- 辅助功能卡片：小方块并排 -->
+        <div class="aux-container grid-card-transparent">
+          <div class="aux-grid">
+            <div class="aux-card cursor-pointer group" @click="goToFavorites">
+              <div class="aux-icon text-amber-600 mb-3 group-hover:-translate-y-1 transition-transform">♥</div>
+              <h4 class="font-serif text-lg">我的收藏</h4>
+            </div>
+            <div class="aux-card cursor-pointer group" @click="goToShopping">
+              <div class="aux-icon text-emerald-600 mb-3 group-hover:-translate-y-1 transition-transform">🛒</div>
+              <h4 class="font-serif text-lg">购物清单</h4>
+            </div>
+          </div>
+        </div>
+
+      </div>
     </div>
   </div>
+  <HeroSection v-else />
 </template>
 
 <script setup>
@@ -214,6 +137,7 @@ import { useAuthStore } from "@/store/auth";
 import { getNutritionRequirements } from "@/api/user";
 import { getTodayStatus } from "@/api/intakeApi";
 import TopNavigation from "@/components/layout/TopNavigation.vue";
+import HeroSection from "@/components/HeroSection.vue";
 
 const router = useRouter();
 const message = useMessage();
@@ -342,456 +266,261 @@ const isGoalAchieved = computed(() => {
 </script>
 
 <style scoped>
-/* Container */
-.home-container {
+/* =========== Grid 布局体系 =========== */
+.grid-layout {
   min-height: 100vh;
-  background: linear-gradient(180deg, #ecfdf5 0%, #f5f7fa 20%, #f5f7fa 100%);
+  /* 使用全局的有机底色背景，去掉原生渐变 */
+  background: transparent;
 }
 
 .main-wrapper {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 24px;
+  padding: 2rem;
 }
 
-/* Hero Card */
-.hero-card {
-  padding: 32px;
-  background: white;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  grid-auto-rows: minmax(100px, auto);
+  gap: 1.5rem;
 }
 
-.greeting-section {
+/* 基础卡片样式: 有机、微边框、大倒角 */
+.grid-card {
+  background: var(--color-bg-primary);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border-primary);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  position: relative;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.grid-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* ================== 卡片分配 ================== */
+
+/* 1. 概览卡片 (左上，大尺寸) */
+.overview-card {
+  grid-column: span 12;
+  min-height: 240px;
+  background: linear-gradient(135deg, var(--color-bg-primary) 0%, var(--color-primary-supperlight) 100%);
+}
+@media (min-width: 1024px) {
+  .overview-card {
+    grid-column: span 8;
+  }
+}
+
+.overview-content {
   display: flex;
   flex-direction: column;
-  justify-content: center;
   height: 100%;
+  padding: 2.5rem;
+}
+@media (min-width: 768px) {
+  .overview-content {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
 }
 
 .greeting-text {
-  font-size: 2.25rem;
-  font-weight: 700;
-  color: #1f2937;
-  margin: 0 0 8px 0;
+  font-family: var(--font-family-display);
+  font-size: 2.5rem;
   line-height: 1.2;
+  color: var(--color-text-primary);
+  margin-bottom: 0.5rem;
 }
 
 .username {
-  color: #10b981;
+  font-style: italic;
+  color: var(--color-primary);
 }
 
-.greeting-subtitle {
-  font-size: 0.95rem;
-  color: #6b7280;
-  margin: 0;
-}
-
-/* Calorie Ring */
-.calorie-ring-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  padding: 12px 0;
-}
-
-.ring-inner {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-}
-
-.ring-number {
-  font-size: 2rem;
-  font-weight: 800;
-  line-height: 1;
-  font-family: 'Inter', -apple-system, sans-serif;
-  white-space: nowrap; /* Prevent wrapping */
-  letter-spacing: -1px; /* Tighter tracking */
-}
-
-.ring-label {
-  font-size: 0.75rem;
-  color: #9ca3af;
-  margin-top: 4px;
-}
-
-.ring-footer {
-  margin-top: 12px;
-  font-size: 0.8rem;
-  color: #9ca3af;
-  font-weight: 500;
-}
-
-/* Goal Achieved State */
-.goal-achieved {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  text-align: center;
-  animation: celebrate 0.6s ease-out;
-}
-
-@keyframes celebrate {
-  0% {
-    transform: scale(0.8);
-    opacity: 0;
-  }
-  50% {
-    transform: scale(1.05);
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-.achievement-icon {
-  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-  border-radius: 50%;
-  width: 120px;
-  height: 120px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 16px;
-  box-shadow: 0 10px 30px rgba(16, 185, 129, 0.2);
-  animation: pulse 2s ease-in-out infinite;
-}
-
-@keyframes pulse {
-  0%, 100% {
-    box-shadow: 0 10px 30px rgba(16, 185, 129, 0.2);
-  }
-  50% {
-    box-shadow: 0 15px 40px rgba(16, 185, 129, 0.3);
-  }
-}
-
-.achievement-text {
-  margin-bottom: 12px;
-}
-
-.achievement-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #10b981;
-  margin-bottom: 4px;
-}
-
-.achievement-subtitle {
-  font-size: 0.9rem;
-  color: #6b7280;
-}
-
-.achievement-stats {
-  font-size: 0.85rem;
-  color: #9ca3af;
-  font-weight: 500;
-  padding: 8px 16px;
-  background: #f0fdf4;
-  border-radius: 12px;
-}
-
-.empty-ring {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-}
-
-.calorie-footer {
-  text-align: center;
-  margin-top: -16px; /* Pull up closer to ring */
+/* 2. 补签/记录卡片 (右上，高亮) */
+.record-card {
+  grid-column: span 12;
+  background: var(--color-accent-warm);
+  color: #fff;
+  border: none;
+  min-height: 240px;
   position: relative;
-  z-index: 10;
+}
+@media (min-width: 1024px) {
+  .record-card {
+    grid-column: span 4;
+  }
 }
 
-.calorie-detail {
-  font-size: 0.875rem;
-  color: #6b7280;
-  font-weight: 500;
-  background: rgba(255, 255, 255, 0.8);
-  padding: 4px 12px;
-  border-radius: 20px;
-  display: inline-block;
+.card-glass-effect {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(145deg, rgba(255,255,255,0.1) 0%, rgba(0,0,0,0.05) 100%);
+  pointer-events: none;
 }
 
-.empty-ring {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-}
-
-/* Recipe Magazine Card */
-.recipe-magazine-card {
+.record-content {
   position: relative;
+  z-index: 2;
+  padding: 2rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.record-icon {
+  font-size: 3rem;
+  font-weight: 300;
+  margin-bottom: 1rem;
+  color: rgba(255,255,255,0.9);
+}
+
+.record-title {
+  font-size: 1.75rem;
+}
+
+/* 3. 食谱卡片 (中左，宽幅杂志风) */
+.recipe-card {
+  grid-column: span 12;
   min-height: 320px;
-  overflow: hidden;
-  cursor: pointer;
-  transition: transform 0.3s ease;
 }
-
-.recipe-magazine-card:hover {
-  transform: translateY(-4px);
-}
-
-.recipe-magazine-card.disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+@media (min-width: 1024px) {
+  .recipe-card {
+    grid-column: span 8;
+  }
 }
 
 .recipe-bg-image {
   position: absolute;
   inset: 0;
-  background-image: url('https://images.unsplash.com/photo-1498837167922-ddd27525d352?w=1200&q=80');
+  background-image: url('https://images.unsplash.com/photo-1490645935967-10de6ba17061?q=80&w=2053&auto=format&fit=crop');
   background-size: cover;
   background-position: center;
-  z-index: 0;
 }
 
 .recipe-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.3) 100%);
-  z-index: 1;
+  background: linear-gradient(to top, rgba(30,40,30,0.85) 0%, rgba(0,0,0,0.1) 60%, transparent 100%);
 }
 
-.recipe-content {
-  position: relative;
-  z-index: 2;
-  height: 100%;
-  min-height: 280px;
+.editorial-tag {
+  background: rgba(255,255,255,0.2);
+  backdrop-filter: blur(8px);
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.3);
+}
+
+/* 4. 报告卡片 (中右，火花线趋势) */
+.report-card {
+  grid-column: span 12;
+  padding: 1.5rem;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  padding: 32px 32px 32px 40px;
-  color: white;
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border-primary);
+}
+@media (min-width: 768px) {
+  .report-card {
+    grid-column: span 6;
+  }
+}
+@media (min-width: 1024px) {
+  .report-card {
+    grid-column: span 4;
+  }
 }
 
-.recipe-tag {
-  margin-bottom: 16px;
+.report-sparkline {
+  align-items: flex-end;
 }
 
-.recipe-title {
-  font-size: 2rem;
-  font-weight: 700;
-  margin: 0 0 12px 0;
-  color: white;
-  text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+.report-sparkline .bar {
+  flex: 1;
+  background: var(--color-border-primary);
+  border-radius: 2px 2px 0 0;
+  transition: height 0.5s ease-in-out, background 0.3s;
 }
 
-.recipe-description {
-  font-size: 1.125rem;
-  color: rgba(255, 255, 255, 0.8);
-  margin: 0 0 24px 0;
-  line-height: 1.6;
+.report-sparkline .bar:hover {
+  background: var(--color-primary-light);
 }
 
-.recipe-action {
+.report-sparkline .bar.active {
+  background: var(--color-accent-cool);
+}
+
+/* 5. 辅助功能 (下右，小巧双格) */
+.aux-container {
+  grid-column: span 12;
   display: flex;
+  flex-direction: column;
   justify-content: flex-end;
-  align-items: center;
+}
+@media (min-width: 768px) {
+  .aux-container {
+    grid-column: span 6;
+  }
+}
+@media (min-width: 1024px) {
+  .aux-container {
+    grid-column: span 4;
+  }
 }
 
-/* Action Cards */
-.action-card {
-  padding: 24px;
-  background: white;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-  cursor: pointer;
-  transition: all 0.3s ease;
-  text-align: center;
+.aux-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  height: 100%;
 }
 
-.action-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-}
-
-.action-icon-wrapper {
-  width: 72px;
-  height: 72px;
-  border-radius: 16px;
+.aux-card {
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 16px;
-}
-
-.bg-red-100 {
-  background-color: #fee2e2;
-}
-
-.bg-blue-100 {
-  background-color: #dbeafe;
-}
-
-.bg-yellow-100 {
-  background-color: #fef3c7;
-}
-
-.bg-green-100 {
-  background-color: #d1fae5;
-}
-
-.action-title {
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: #1f2937;
-  margin: 0 0 8px 0;
-}
-
-.action-desc {
-  font-size: 0.875rem;
-  color: #6b7280;
-  margin: 0;
-}
-
-/* Tip Card */
-.tip-card {
-  padding: 32px;
-  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-}
-
-.tip-content {
   text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s ease;
 }
 
-.tip-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #78350f;
-  margin: 0;
+.aux-card:hover {
+  background: var(--color-bg-secondary);
+  border-color: var(--color-primary-lighter);
 }
 
-.tip-text {
-  font-size: 1rem;
-  color: #92400e;
-  margin: 0;
-  max-width: 500px;
+.aux-icon {
+  font-size: 2rem;
 }
 
-/* Responsive */
+/* ==================================================== */
+
+/* Optional responsive cleanups underneath */
 @media (max-width: 1024px) {
-  .calorie-ring-container :deep(.n-progress) {
-    width: 140px !important;
-    height: 140px !important;
-  }
-  
-  .calorie-number {
-    font-size: 2.25rem;
-  }
+  /* Removed old ring container scale */
 }
 
 @media (max-width: 768px) {
   .main-wrapper {
-    padding: 16px;
-  }
-
-  .hero-card {
-    padding: 24px;
-  }
-
-  /* Hero卡片移动端居中 */
-  .greeting-section {
-    text-align: center;
-  }
-
-  .greeting-text {
-    font-size: 1.75rem;
-  }
-
-  .greeting-subtitle {
-    font-size: 0.875rem;
-  }
-
-  /* 卡路里圆环居中 */
-  .calorie-ring-container {
-    justify-content: center;
-    padding: 24px 0;
-  }
-
-  .calorie-ring-container :deep(.n-progress) {
-    width: 160px !important;
-    height: 160px !important;
-  }
-
-  .ring-number {
-    font-size: 2.25rem;
-  }
-
-  .calorie-detail {
-    font-size: 0.7rem;
-  }
-
-  /* 达成状态移动端适配 */
-  .achievement-icon {
-    width: 100px;
-    height: 100px;
-  }
-
-  .achievement-icon :deep(.n-icon) {
-    font-size: 64px !important;
-  }
-
-  .achievement-title {
-    font-size: 1.3rem;
-  }
-
-  .achievement-subtitle {
-    font-size: 0.85rem;
-  }
-
-  .achievement-stats {
-    font-size: 0.8rem;
-  }
-
-  /* Banner高度增加 */
-  .recipe-magazine-card {
-    min-height: 400px;
-  }
-
-  .recipe-content {
-    min-height: 360px;
-    padding: 28px;
-  }
-
-  .recipe-title {
-    font-size: 1.75rem;
-  }
-
-  .recipe-description {
-    font-size: 1rem;
-  }
-
-  /* Action卡片调整 */
-  .action-card {
-    padding: 20px;
-  }
-
-  .action-icon-wrapper {
-    width: 64px;
-    height: 64px;
-  }
-
-  .action-title {
-    font-size: 1rem;
-  }
-
-  .action-desc {
-    font-size: 0.8125rem;
+    padding: 1rem;
   }
 }
 
