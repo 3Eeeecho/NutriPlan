@@ -1,40 +1,6 @@
 ﻿<template>
   <div v-if="authStore.isAuthenticated" class="etm-container">
-    <div class="etm-wrapper">
-      <div class="etm-layout">
-        <aside class="etm-sidebar">
-          <div class="sidebar-profile">
-            <div class="sidebar-avatar">{{ userAvatarText }}</div>
-            <div class="sidebar-user">
-              <div class="sidebar-name">{{ userDisplayName }}</div>
-              <div class="sidebar-sub">NutriPlan 用户</div>
-            </div>
-          </div>
-
-          <div class="sidebar-menu">
-            <button class="sidebar-item" @click="goToProfile">
-              <n-icon><PersonOutline /></n-icon>个人档案
-            </button>
-            <button class="sidebar-item" @click="goToFavorites">
-              <n-icon><StarOutline /></n-icon>我的收藏
-            </button>
-            <button class="sidebar-item active">
-              <n-icon><RestaurantOutline /></n-icon>饮食记录
-            </button>
-            <button class="sidebar-item" @click="goToWeekly">
-              <n-icon><BarChartOutline /></n-icon>周报告
-            </button>
-            <button class="sidebar-item" @click="goToShopping">
-              <n-icon><BasketOutline /></n-icon>购物清单
-            </button>
-          </div>
-
-          <button class="sidebar-logout" @click="handleLogout">
-            <n-icon><LogOutOutline /></n-icon>退出登录
-          </button>
-        </aside>
-
-        <div class="etm-main">
+    <div class="etm-main">
           <div class="etm-toolbar">
             <div class="toggle-group">
               <button class="toggle-btn active">日</button>
@@ -66,6 +32,12 @@
                   <n-icon class="action-icon"><EllipsisVerticalOutline /></n-icon>
                 </div>
               </div>
+              <div class="daily-calorie-progress">
+                <div class="daily-calorie-track">
+                  <div class="daily-calorie-fill" :style="{ width: checkedCaloriePercentage + '%' }"></div>
+                </div>
+                <div class="daily-calorie-text">今日已完成 {{ checkedCaloriePercentage.toFixed(0) }}%</div>
+              </div>
 
               <div class="meal-block" v-for="mealInfo in mealsList" :key="mealInfo.type">
                 <div class="meal-header">
@@ -75,9 +47,9 @@
                       <div
                         class="meal-macro-pie"
                         :style="{ background: mealInfo.macroGradient }"
-                        :title="`碳水 ${mealInfo.carbs}g / 蛋白质 ${mealInfo.protein}g / 脂肪 ${mealInfo.fat}g`"
+                        :title="`已勾选占比：碳水 ${mealInfo.checkedCarbs}g / 蛋白质 ${mealInfo.checkedProtein}g / 脂肪 ${mealInfo.checkedFat}g`"
                       ></div>
-                      <span class="meal-macro-label">碳/蛋/脂</span>
+                      <span class="meal-checked-calories">{{ mealInfo.checkedCalories }} 千卡</span>
                     </div>
                   </div>
                   <n-icon class="action-icon"><EllipsisVerticalOutline /></n-icon>
@@ -90,7 +62,11 @@
                     </div>
                     <div class="meal-card" style="border: 1px solid #d1fae5; background: #ecfdf5; cursor: pointer; border-radius: 12px; display: flex; gap: 1rem; padding: 0.75rem; align-items: center;" @click="router.push('/recipes/' + dailyRecommendation[mealInfo.type].id)">
                       <div style="flex-shrink: 0; display: flex; align-items: center; justify-content: center;" @click.stop>
-                        <n-checkbox v-model:checked="recommendationCompleted[mealInfo.type]" size="large" />
+                        <n-checkbox
+                          :checked="recommendationCompleted[mealInfo.type]"
+                          @update:checked="(checked) => handleRecommendationChecked(mealInfo.type, checked)"
+                          size="large"
+                        />
                       </div>
                       <div class="meal-img" style="background: #ffffff; border: 1px solid #e2e8f0; width: 48px; height: 48px; flex-shrink: 0; border-radius: 8px; overflow: hidden;">
                         <img :src="dailyRecommendation[mealInfo.type].image_url" v-if="dailyRecommendation[mealInfo.type].image_url" style="width: 100%; height: 100%; object-fit: cover;" />
@@ -112,7 +88,11 @@
                 <div class="meal-items" v-if="mealInfo.items.length > 0">
                   <div class="meal-card" style="border-bottom: 1px solid #f1f5f9; cursor: pointer; padding-bottom: 1rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.75rem;" v-for="item in mealInfo.items" :key="item.id">
                     <div style="flex-shrink: 0; display: flex; align-items: center; justify-content: center;" @click.stop>
-                      <n-checkbox v-model:checked="item.completed" size="large" />
+                      <n-checkbox
+                        :checked="item.completed"
+                        @update:checked="(checked) => handleMealItemChecked(item.id, checked)"
+                        size="large"
+                      />
                     </div>
                     <div class="meal-img" style="flex-shrink: 0; width: 60px; height: 60px; border-radius: 8px; overflow: hidden;" :style="{ opacity: item.completed ? 0.5 : 1 }">
                       <img v-if="item.image" :src="item.image" :alt="item.foodName" style="width: 100%; height: 100%; object-fit: cover;" />
@@ -157,66 +137,25 @@
                 </div>
 
                 <div class="stats-table">
-                  <div class="stats-header">
-                    <span></span>
-                    <span class="col-center">总计</span>
-                    <span class="col-right">目标 <n-icon class="edit-icon"><CreateOutline /></n-icon></span>
+                  <div class="stats-header compact">
+                    <span>营养项</span>
+                    <span class="col-right">数值</span>
                   </div>
-                  <div class="stats-row highlight">
+                  <div class="stats-row compact-row highlight">
                     <span>卡路里</span>
-                    <span class="col-center">{{ caloriesConsumed }}</span>
-                    <span class="col-right">{{ calorieTarget }}</span>
+                    <span class="col-right">{{ overviewCalories }} 千卡</span>
                   </div>
-
-                  <div class="stats-item">
-                    <div class="stats-row">
-                      <span class="text-amber-500 font-medium">碳水化合物</span>
-                      <span class="col-center">{{ totalCarbs }}克</span>
-                      <span class="col-right">{{ targetCarbs }}克</span>
-                    </div>
-                    <div class="mini-progress-container">
-                      <n-progress type="line" :percentage="Math.min(100, targetCarbs ? (totalCarbs / targetCarbs * 100) : 0)" color="#fbbf24" :show-indicator="false" :height="6" class="mini-progress" />
-                    </div>
+                  <div class="stats-row compact-row">
+                    <span class="text-amber-500 font-medium">碳水化合物</span>
+                    <span class="col-right">{{ overviewCarbs }}克</span>
                   </div>
-
-                  <div class="stats-item">
-                    <div class="stats-row">
-                      <span class="text-indigo-400 font-medium">脂肪</span>
-                      <span class="col-center">{{ totalFat }}克</span>
-                      <span class="col-right">{{ targetFat }}克</span>
-                    </div>
-                    <div class="mini-progress-container">
-                      <n-progress type="line" :percentage="Math.min(100, targetFat ? (totalFat / targetFat * 100) : 0)" color="#818cf8" :show-indicator="false" :height="6" class="mini-progress" />
-                    </div>
+                  <div class="stats-row compact-row">
+                    <span class="text-indigo-400 font-medium">脂肪</span>
+                    <span class="col-right">{{ overviewFat }}克</span>
                   </div>
-
-                  <div class="stats-item">
-                    <div class="stats-row">
-                      <span class="text-rose-500 font-medium">蛋白质</span>
-                      <span class="col-center">{{ totalProtein }}克</span>
-                      <span class="col-right">{{ targetProtein }}克</span>
-                    </div>
-                    <div class="mini-progress-container">
-                      <n-progress type="line" :percentage="Math.min(100, targetProtein ? (totalProtein / targetProtein * 100) : 0)" color="#fb7185" :show-indicator="false" :height="6" class="mini-progress" />
-                    </div>
-                  </div>
-
-                  <div class="stats-divider"></div>
-
-                  <div class="stats-row disabled text-gray-400">
-                    <span>纤维</span>
-                    <span class="col-center">-</span>
-                    <span class="col-right">-</span>
-                  </div>
-                  <div class="stats-row disabled text-gray-400">
-                    <span>钠</span>
-                    <span class="col-center">-</span>
-                    <span class="col-right">-</span>
-                  </div>
-                  <div class="stats-row disabled text-gray-400">
-                    <span>胆固醇</span>
-                    <span class="col-center">-</span>
-                    <span class="col-right">-</span>
+                  <div class="stats-row compact-row">
+                    <span class="text-rose-500 font-medium">蛋白质</span>
+                    <span class="col-right">{{ overviewProtein }}克</span>
                   </div>
 
                   <button class="detailed-btn" @click="goToProfile">详细营养信息</button>
@@ -229,8 +168,6 @@
             </div>
           </div>
         </div>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -248,12 +185,7 @@
     FlameOutline,
     CreateOutline,
     CloseOutline,
-    RestaurantOutline,
-    PersonOutline,
-    StarOutline,
-    BarChartOutline,
-    BasketOutline,
-    LogOutOutline
+    RestaurantOutline
   } from "@vicons/ionicons5";
 import { useAuthStore } from "@/store/auth";
 import { getNutritionRequirements } from "@/api/user";
@@ -265,8 +197,7 @@ const message = useMessage();
 const authStore = useAuthStore();
 const nutritionData = ref(null);
 const todayIntake = ref(null);
-const userDisplayName = computed(() => authStore.user?.username || "用户");
-const userAvatarText = computed(() => (userDisplayName.value || "用").slice(0, 1).toUpperCase());
+const mealCompletionMap = ref({});
 
   const dailyRecommendation = ref(null);
   const recommendationCompleted = ref({
@@ -277,7 +208,61 @@ const userAvatarText = computed(() => (userDisplayName.value || "用").slice(0, 
   });
   const isRecommending = ref(false);
 
+  const CHECKLIST_KEY_PREFIX = 'nutriplan_daily_checklist';
   const CACHE_KEY = 'nutriplan_daily_recommendation';
+
+  const getDateTag = () => {
+    const now = new Date();
+    return `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
+  };
+
+  const getChecklistStorageKey = () => {
+    const userId = authStore.user?.id || 'guest';
+    return `${CHECKLIST_KEY_PREFIX}_${userId}_${getDateTag()}`;
+  };
+
+  const loadChecklistState = () => {
+    try {
+      const raw = localStorage.getItem(getChecklistStorageKey());
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      mealCompletionMap.value = parsed.mealCompletionMap || {};
+      recommendationCompleted.value = {
+        breakfast: !!parsed.recommendationCompleted?.breakfast,
+        lunch: !!parsed.recommendationCompleted?.lunch,
+        dinner: !!parsed.recommendationCompleted?.dinner,
+        snack: !!parsed.recommendationCompleted?.snack
+      };
+    } catch (error) {
+      console.warn('加载勾选状态失败', error);
+    }
+  };
+
+  const saveChecklistState = () => {
+    localStorage.setItem(
+      getChecklistStorageKey(),
+      JSON.stringify({
+        mealCompletionMap: mealCompletionMap.value,
+        recommendationCompleted: recommendationCompleted.value
+      })
+    );
+  };
+
+  const handleMealItemChecked = (itemId, checked) => {
+    mealCompletionMap.value = {
+      ...mealCompletionMap.value,
+      [itemId]: !!checked
+    };
+    saveChecklistState();
+  };
+
+  const handleRecommendationChecked = (mealType, checked) => {
+    recommendationCompleted.value = {
+      ...recommendationCompleted.value,
+      [mealType]: !!checked
+    };
+    saveChecklistState();
+  };
 
   const loadRecommendation = async (force = false) => {
     isRecommending.value = true;
@@ -340,20 +325,40 @@ const userAvatarText = computed(() => (userDisplayName.value || "用").slice(0, 
       }
     }
 
-    if (authStore.hasProfile) {
-      try {
-        const [reqRes, statusRes] = await Promise.all([
-          getNutritionRequirements(),
-          getTodayStatus()
-        ]);
-        nutritionData.value = reqRes;
-        todayIntake.value = statusRes;
-      } catch (error) {
-        console.log("数据加载失败:", error);
-      }
-      
-      loadRecommendation();
+    try {
+      const statusRes = await getTodayStatus();
+      todayIntake.value = {
+        ...statusRes,
+        total_energy: statusRes?.total_energy ?? statusRes?.totalEnergy ?? 0,
+        total_protein: statusRes?.total_protein ?? statusRes?.totalProtein ?? 0,
+        total_carbohydrate: statusRes?.total_carbohydrate ?? statusRes?.totalCarbohydrate ?? 0,
+        total_fat: statusRes?.total_fat ?? statusRes?.totalFat ?? 0,
+        records: statusRes?.records || []
+      };
+      loadChecklistState();
+    } catch (error) {
+      console.log("获取今日营养状态失败:", error);
+      todayIntake.value = {
+        total_energy: 0,
+        total_protein: 0,
+        total_carbohydrate: 0,
+        total_fat: 0,
+        records: []
+      };
     }
+
+    try {
+      if (authStore.hasProfile) {
+        nutritionData.value = await getNutritionRequirements();
+      } else {
+        nutritionData.value = null;
+      }
+    } catch (error) {
+      console.log("获取营养目标失败:", error);
+      nutritionData.value = null;
+    }
+
+    loadRecommendation();
   }
 });
 
@@ -361,12 +366,6 @@ const userAvatarText = computed(() => (userDisplayName.value || "用").slice(0, 
   const goToProfile = () => router.push("/profile/view");
   const goToIntake = () => router.push("/intake");
   const goToWeekly = () => router.push("/weekly");
-  const goToFavorites = () => router.push("/favorites");
-  const goToShopping = () => router.push("/shopping");
-  const handleLogout = () => {
-    authStore.logout();
-    router.push("/login");
-  };
 
   const handleDeleteMealItem = (id) => {
     message.success("已删除该记录（演示使用）");
@@ -379,9 +378,33 @@ const calorieTarget = computed(() => {
 
 const caloriesConsumed = computed(() => Math.floor(todayIntake.value?.total_energy || 0));
 
+const checkedCalories = computed(() => {
+  const records = todayIntake.value?.records || [];
+  const checkedFromRecords = records
+    .filter((record) => !!mealCompletionMap.value[record.ID])
+    .reduce((sum, record) => sum + (record.calculatedEnergy || 0), 0);
+
+  const recommendationTypes = ["breakfast", "lunch", "dinner", "snack"];
+  const checkedFromRecommendations = recommendationTypes.reduce((sum, type) => {
+    if (!recommendationCompleted.value?.[type]) return sum;
+    const recommendation = dailyRecommendation.value?.[type];
+    if (!recommendation) return sum;
+    const energy = Number(recommendation.energy ?? recommendation.calories ?? 0);
+    return sum + (Number.isFinite(energy) ? energy : 0);
+  }, 0);
+
+  return Math.floor(checkedFromRecords + checkedFromRecommendations);
+});
+
 const caloriePercentage = computed(() => {
   if (!calorieTarget.value) return 0;
   return Math.min(100, Math.max(0, (caloriesConsumed.value / calorieTarget.value) * 100));
+});
+
+const checkedCaloriePercentage = computed(() => {
+  if (allRecommendedChecked.value) return 100;
+  if (!calorieTarget.value) return 0;
+  return Math.min(100, Math.max(0, (checkedCalories.value / calorieTarget.value) * 100));
 });
 
 // Macro calcs
@@ -414,15 +437,121 @@ const buildMacroGradient = (fat, protein, carbs) => {
   return `conic-gradient(#818cf8 0% ${fatEnd}%, #fb7185 ${fatEnd}% ${proteinEnd}%, #fbbf24 ${proteinEnd}% 100%)`;
 };
 
+const parseMacroValue = (value) => {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : 0;
+};
+
+const getRecommendationMacro = (mealType) => {
+  if (!recommendationCompleted.value?.[mealType]) {
+    return { fat: 0, protein: 0, carbs: 0 };
+  }
+  const recommendation = dailyRecommendation.value?.[mealType];
+  if (!recommendation) {
+    return { fat: 0, protein: 0, carbs: 0 };
+  }
+  return {
+    fat: parseMacroValue(recommendation.fat ?? recommendation.total_fat),
+    protein: parseMacroValue(recommendation.protein ?? recommendation.total_protein),
+    carbs: parseMacroValue(recommendation.carbohydrate ?? recommendation.carbs ?? recommendation.total_carbohydrate)
+  };
+};
+
+const getRecommendationCheckedEnergy = (mealType) => {
+  if (!recommendationCompleted.value?.[mealType]) {
+    return 0;
+  }
+  const recommendation = dailyRecommendation.value?.[mealType];
+  if (!recommendation) {
+    return 0;
+  }
+  return parseMacroValue(recommendation.energy ?? recommendation.calories);
+};
+
+const mealTypes = ["breakfast", "lunch", "dinner", "snack"];
+
+const allRecommendedChecked = computed(() => {
+  const availableTypes = mealTypes.filter((type) => !!dailyRecommendation.value?.[type]?.id);
+  if (availableTypes.length === 0) return false;
+  return availableTypes.every((type) => !!recommendationCompleted.value?.[type]);
+});
+
+const checkedNutritionTotals = computed(() => {
+  const records = todayIntake.value?.records || [];
+  const checkedRecords = records.filter((record) => !!mealCompletionMap.value[record.ID]);
+
+  const fromRecords = checkedRecords.reduce(
+    (sum, record) => {
+      sum.calories += parseMacroValue(record.calculatedEnergy);
+      sum.carbs += parseMacroValue(record.calculatedCarb);
+      sum.fat += parseMacroValue(record.calculatedFat);
+      sum.protein += parseMacroValue(record.calculatedProtein);
+      return sum;
+    },
+    { calories: 0, carbs: 0, fat: 0, protein: 0 }
+  );
+
+  const fromRecommendations = mealTypes.reduce(
+    (sum, type) => {
+      if (!recommendationCompleted.value?.[type]) return sum;
+      const recommendation = dailyRecommendation.value?.[type];
+      if (!recommendation) return sum;
+      sum.calories += parseMacroValue(recommendation.energy ?? recommendation.calories);
+      sum.carbs += parseMacroValue(recommendation.carbohydrate ?? recommendation.carbs ?? recommendation.total_carbohydrate);
+      sum.fat += parseMacroValue(recommendation.fat ?? recommendation.total_fat);
+      sum.protein += parseMacroValue(recommendation.protein ?? recommendation.total_protein);
+      return sum;
+    },
+    { calories: 0, carbs: 0, fat: 0, protein: 0 }
+  );
+
+  return {
+    calories: fromRecords.calories + fromRecommendations.calories,
+    carbs: fromRecords.carbs + fromRecommendations.carbs,
+    fat: fromRecords.fat + fromRecommendations.fat,
+    protein: fromRecords.protein + fromRecommendations.protein
+  };
+});
+
+const overviewCalories = computed(() => {
+  const checkedValue = Math.floor(checkedNutritionTotals.value.calories);
+  if (checkedValue > 0) return checkedValue;
+  return Math.floor(todayIntake.value?.total_energy || 0);
+});
+
+const overviewCarbs = computed(() => {
+  const checkedValue = Math.floor(checkedNutritionTotals.value.carbs);
+  if (checkedValue > 0) return checkedValue;
+  return Math.floor(todayIntake.value?.total_carbohydrate || 0);
+});
+
+const overviewFat = computed(() => {
+  const checkedValue = Math.floor(checkedNutritionTotals.value.fat);
+  if (checkedValue > 0) return checkedValue;
+  return Math.floor(todayIntake.value?.total_fat || 0);
+});
+
+const overviewProtein = computed(() => {
+  const checkedValue = Math.floor(checkedNutritionTotals.value.protein);
+  if (checkedValue > 0) return checkedValue;
+  return Math.floor(todayIntake.value?.total_protein || 0);
+});
+
 // Meals List formatting
 const generateMealBlock = (label, type, code) => {
     const records = todayIntake.value?.records || [];
     const typeRecords = records.filter(r => r.mealType === type || r.mealType === code || r.mealType === label.toLowerCase());
+    const checkedRecords = typeRecords.filter((record) => !!mealCompletionMap.value[record.ID]);
+    const recommendationMacro = getRecommendationMacro(type);
 
     const calories = typeRecords.reduce((sum, r) => sum + (r.calculatedEnergy || 0), 0);
     const fat = typeRecords.reduce((sum, r) => sum + (r.calculatedFat || 0), 0);
     const protein = typeRecords.reduce((sum, r) => sum + (r.calculatedProtein || 0), 0);
     const carbs = typeRecords.reduce((sum, r) => sum + (r.calculatedCarb || 0), 0);
+    const checkedCalories = checkedRecords.reduce((sum, r) => sum + (r.calculatedEnergy || 0), 0) + getRecommendationCheckedEnergy(type);
+    const checkedFat = checkedRecords.reduce((sum, r) => sum + (r.calculatedFat || 0), 0) + recommendationMacro.fat;
+    const checkedProtein = checkedRecords.reduce((sum, r) => sum + (r.calculatedProtein || 0), 0) + recommendationMacro.protein;
+    const checkedCarbs = checkedRecords.reduce((sum, r) => sum + (r.calculatedCarb || 0), 0) + recommendationMacro.carbs;
 
     return {
       name: label,
@@ -431,13 +560,17 @@ const generateMealBlock = (label, type, code) => {
       fat: Math.floor(fat),
       protein: Math.floor(protein),
       carbs: Math.floor(carbs),
-      macroGradient: buildMacroGradient(fat, protein, carbs),
+      checkedCalories: Math.floor(checkedCalories),
+      checkedFat: Math.floor(checkedFat),
+      checkedProtein: Math.floor(checkedProtein),
+      checkedCarbs: Math.floor(checkedCarbs),
+      macroGradient: buildMacroGradient(checkedFat, checkedProtein, checkedCarbs),
       items: typeRecords.map(r => ({
         id: r.ID,
         foodName: r.foodName,
         intakeAmount: r.intakeAmount,
         image: r.imageUrl || null,
-        completed: false
+        completed: !!mealCompletionMap.value[r.ID]
       }))
     };
   };const mealsList = computed(() => {
@@ -452,7 +585,6 @@ const generateMealBlock = (label, type, code) => {
 // ECharts logic
 import * as echarts from 'echarts';
 import { watch, onUnmounted, nextTick } from 'vue';
-import { NProgress } from 'naive-ui'; // Import NProgress for the mini progress bars
 
 const macroChartRef = ref(null);
 let donutChart = null;
@@ -466,28 +598,11 @@ const initChart = () => {
       tooltip: {
         trigger: 'item'
       },
-      title: {
-        text: caloriesConsumed.value + '\n{small|kcal}',
-        left: 'center',
-        top: 'center',
-        textStyle: {
-          fontSize: 28,
-          fontWeight: 'bold',
-          color: '#1e293b',
-          rich: {
-            small: {
-              fontSize: 14,
-              color: '#64748b',
-              padding: [4, 0, 0, 0]
-            }
-          }
-        }
-      },
       series: [
         {
           name: '营养素',
           type: 'pie',
-          radius: ['60%', '80%'],
+          radius: ['0%', '78%'],
           avoidLabelOverlap: false,
           itemStyle: {
             borderRadius: 10,
@@ -495,18 +610,22 @@ const initChart = () => {
             borderWidth: 2
           },
           label: {
-            show: false,
-            position: 'center'
+            show: true,
+            position: 'inside',
+            formatter: '{b}\n{d}%',
+            color: '#ffffff',
+            fontWeight: 700,
+            fontSize: 12
           },
           labelLine: {
             show: false
           },
-          data: totalCarbs.value === 0 && totalProtein.value === 0 && totalFat.value === 0
+          data: overviewCarbs.value === 0 && overviewProtein.value === 0 && overviewFat.value === 0
             ? [{ value: 1, name: '暂无数据', itemStyle: { color: '#f1f5f9' } }]
             : [
-              { value: totalCarbs.value, name: '碳水', itemStyle: { color: '#fbbf24' } },
-              { value: totalProtein.value, name: '蛋白', itemStyle: { color: '#fb7185' } },
-              { value: totalFat.value, name: '脂肪', itemStyle: { color: '#818cf8' } }
+              { value: overviewCarbs.value, name: '碳水', itemStyle: { color: '#fbbf24' } },
+              { value: overviewProtein.value, name: '蛋白', itemStyle: { color: '#fb7185' } },
+              { value: overviewFat.value, name: '脂肪', itemStyle: { color: '#818cf8' } }
             ]
         }
       ]
@@ -515,7 +634,7 @@ const initChart = () => {
   }
 };
 
-watch([totalCarbs, totalProtein, totalFat, caloriesConsumed], () => {
+watch([overviewCarbs, overviewProtein, overviewFat, overviewCalories, checkedCaloriePercentage], () => {
   nextTick(() => {
     initChart();
   });
@@ -731,6 +850,32 @@ onUnmounted(() => {
   margin-bottom: 1rem;
 }
 
+.daily-calorie-progress {
+  margin: -0.2rem 0 1rem;
+}
+
+.daily-calorie-track {
+  width: 100%;
+  height: 5px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  overflow: hidden;
+}
+
+.daily-calorie-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #fb923c, #f97316);
+  transition: width 0.3s ease;
+}
+
+.daily-calorie-text {
+  margin-top: 0.4rem;
+  font-size: 0.84rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
 .section-title {
   font-size: 1.4rem;
   font-weight: 600;
@@ -814,16 +959,17 @@ onUnmounted(() => {
 }
 
 .meal-macro-pie {
-  width: 14px;
-  height: 14px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   border: 1px solid #e2e8f0;
   flex-shrink: 0;
 }
 
-.meal-macro-label {
+.meal-checked-calories {
   color: #64748b;
-  font-weight: 500;
+  font-size: 0.85rem;
+  font-weight: 600;
 }
 
 .meal-items {
@@ -991,6 +1137,10 @@ onUnmounted(() => {
   border-bottom: 1px solid #e2e8f0;
 }
 
+.stats-header.compact {
+  grid-template-columns: 2fr 1fr;
+}
+
 .col-center { text-align: right; margin-right: 1.5rem; }
 .col-right { text-align: right; }
 
@@ -1000,6 +1150,11 @@ onUnmounted(() => {
   padding: 0.4rem 0;
   align-items: center;
   color: #1e293b;
+}
+
+.stats-row.compact-row {
+  grid-template-columns: 2fr 1fr;
+  padding: 0.5rem 0;
 }
 
 .stats-row.highlight {

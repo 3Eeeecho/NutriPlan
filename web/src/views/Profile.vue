@@ -357,13 +357,13 @@ onMounted(async () => {
         age: profile.age || null,
         height: profile.height || null,
         weight: profile.weight || null,
-        health_goal: profile.health_goal || "",
-        target_weight: profile.target_weight || null,
-        activity_level: profile.activity_level || "",
+        health_goal: profile.health_goal || profile.healthGoal || "",
+        target_weight: profile.target_weight ?? profile.targetWeight ?? null,
+        activity_level: profile.activity_level || profile.activityLevel || "",
         allergies: profile.allergies || "",
-        dietary_prefs: profile.dietary_prefs || "",
-        health_conditions: profile.health_conditions || "",
-        meal_times_per_day: profile.meal_times_per_day || 3,
+        dietary_prefs: profile.dietary_prefs || profile.dietaryPrefs || "",
+        health_conditions: profile.health_conditions || profile.healthConditions || "",
+        meal_times_per_day: profile.meal_times_per_day || profile.mealTimesPerDay || 3,
       });
     }
   } catch (error) {

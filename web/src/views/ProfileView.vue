@@ -38,8 +38,8 @@
                 <p class="hero-greet">你好，{{ authStore.user?.username || 'Nutri 用户' }}</p>
                 <h2 class="hero-goal">{{ authStore.profile?.health_goal || '维持健康' }} · 今日继续加油</h2>
                 <p class="hero-note">
-                  目标体重：{{ authStore.profile?.target_weight || '--' }} kg ·
-                  每日用餐：{{ authStore.profile?.meal_times_per_day || 3 }} 次
+                  目标体重：{{ authStore.profile?.target_weight ?? authStore.profile?.targetWeight ?? '--' }} kg ·
+                  每日用餐：{{ authStore.profile?.meal_times_per_day || authStore.profile?.mealTimesPerDay || 3 }} 次
                 </p>
               </div>
             </div>
@@ -68,8 +68,8 @@
           <n-card v-if="nutritionData" class="nutrition-card" :bordered="false">
             <div class="section-title-row">
               <h3>每日营养需求</h3>
-              <n-tag round size="small" type="success">
-                {{ authStore.profile?.health_goal || '个性化推荐' }}
+                <n-tag round size="small" type="success">
+                  {{ authStore.profile?.health_goal || authStore.profile?.healthGoal || '个性化推荐' }}
               </n-tag>
             </div>
 
@@ -142,18 +142,18 @@
               </template>
               <n-descriptions :column="1" bordered label-placement="left">
                 <n-descriptions-item label="健康目标">
-                  <n-tag :type="getGoalTagType(authStore.profile?.health_goal)" round>
-                    {{ authStore.profile?.health_goal || '未设置' }}
+                  <n-tag :type="getGoalTagType(authStore.profile?.health_goal || authStore.profile?.healthGoal)" round>
+                    {{ authStore.profile?.health_goal || authStore.profile?.healthGoal || '未设置' }}
                   </n-tag>
                 </n-descriptions-item>
                 <n-descriptions-item label="目标体重">
-                  {{ authStore.profile?.target_weight ? `${authStore.profile.target_weight} kg` : '未设置' }}
+                  {{ (authStore.profile?.target_weight ?? authStore.profile?.targetWeight) ? `${authStore.profile?.target_weight ?? authStore.profile?.targetWeight} kg` : '未设置' }}
                 </n-descriptions-item>
                 <n-descriptions-item label="活动水平">
-                  <n-tag type="info" round>{{ authStore.profile?.activity_level || '未设置' }}</n-tag>
+                  <n-tag type="info" round>{{ authStore.profile?.activity_level || authStore.profile?.activityLevel || '未设置' }}</n-tag>
                 </n-descriptions-item>
                 <n-descriptions-item label="每日用餐次数">
-                  {{ authStore.profile?.meal_times_per_day || 3 }} 次
+                  {{ authStore.profile?.meal_times_per_day || authStore.profile?.mealTimesPerDay || 3 }} 次
                 </n-descriptions-item>
               </n-descriptions>
             </n-card>
@@ -167,10 +167,10 @@
                   <div class="text-content">{{ authStore.profile?.allergies || '无' }}</div>
                 </n-descriptions-item>
                 <n-descriptions-item label="饮食偏好">
-                  <div class="text-content">{{ authStore.profile?.dietary_prefs || '无' }}</div>
+                  <div class="text-content">{{ authStore.profile?.dietary_prefs || authStore.profile?.dietaryPrefs || '无' }}</div>
                 </n-descriptions-item>
                 <n-descriptions-item label="健康问题">
-                  <div class="text-content">{{ authStore.profile?.health_conditions || '无' }}</div>
+                  <div class="text-content">{{ authStore.profile?.health_conditions || authStore.profile?.healthConditions || '无' }}</div>
                 </n-descriptions-item>
               </n-descriptions>
             </n-card>
