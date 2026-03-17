@@ -1,10 +1,18 @@
 ﻿<template>
   <section class="hero">
     <nav class="hero__nav">
-      <div class="hero__nav-tag">NUTRIPLAN FOR LIFESTYLE</div>
+      <div class="hero__nav-tag" @click="router.push('/welcome')" style="cursor: pointer;">NUTRIPLAN FOR LIFESTYLE</div>
       <div class="hero__nav-right">
-        <button class="hero__btn hero__btn--nav hero__btn--soft" @click="router.push('/login')">登录</button>
-        <button class="hero__btn hero__btn--nav hero__btn--outline" @click="router.push('/register')">免费注册</button>
+        <n-dropdown v-if="authStore.isAuthenticated" :options="userOptions" @select="handleSelect">
+          <div class="user-avatar-container">
+            <n-avatar round :size="36" src="https://ui-avatars.com/api/?name=User&background=random" />
+            <span class="username">{{ authStore.user?.username || '用户' }}</span>
+          </div>
+        </n-dropdown>
+        <template v-else>
+          <button class="hero__btn hero__btn--nav hero__btn--soft" @click="router.push('/login')">登录</button>
+          <button class="hero__btn hero__btn--nav hero__btn--outline" @click="router.push('/register')">免费注册</button>
+        </template>
       </div>
     </nav>
 
@@ -34,7 +42,8 @@
         </div>
 
         <div class="hero__actions">
-          <button class="hero__btn hero__btn--cta hero__btn--primary" @click="router.push('/login')">开启智能饮食</button>
+          <button v-if="!authStore.isAuthenticated" class="hero__btn hero__btn--cta hero__btn--primary" @click="router.push('/login')">开启智能饮食</button>
+          <button v-else class="hero__btn hero__btn--cta hero__btn--primary" @click="router.push('/home')">进入控制台</button>
           <button ref="demoTriggerRef" class="hero__btn hero__btn--cta hero__btn--outline" @click="openDemoVideo">查看演示</button>
         </div>
       </section>
@@ -70,10 +79,30 @@
 <script setup>
 import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { NDropdown, NAvatar } from 'naive-ui'
+import { useAuthStore } from '@/store/auth'
 
 const router = useRouter()
+const authStore = useAuthStore()
 const isDemoVisible = ref(false)
 const demoVideoRef = ref(null)
+
+const userOptions = [
+  { label: '进入控制台', key: 'dashboard' },
+  { label: '个人中心', key: 'profile' },
+  { label: '退出登录', key: 'logout' }
+]
+
+const handleSelect = async (key) => {
+  if (key === 'dashboard') {
+    router.push('/home')
+  } else if (key === 'profile') {
+    router.push('/profile/view')
+  } else if (key === 'logout') {
+    authStore.logout()
+    router.push('/login')
+  }
+}
 const demoTriggerRef = ref(null)
 const previousBodyOverflow = ref('')
 
@@ -388,13 +417,32 @@ onBeforeUnmount(() => {
 }
 
 .hero__video-close {
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  background: transparent;
-  color: #f5f8ff;
-  min-height: 30px;
-  padding: 0 12px;
-  border-radius: 8px;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1rem;
   cursor: pointer;
+  padding: 0.5rem;
+}
+
+.user-avatar-container {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  transition: background-color 0.2s;
+}
+
+.user-avatar-container:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.username {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #333;
 }
 
 .hero__video-player {

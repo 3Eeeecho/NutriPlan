@@ -1,210 +1,215 @@
 <template>
-  <div class="profile-view-container">
+  <div class="profile-view-page">
     <TopNavigation />
-    
-    <div class="page-header">
-      <BackButton />
-      <h1 class="page-title">个人档案</h1>
-      <n-button type="primary" @click="goToEdit">
-        <template #icon>
-          <n-icon><CreateOutline /></n-icon>
-        </template>
-        更新档案
-      </n-button>
-    </div>
 
-    <div class="main-content">
-      <div v-if="loading" class="loading-container">
-        <n-skeleton text :repeat="10" />
-      </div>
-
-      <div v-else-if="!authStore.hasProfile" class="empty-state">
-        <n-empty description="您还没有完善健康档案">
-          <template #extra>
-            <n-button type="primary" @click="goToEdit">立即完善档案</n-button>
+    <div class="profile-shell">
+      <header class="page-header">
+        <BackButton />
+        <div class="page-title-wrap">
+          <h1 class="page-title">个人主页</h1>
+          <p class="page-subtitle">清晰了解身体状态，轻松管理每日营养计划</p>
+        </div>
+        <n-button type="primary" class="update-btn" @click="goToEdit">
+          <template #icon>
+            <n-icon><CreateOutline /></n-icon>
           </template>
-        </n-empty>
-      </div>
+          更新档案
+        </n-button>
+      </header>
 
-      <div v-else class="profile-content">
-        <!-- 顶部：营养需求（最重要，突出显示） -->
-        <div class="top-section" v-if="nutritionData">
-          <n-card class="nutrition-card highlight-card">
-            <template #header>
-              <div class="card-header">
-                <span class="card-icon">🔥</span>
-                <span>每日营养需求</span>
-              </div>
+      <main class="page-content">
+        <section v-if="loading" class="loading-section">
+          <n-skeleton text :repeat="10" />
+        </section>
+
+        <section v-else-if="!authStore.hasProfile" class="empty-section">
+          <n-empty description="您还没有完善健康档案">
+            <template #extra>
+              <n-button type="primary" @click="goToEdit">立即完善档案</n-button>
             </template>
-            <div class="nutrition-content">
-              <div class="target-calorie">
-                <div class="target-label">
-                  目标热量 
-                  <span class="goal-hint" v-if="authStore.profile?.health_goal">
-                    ({{ authStore.profile.health_goal }})
-                  </span>
-                </div>
-                <div class="target-value">{{ nutritionData.target_calorie }} <span class="unit">kcal</span></div>
-              </div>
-              <div class="macros-grid">
-                <div class="macro-item protein">
-                  <div class="macro-icon">🥩</div>
-                  <div class="macro-info">
-                    <div class="macro-name">蛋白质</div>
-                    <div class="macro-value">{{ nutritionData.protein_gram }}g</div>
-                    <div class="macro-ratio">{{ nutritionData.protein_ratio.toFixed(0) }}%</div>
-                  </div>
-                </div>
-                <div class="macro-item carb">
-                  <div class="macro-icon">🍚</div>
-                  <div class="macro-info">
-                    <div class="macro-name">碳水化合物</div>
-                    <div class="macro-value">{{ nutritionData.carb_gram }}g</div>
-                    <div class="macro-ratio">{{ nutritionData.carb_ratio.toFixed(0) }}%</div>
-                  </div>
-                </div>
-                <div class="macro-item fat">
-                  <div class="macro-icon">🥑</div>
-                  <div class="macro-info">
-                    <div class="macro-name">脂肪</div>
-                    <div class="macro-value">{{ nutritionData.fat_gram }}g</div>
-                    <div class="macro-ratio">{{ nutritionData.fat_ratio.toFixed(0) }}%</div>
-                  </div>
-                </div>
+          </n-empty>
+        </section>
+
+        <section v-else class="profile-content">
+          <div class="hero-card">
+            <div class="hero-main">
+              <div class="avatar-chip">{{ getUserInitial() }}</div>
+              <div>
+                <p class="hero-greet">你好，{{ authStore.user?.username || 'Nutri 用户' }}</p>
+                <h2 class="hero-goal">{{ authStore.profile?.health_goal || '维持健康' }} · 今日继续加油</h2>
+                <p class="hero-note">
+                  目标体重：{{ authStore.profile?.target_weight || '--' }} kg ·
+                  每日用餐：{{ authStore.profile?.meal_times_per_day || 3 }} 次
+                </p>
               </div>
             </div>
-          </n-card>
-        </div>
 
-        <!-- 中间：两列布局 - 基础信息和健康指标 -->
-        <div class="middle-section">
-          <n-card class="info-card">
-            <template #header>
-              <div class="card-header">
-                <span class="card-icon">👤</span>
-                <span>基础信息</span>
-              </div>
-            </template>
-            <n-descriptions :column="2" bordered label-placement="left">
-              <n-descriptions-item label="用户名">
-                <n-tag type="primary" round>{{ authStore.user?.username }}</n-tag>
-              </n-descriptions-item>
-              <n-descriptions-item label="邮箱">
-                {{ authStore.profile?.email || '未设置' }}
-              </n-descriptions-item>
-              <n-descriptions-item label="性别">
-                <n-tag :type="authStore.profile?.gender === '男' ? 'info' : 'error'" round>
-                  {{ authStore.profile?.gender }}
-                </n-tag>
-              </n-descriptions-item>
-              <n-descriptions-item label="年龄">
-                {{ authStore.profile?.age }} 岁
-              </n-descriptions-item>
-              <n-descriptions-item label="身高">
-                {{ authStore.profile?.height }} cm
-              </n-descriptions-item>
-              <n-descriptions-item label="体重">
-                {{ authStore.profile?.weight }} kg
-              </n-descriptions-item>
-            </n-descriptions>
-          </n-card>
-
-          <n-card class="info-card">
-            <template #header>
-              <div class="card-header">
-                <span class="card-icon">📊</span>
-                <span>健康指标</span>
-              </div>
-            </template>
-            <div class="health-metrics">
-              <div class="metric-item">
-                <div class="metric-label">BMI</div>
-                <div class="metric-value" :class="getBMIClass(authStore.profile?.bmi)">
+            <div class="hero-metrics">
+              <div class="metric-pill">
+                <span class="metric-pill__label">BMI</span>
+                <strong class="metric-pill__value" :class="getBMIClass(authStore.profile?.bmi)">
                   {{ authStore.profile?.bmi || '--' }}
+                </strong>
+                <span class="metric-pill__desc">{{ getBMIDesc(authStore.profile?.bmi) }}</span>
+              </div>
+              <div class="metric-pill">
+                <span class="metric-pill__label">BMR</span>
+                <strong class="metric-pill__value">{{ authStore.profile?.bmr || '--' }}</strong>
+                <span class="metric-pill__desc">基础代谢</span>
+              </div>
+              <div class="metric-pill">
+                <span class="metric-pill__label">TDEE</span>
+                <strong class="metric-pill__value">{{ authStore.profile?.tdee || '--' }}</strong>
+                <span class="metric-pill__desc">维持热量</span>
+              </div>
+            </div>
+          </div>
+
+          <n-card v-if="nutritionData" class="nutrition-card" :bordered="false">
+            <div class="section-title-row">
+              <h3>每日营养需求</h3>
+              <n-tag round size="small" type="success">
+                {{ authStore.profile?.health_goal || '个性化推荐' }}
+              </n-tag>
+            </div>
+
+            <div class="nutrition-summary">
+              <div class="calorie-block">
+                <div class="calorie-label">目标热量</div>
+                <div class="calorie-value">{{ nutritionData.target_calorie }}<span>kcal</span></div>
+              </div>
+
+              <div class="macro-bars">
+                <div class="macro-row protein">
+                  <div class="macro-row__head">
+                    <span>蛋白质</span>
+                    <span>{{ nutritionData.protein_gram }}g · {{ nutritionData.protein_ratio.toFixed(0) }}%</span>
+                  </div>
+                  <div class="macro-row__track">
+                    <div class="macro-row__fill" :style="{ width: `${nutritionData.protein_ratio}%` }"></div>
+                  </div>
                 </div>
-                <div class="metric-desc">{{ getBMIDesc(authStore.profile?.bmi) }}</div>
-              </div>
-              <div class="metric-item">
-                <div class="metric-label">BMR</div>
-                <div class="metric-value primary">{{ authStore.profile?.bmr || '--' }}</div>
-                <div class="metric-desc">基础代谢率</div>
-              </div>
-              <div class="metric-item">
-                <div class="metric-label">TDEE</div>
-                <div class="metric-value primary">{{ authStore.profile?.tdee || '--' }}</div>
-                <div class="metric-desc">维持体重所需热量</div>
+
+                <div class="macro-row carb">
+                  <div class="macro-row__head">
+                    <span>碳水化合物</span>
+                    <span>{{ nutritionData.carb_gram }}g · {{ nutritionData.carb_ratio.toFixed(0) }}%</span>
+                  </div>
+                  <div class="macro-row__track">
+                    <div class="macro-row__fill" :style="{ width: `${nutritionData.carb_ratio}%` }"></div>
+                  </div>
+                </div>
+
+                <div class="macro-row fat">
+                  <div class="macro-row__head">
+                    <span>脂肪</span>
+                    <span>{{ nutritionData.fat_gram }}g · {{ nutritionData.fat_ratio.toFixed(0) }}%</span>
+                  </div>
+                  <div class="macro-row__track">
+                    <div class="macro-row__fill" :style="{ width: `${nutritionData.fat_ratio}%` }"></div>
+                  </div>
+                </div>
               </div>
             </div>
           </n-card>
-        </div>
 
-        <!-- 底部：两列布局 - 健康目标和个性化设置 -->
-        <div class="bottom-section">
-          <n-card class="info-card">
-            <template #header>
-              <div class="card-header">
-                <span class="card-icon">🎯</span>
-                <span>健康目标</span>
+          <div class="content-grid">
+            <n-card class="info-card" :bordered="false">
+              <template #header>
+                <div class="card-header"><span>基础信息</span></div>
+              </template>
+              <n-descriptions :column="2" bordered label-placement="left">
+                <n-descriptions-item label="用户名">
+                  <n-tag type="primary" round>{{ authStore.user?.username }}</n-tag>
+                </n-descriptions-item>
+                <n-descriptions-item label="邮箱">
+                  {{ authStore.profile?.email || '未设置' }}
+                </n-descriptions-item>
+                <n-descriptions-item label="性别">
+                  <n-tag :type="authStore.profile?.gender === '男' ? 'info' : 'error'" round>
+                    {{ authStore.profile?.gender || '未设置' }}
+                  </n-tag>
+                </n-descriptions-item>
+                <n-descriptions-item label="年龄">{{ authStore.profile?.age || '--' }} 岁</n-descriptions-item>
+                <n-descriptions-item label="身高">{{ authStore.profile?.height || '--' }} cm</n-descriptions-item>
+                <n-descriptions-item label="体重">{{ authStore.profile?.weight || '--' }} kg</n-descriptions-item>
+              </n-descriptions>
+            </n-card>
+
+            <n-card class="info-card" :bordered="false">
+              <template #header>
+                <div class="card-header"><span>目标与活动</span></div>
+              </template>
+              <n-descriptions :column="1" bordered label-placement="left">
+                <n-descriptions-item label="健康目标">
+                  <n-tag :type="getGoalTagType(authStore.profile?.health_goal)" round>
+                    {{ authStore.profile?.health_goal || '未设置' }}
+                  </n-tag>
+                </n-descriptions-item>
+                <n-descriptions-item label="目标体重">
+                  {{ authStore.profile?.target_weight ? `${authStore.profile.target_weight} kg` : '未设置' }}
+                </n-descriptions-item>
+                <n-descriptions-item label="活动水平">
+                  <n-tag type="info" round>{{ authStore.profile?.activity_level || '未设置' }}</n-tag>
+                </n-descriptions-item>
+                <n-descriptions-item label="每日用餐次数">
+                  {{ authStore.profile?.meal_times_per_day || 3 }} 次
+                </n-descriptions-item>
+              </n-descriptions>
+            </n-card>
+
+            <n-card class="info-card" :bordered="false">
+              <template #header>
+                <div class="card-header"><span>个性化偏好</span></div>
+              </template>
+              <n-descriptions :column="1" bordered label-placement="left">
+                <n-descriptions-item label="过敏源">
+                  <div class="text-content">{{ authStore.profile?.allergies || '无' }}</div>
+                </n-descriptions-item>
+                <n-descriptions-item label="饮食偏好">
+                  <div class="text-content">{{ authStore.profile?.dietary_prefs || '无' }}</div>
+                </n-descriptions-item>
+                <n-descriptions-item label="健康问题">
+                  <div class="text-content">{{ authStore.profile?.health_conditions || '无' }}</div>
+                </n-descriptions-item>
+              </n-descriptions>
+            </n-card>
+
+            <n-card class="info-card" :bordered="false">
+              <template #header>
+                <div class="card-header"><span>身体指标解读</span></div>
+              </template>
+              <div class="insight-grid">
+                <div class="insight-item">
+                  <div class="insight-item__label">BMI 状态</div>
+                  <div class="insight-item__value">{{ getBMIDesc(authStore.profile?.bmi) }}</div>
+                  <div class="insight-item__desc">建议维持规律作息与稳定运动节奏。</div>
+                </div>
+                <div class="insight-item">
+                  <div class="insight-item__label">代谢能力</div>
+                  <div class="insight-item__value">{{ authStore.profile?.bmr || '--' }} kcal</div>
+                  <div class="insight-item__desc">基础代谢是每日饮食规划的参考基线。</div>
+                </div>
+                <div class="insight-item">
+                  <div class="insight-item__label">维持热量</div>
+                  <div class="insight-item__value">{{ authStore.profile?.tdee || '--' }} kcal</div>
+                  <div class="insight-item__desc">结合活动量，动态调整更容易长期坚持。</div>
+                </div>
               </div>
-            </template>
-            <n-descriptions :column="1" bordered label-placement="left">
-              <n-descriptions-item label="健康目标">
-                <n-tag :type="getGoalTagType(authStore.profile?.health_goal)" round size="large">
-                  {{ authStore.profile?.health_goal || '未设置' }}
-                </n-tag>
-              </n-descriptions-item>
-              <n-descriptions-item label="目标体重">
-                {{ authStore.profile?.target_weight ? `${authStore.profile.target_weight} kg` : '未设置' }}
-              </n-descriptions-item>
-              <n-descriptions-item label="活动水平">
-                <n-tag type="info" round>{{ authStore.profile?.activity_level || '未设置' }}</n-tag>
-              </n-descriptions-item>
-              <n-descriptions-item label="每日用餐次数">
-                {{ authStore.profile?.meal_times_per_day || 3 }} 次
-              </n-descriptions-item>
-            </n-descriptions>
-          </n-card>
+            </n-card>
+          </div>
 
-          <n-card class="info-card">
-            <template #header>
-              <div class="card-header">
-                <span class="card-icon">⚙️</span>
-                <span>个性化设置</span>
-              </div>
-            </template>
-            <n-descriptions :column="1" bordered label-placement="left">
-              <n-descriptions-item label="过敏源">
-                <div class="text-content">
-                  {{ authStore.profile?.allergies || '无' }}
-                </div>
-              </n-descriptions-item>
-              <n-descriptions-item label="饮食偏好">
-                <div class="text-content">
-                  {{ authStore.profile?.dietary_prefs || '无' }}
-                </div>
-              </n-descriptions-item>
-              <n-descriptions-item label="健康问题">
-                <div class="text-content">
-                  {{ authStore.profile?.health_conditions || '无' }}
-                </div>
-              </n-descriptions-item>
-            </n-descriptions>
-          </n-card>
-        </div>
-
-        <!-- 操作按钮 -->
-        <div class="action-buttons">
-          <n-button type="primary" size="large" @click="goToEdit">
-            <template #icon>
-              <n-icon><CreateOutline /></n-icon>
-            </template>
-            更新档案
-          </n-button>
-          <n-button size="large" @click="goBack">
-            返回首页
-          </n-button>
-        </div>
-      </div>
+          <div class="action-buttons">
+            <n-button type="primary" size="large" @click="goToEdit">
+              <template #icon>
+                <n-icon><CreateOutline /></n-icon>
+              </template>
+              更新档案
+            </n-button>
+            <n-button size="large" @click="goBack">返回首页</n-button>
+          </div>
+        </section>
+      </main>
     </div>
   </div>
 </template>
@@ -230,14 +235,11 @@ onMounted(async () => {
     if (!authStore.profile) {
       await authStore.loadProfile()
     }
-    // 加载营养需求数据
     if (authStore.hasProfile) {
       try {
         const response = await getNutritionRequirements()
         nutritionData.value = response
       } catch (error) {
-        // 静默处理错误，不显示错误提示
-        // 如果档案不完整或接口不存在，只是不显示营养需求卡片
         const errorMsg = error?.response?.data?.error || error.message
         const status = error?.response?.status
         console.log('营养需求数据不可用:', {
@@ -263,6 +265,11 @@ const goToEdit = () => {
   router.push('/profile')
 }
 
+const getUserInitial = () => {
+  const username = authStore.user?.username || 'N'
+  return username.charAt(0).toUpperCase()
+}
+
 const getBMIClass = (bmi) => {
   if (!bmi) return ''
   if (bmi < 18.5) return 'underweight'
@@ -281,364 +288,389 @@ const getBMIDesc = (bmi) => {
 
 const getGoalTagType = (goal) => {
   const goalMap = {
-    '减脂': 'error',
-    '增肌': 'success',
-    '控糖': 'warning',
-    '维持健康': 'info'
+    减脂: 'error',
+    增肌: 'success',
+    控糖: 'warning',
+    维持健康: 'info'
   }
   return goalMap[goal] || 'default'
 }
 </script>
 
 <style scoped>
-.profile-view-container {
+.profile-view-page {
   min-height: 100vh;
-  background: var(--bg-secondary);
+  background: radial-gradient(circle at 0% 0%, #edf9ef 0%, #f4f8ff 36%, #eef3fa 100%);
+}
+
+.profile-shell {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 20px 20px 44px;
 }
 
 .page-header {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: var(--spacing-lg) var(--spacing-xl);
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.page-title-wrap {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
 }
 
 .page-title {
-  font-size: var(--font-size-2xl);
-  font-weight: var(--font-weight-bold);
-  color: var(--text-primary);
   margin: 0;
-  flex: 1;
-  text-align: center;
+  font-size: clamp(24px, 3.3vw, 32px);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #1f2937;
 }
 
-.main-content {
-  padding: 0 var(--spacing-xl) var(--spacing-3xl);
-  max-width: 1400px;
-  margin: 0 auto;
+.page-subtitle {
+  margin: 0;
+  font-size: 13px;
+  color: #6b7280;
 }
 
-/* 响应式布局 */
-@media (max-width: 1024px) {
-  .middle-section,
-  .bottom-section {
-    grid-template-columns: 1fr;
-  }
-  
-  .health-metrics {
-    grid-template-columns: repeat(3, 1fr);
-  }
-  
-  .macros-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
+.update-btn {
+  border-radius: 10px;
 }
 
-@media (max-width: 768px) {
-  .health-metrics {
-    grid-template-columns: 1fr;
-  }
-  
-  .macros-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .main-content {
-    padding: 20px;
-  }
+.page-content {
+  display: grid;
+  gap: 18px;
 }
 
-.loading-container {
-  padding: var(--spacing-3xl);
-}
-
-.empty-state {
-  padding: var(--spacing-4xl) var(--spacing-lg);
+.loading-section,
+.empty-section {
+  padding: 30px 8px;
 }
 
 .profile-content {
-  animation: fadeIn 0.5s ease-out;
+  display: grid;
+  gap: 18px;
+  animation: fadeInUp 0.35s ease;
+}
+
+.hero-card {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 14px;
+  padding: 18px;
+  border-radius: 20px;
+  background: linear-gradient(145deg, #f8fff9 0%, #f5faff 100%);
+  border: 1px solid rgba(130, 184, 150, 0.26);
+  box-shadow: 0 12px 30px rgba(21, 42, 36, 0.07);
+}
+
+.hero-main {
   display: flex;
-  flex-direction: column;
-  gap: var(--spacing-lg);
+  align-items: center;
+  gap: 14px;
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.avatar-chip {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-size: 24px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #39a36b 0%, #2a8969 100%);
+  box-shadow: 0 10px 20px rgba(43, 137, 105, 0.28);
 }
 
-/* 顶部营养需求区域 */
-.top-section {
-  width: 100%;
+.hero-greet {
+  margin: 0;
+  color: #4b5563;
+  font-size: 13px;
+}
+
+.hero-goal {
+  margin: 4px 0;
+  font-size: clamp(18px, 2.4vw, 24px);
+  color: #0f172a;
+  letter-spacing: -0.01em;
+}
+
+.hero-note {
+  margin: 0;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.hero-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.metric-pill {
+  padding: 12px 10px;
+  border-radius: 14px;
+  border: 1px solid #dce6df;
+  background: rgba(255, 255, 255, 0.72);
+  text-align: center;
+}
+
+.metric-pill__label {
+  display: block;
+  font-size: 11px;
+  color: #6b7280;
+  margin-bottom: 4px;
+}
+
+.metric-pill__value {
+  display: block;
+  font-size: 20px;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.1;
+}
+
+.metric-pill__value.normal {
+  color: #10b981;
+}
+
+.metric-pill__value.underweight {
+  color: #3b82f6;
+}
+
+.metric-pill__value.overweight {
+  color: #f59e0b;
+}
+
+.metric-pill__value.obese {
+  color: #ef4444;
+}
+
+.metric-pill__desc {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+  color: #6b7280;
 }
 
 .nutrition-card {
-  border-radius: var(--radius-xl);
+  border-radius: 18px;
+  background: linear-gradient(135deg, #ffffff 0%, #f4fff8 100%);
+  box-shadow: 0 10px 24px rgba(18, 34, 24, 0.08);
+}
+
+.section-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.section-title-row h3 {
+  margin: 0;
+  font-size: 19px;
+  color: #111827;
+}
+
+.nutrition-summary {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 16px;
+}
+
+.calorie-block {
+  border-radius: 14px;
+  padding: 16px;
+  background: linear-gradient(160deg, #2faa67 0%, #43b27a 100%);
+  color: #fff;
+  box-shadow: 0 12px 24px rgba(48, 170, 110, 0.28);
+}
+
+.calorie-label {
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+.calorie-value {
+  margin-top: 8px;
+  font-size: 38px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.calorie-value span {
+  margin-left: 6px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.macro-bars {
+  display: grid;
+  gap: 12px;
+}
+
+.macro-row {
+  border-radius: 12px;
+  border: 1px solid #e6ecf2;
+  background: #fff;
+  padding: 12px;
+}
+
+.macro-row__head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+  color: #4b5563;
+  margin-bottom: 8px;
+}
+
+.macro-row__track {
+  height: 8px;
+  border-radius: 99px;
   overflow: hidden;
+  background: #edf2f7;
 }
 
-.highlight-card {
-  background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
-  box-shadow: var(--shadow-lg);
+.macro-row__fill {
+  height: 100%;
+  border-radius: inherit;
 }
 
-/* 中间区域：两列布局 */
-.middle-section {
+.macro-row.protein .macro-row__fill {
+  background: linear-gradient(90deg, #f87171 0%, #ef4444 100%);
+}
+
+.macro-row.carb .macro-row__fill {
+  background: linear-gradient(90deg, #60a5fa 0%, #3b82f6 100%);
+}
+
+.macro-row.fat .macro-row__fill {
+  background: linear-gradient(90deg, #fbbf24 0%, #f59e0b 100%);
+}
+
+.content-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--spacing-lg);
-}
-
-/* 底部区域：两列布局 */
-.bottom-section {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--spacing-lg);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
 }
 
 .info-card {
-  border-radius: var(--radius-xl);
-  overflow: hidden;
-  transition: var(--transition-normal);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.06);
+  backdrop-filter: blur(6px);
 }
 
 .card-header {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  font-size: var(--font-size-lg);
-  font-weight: var(--font-weight-semibold);
-}
-
-.card-icon {
-  font-size: 24px;
-}
-
-.health-metrics {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--spacing-md);
-  padding: var(--spacing-lg) 0;
-}
-
-.metric-item {
-  text-align: center;
-  padding: var(--spacing-md);
-  background: linear-gradient(135deg, var(--bg-secondary) 0%, #ffffff 100%);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border-color);
-  transition: var(--transition-normal);
-}
-
-.metric-item:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-md);
-}
-
-.metric-label {
-  font-size: var(--font-size-sm);
-  color: var(--text-secondary);
-  margin-bottom: var(--spacing-sm);
-  font-weight: var(--font-weight-medium);
-}
-
-.metric-value {
-  font-size: 28px;
-  font-weight: var(--font-weight-bold);
-  margin-bottom: var(--spacing-xs);
-  color: var(--text-primary);
-}
-
-.metric-value.primary {
-  color: var(--color-primary);
-}
-
-.metric-value.normal {
-  color: var(--color-success);
-}
-
-.metric-value.underweight {
-  color: var(--color-info);
-}
-
-.metric-value.overweight {
-  color: var(--color-warning);
-}
-
-.metric-value.obese {
-  color: var(--color-error);
-}
-
-.metric-desc {
-  font-size: var(--font-size-xs);
-  color: var(--text-tertiary);
+  font-size: 18px;
+  font-weight: 700;
+  color: #1f2937;
 }
 
 .text-content {
-  color: var(--text-secondary);
-  line-height: 1.6;
+  color: #4b5563;
+  line-height: 1.65;
   white-space: pre-wrap;
+}
+
+.insight-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.insight-item {
+  border: 1px solid #e5ebf0;
+  border-radius: 12px;
+  background: #fbfdff;
+  padding: 12px;
+}
+
+.insight-item__label {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.insight-item__value {
+  margin-top: 2px;
+  font-size: 20px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.insight-item__desc {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #6b7280;
 }
 
 .action-buttons {
   display: flex;
-  gap: var(--spacing-md);
   justify-content: center;
-  margin-top: var(--spacing-2xl);
-  padding-top: var(--spacing-2xl);
-  border-top: 1px solid var(--border-color);
+  gap: 12px;
+  margin-top: 2px;
 }
 
-.nutrition-content {
-  padding: var(--spacing-lg) 0;
-}
-
-.target-calorie {
-  text-align: center;
-  padding: var(--spacing-xl);
-  background: linear-gradient(135deg, var(--color-primary) 0%, #34d399 100%);
-  border-radius: var(--radius-xl);
-  margin-bottom: var(--spacing-xl);
-  color: white;
-  box-shadow: var(--shadow-lg);
-}
-
-.goal-hint {
-  font-size: 0.8em;
-  opacity: 0.8;
-  font-weight: normal;
-  margin-left: 4px;
-}
-
-.target-label {
-  font-size: var(--font-size-sm);
-  opacity: 0.9;
-  margin-bottom: var(--spacing-xs);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.target-value {
-  font-size: 42px;
-  font-weight: var(--font-weight-bold);
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.target-value .unit {
-  font-size: var(--font-size-lg);
-  margin-left: var(--spacing-xs);
-}
-
-.macros-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--spacing-md);
-}
-
-.macro-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: var(--spacing-xs);
-  padding: var(--spacing-lg) var(--spacing-md);
-  background: #ffffff;
-  border-radius: var(--radius-xl);
-  border: 2px solid transparent;
-  transition: var(--transition-normal);
-  box-shadow: var(--shadow-sm);
-}
-
-.macro-item:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-md);
-}
-
-.macro-item.protein {
-  border-color: var(--color-protein);
-}
-
-.macro-item.carb {
-  border-color: var(--color-carb);
-}
-
-.macro-item.fat {
-  border-color: var(--color-fat);
-}
-
-.macro-icon {
-  font-size: 40px;
-  margin-bottom: var(--spacing-xs);
-}
-
-.macro-info {
-  width: 100%;
-}
-
-.macro-name {
-  font-size: var(--font-size-sm);
-  color: var(--text-secondary);
-  margin-bottom: var(--spacing-xs);
-  font-weight: var(--font-weight-medium);
-}
-
-.macro-value {
-  font-size: var(--font-size-2xl);
-  font-weight: var(--font-weight-bold);
-  color: var(--text-primary);
-  margin-bottom: var(--spacing-xs);
-}
-
-.macro-ratio {
-  font-size: var(--font-size-xs);
-  color: var(--text-tertiary);
-  background: var(--bg-secondary);
-  padding: 2px var(--spacing-xs);
-  border-radius: var(--radius-full);
-  display: inline-block;
-}
-
-/* 响应式布局 */
 @media (max-width: 1024px) {
-  .middle-section,
-  .bottom-section {
+  .hero-card {
     grid-template-columns: 1fr;
   }
-  
-  .health-metrics {
-    grid-template-columns: repeat(3, 1fr);
+
+  .nutrition-summary {
+    grid-template-columns: 1fr;
   }
-  
-  .macros-grid {
-    grid-template-columns: repeat(3, 1fr);
+
+  .content-grid {
+    grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 768px) {
+  .profile-shell {
+    padding: 12px 12px 28px;
+  }
+
   .page-header {
-    padding: var(--spacing-md);
+    grid-template-columns: 1fr;
+    justify-items: start;
+    gap: 10px;
   }
 
-  .main-content {
-    padding: 0 var(--spacing-md) var(--spacing-2xl);
+  .page-title-wrap {
+    justify-items: start;
   }
 
-  .health-metrics {
+  .hero-main {
+    align-items: flex-start;
+  }
+
+  .hero-metrics {
     grid-template-columns: 1fr;
   }
-  
-  .macros-grid {
-    grid-template-columns: 1fr;
+
+  .calorie-value {
+    font-size: 32px;
+  }
+
+  .action-buttons {
+    justify-content: stretch;
+    display: grid;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 </style>

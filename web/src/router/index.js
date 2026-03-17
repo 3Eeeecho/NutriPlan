@@ -4,7 +4,13 @@ import { useAuthStore } from "@/store/auth";
 const routes = [
   {
     path: "/",
-    redirect: "/home",
+    redirect: "/welcome",
+  },
+  {
+    path: "/welcome",
+    name: "Welcome",
+    component: () => import("@/components/HeroSection.vue"),
+    meta: { requiresAuth: false },
   },
   {
     path: "/login",
@@ -22,7 +28,7 @@ const routes = [
     path: "/home",
     name: "Home",
     component: () => import("@/views/Home.vue"),
-    meta: { requiresAuth: false },
+    meta: { requiresAuth: true },
   },
   {
     path: "/profile",
