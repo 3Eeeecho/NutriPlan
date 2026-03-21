@@ -1,7 +1,5 @@
 <template>
   <PageLayout>
-    <TopNavigation />
-
     <div class="shopping-container">
       <div class="page-header">
         <div class="header-left">
@@ -183,7 +181,6 @@ import {
 import { getShoppingLists, createShoppingList, deleteShoppingList, updateShoppingList, completeShoppingList, getShoppingListDetail } from '@/api/shoppingApi'
 import { getSelectedRecipePlan, getFavoriteList } from '@/api/recipeApi'
 import PageLayout from '@/components/layout/PageLayout.vue'
-import TopNavigation from '@/components/layout/TopNavigation.vue'
 import BackButton from '@/components/layout/BackButton.vue'
 
 const router = useRouter()

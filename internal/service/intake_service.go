@@ -52,15 +52,16 @@ type WeeklyReport struct {
 
 // DailyNutritionData 每日营养数据
 type DailyNutritionData struct {
-	Date               string  `json:"date"`
-	TotalEnergy        float64 `json:"total_energy"`
-	TotalProtein       float64 `json:"total_protein"`
-	TotalCarbohydrate  float64 `json:"total_carbohydrate"`
-	TotalFat           float64 `json:"total_fat"`
-	TargetEnergy       float64 `json:"target_energy"`
-	TargetProtein      float64 `json:"target_protein"`
-	TargetCarbohydrate float64 `json:"target_carbohydrate"`
-	TargetFat          float64 `json:"target_fat"`
+	Date               string                     `json:"date"`
+	TotalEnergy        float64                    `json:"total_energy"`
+	TotalProtein       float64                    `json:"total_protein"`
+	TotalCarbohydrate  float64                    `json:"total_carbohydrate"`
+	TotalFat           float64                    `json:"total_fat"`
+	TargetEnergy       float64                    `json:"target_energy"`
+	TargetProtein      float64                    `json:"target_protein"`
+	TargetCarbohydrate float64                    `json:"target_carbohydrate"`
+	TargetFat          float64                    `json:"target_fat"`
+	Records            []models.DailyIntakeRecord `json:"records"`
 }
 
 type intakeServiceImpl struct {
@@ -223,6 +224,12 @@ func (s *intakeServiceImpl) GetWeeklyReport(userID uint) (*WeeklyReport, error) 
 			totalFat += summary.TotalFat
 			dayCount++
 		}
+
+		records, err := s.intakeRepo.GetByUserAndDate(userID, currentDate)
+		if err != nil {
+			return nil, err
+		}
+		data.Records = records
 
 		dailyData = append(dailyData, data)
 	}

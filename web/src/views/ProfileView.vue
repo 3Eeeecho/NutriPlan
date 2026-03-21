@@ -1,7 +1,5 @@
 <template>
   <div class="profile-view-page">
-    <TopNavigation />
-
     <div class="profile-shell">
       <header class="page-header">
         <BackButton />
@@ -221,7 +219,6 @@ import { NCard, NButton, NIcon, NSkeleton, NEmpty, NDescriptions, NDescriptionsI
 import { CreateOutline } from '@vicons/ionicons5'
 import { useAuthStore } from '@/store/auth'
 import { getNutritionRequirements } from '@/api/user'
-import TopNavigation from '@/components/layout/TopNavigation.vue'
 import BackButton from '@/components/layout/BackButton.vue'
 
 const router = useRouter()

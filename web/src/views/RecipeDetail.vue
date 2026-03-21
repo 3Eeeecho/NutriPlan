@@ -6,8 +6,6 @@
       <div class="blob blob-2"></div>
     </div>
 
-    <TopNavigation />
-
     <div class="content-wrapper">
       <!-- Loading State -->
       <div v-if="loading" class="loading-state">
@@ -52,7 +50,7 @@
               </div>
               <div class="meta-tag" v-if="recipe.meal_type">
                 <n-icon class="icon-blue"><RestaurantOutline /></n-icon>
-                <span>{{ recipe.meal_type }}</span>
+                <span>{{ formatMealType(recipe.meal_type) }}</span>
               </div>
             </div>
           </div>
@@ -193,7 +191,6 @@ import {
   BasketOutline,
   ListOutline
 } from '@vicons/ionicons5';
-import TopNavigation from '@/components/layout/TopNavigation.vue';
 import { getRecipeDetail, addFavorite, removeFavorite } from '@/api/recipeApi';
 import { useAuthStore } from '@/store/auth';
 
@@ -268,6 +265,20 @@ const parseIngredientAmount = (ing) => {
     return parts.length > 1 ? parts[1].trim() : '';
   }
   return '';
+};
+
+const formatMealType = (type) => {
+  const map = {
+    breakfast: '早餐',
+    lunch: '午餐',
+    dinner: '晚餐',
+    snack: '加餐',
+    早餐: '早餐',
+    午餐: '午餐',
+    晚餐: '晚餐',
+    加餐: '加餐'
+  };
+  return map[type] || type;
 };
 
 // Hero helpers

@@ -1,7 +1,5 @@
 <template>
   <PageLayout>
-    <TopNavigation />
-    
     <div class="weekly-container">
       <!-- 页面头部 -->
       <div class="page-header">
@@ -72,7 +70,6 @@ import { useMessage, NCard, NSpin } from 'naive-ui'
 import * as echarts from 'echarts'
 import { getWeeklyReport } from '@/api/intakeApi'
 import PageLayout from '@/components/layout/PageLayout.vue'
-import TopNavigation from '@/components/layout/TopNavigation.vue'
 import BackButton from '@/components/layout/BackButton.vue'
 import StatCard from '@/components/ui/StatCard.vue'
 

@@ -13,7 +13,9 @@
               <span class="date-text">今天</span>
             </div>
             <div class="toolbar-actions">
-              <n-icon class="action-icon"><EllipsisVerticalOutline /></n-icon>
+              <n-dropdown trigger="click" :options="moreActionOptions" @select="handleMoreActionSelect">
+                <n-icon class="action-icon action-trigger"><EllipsisVerticalOutline /></n-icon>
+              </n-dropdown>
             </div>
           </div>
 
@@ -26,10 +28,21 @@
                   <span>{{ caloriesConsumed }} 千卡</span>
                 </div>
                 <div class="meals-actions">
-                  <span class="text-xs text-emerald-600 cursor-pointer flex items-center mr-3 hover:text-emerald-700 transition" @click="() => loadRecommendation(true)">
-                    <n-icon class="mr-1" :class="{'animate-spin': isRecommending}"><RefreshOutline /></n-icon>重新推荐
-                  </span>
-                  <n-icon class="action-icon"><EllipsisVerticalOutline /></n-icon>
+                  <button
+                    class="recommend-btn"
+                    :class="{ pressed: recommendPressed, loading: isRecommending }"
+                    :disabled="isRecommending"
+                    @mousedown="recommendPressed = true"
+                    @mouseup="recommendPressed = false"
+                    @mouseleave="recommendPressed = false"
+                    @click="handleRefreshRecommendation"
+                  >
+                    <n-icon class="recommend-icon" :class="{ 'animate-spin': isRecommending }"><RefreshOutline /></n-icon>
+                    <span>{{ isRecommending ? '推荐中...' : '重新推荐' }}</span>
+                  </button>
+                  <n-dropdown trigger="click" :options="moreActionOptions" @select="handleMoreActionSelect">
+                    <n-icon class="action-icon action-trigger"><EllipsisVerticalOutline /></n-icon>
+                  </n-dropdown>
                 </div>
               </div>
               <div class="daily-calorie-progress">
@@ -174,7 +187,7 @@
 <script setup>
   import { onMounted, ref, computed } from "vue";
   import { useRouter } from "vue-router";
-  import { NIcon, useMessage, NInputNumber, NCheckbox } from "naive-ui";
+  import { NIcon, NDropdown, useMessage, NInputNumber, NCheckbox } from "naive-ui";
   import {
     ChevronBackOutline,
     CalendarOutline,
@@ -191,6 +204,7 @@ import { useAuthStore } from "@/store/auth";
 import { getNutritionRequirements } from "@/api/user";
 import { getTodayStatus } from "@/api/intakeApi";
 import { getRecipeRecommendations } from "@/api/recipeApi";
+import { formatDateKey, updateCompletedRecipe } from "@/utils/completedRecipes";
 
 const router = useRouter();
 const message = useMessage();
@@ -207,6 +221,14 @@ const mealCompletionMap = ref({});
     snack: false
   });
   const isRecommending = ref(false);
+  const recommendPressed = ref(false);
+
+  const moreActionOptions = [
+    { label: '立即重新推荐', key: 'refresh' },
+    { label: '清空推荐缓存', key: 'clear-cache' },
+    { label: '重置今日勾选', key: 'reset-checklist' },
+    { label: '前往周计划', key: 'goto-week' }
+  ];
 
   const CHECKLIST_KEY_PREFIX = 'nutriplan_daily_checklist';
   const CACHE_KEY = 'nutriplan_daily_recommendation';
@@ -261,7 +283,73 @@ const mealCompletionMap = ref({});
       ...recommendationCompleted.value,
       [mealType]: !!checked
     };
+
+    const recipe = dailyRecommendation.value?.[mealType];
+    if (recipe) {
+      updateCompletedRecipe({
+        userId: authStore.user?.id,
+        dateKey: formatDateKey(new Date()),
+        mealType,
+        recipe,
+        checked: !!checked
+      });
+    }
+
     saveChecklistState();
+  };
+
+  const handleRefreshRecommendation = async () => {
+    recommendPressed.value = false;
+    await loadRecommendation(true);
+  };
+
+  const resetTodayChecklist = () => {
+    const recommendationTypes = ['breakfast', 'lunch', 'dinner', 'snack'];
+    recommendationTypes.forEach((mealType) => {
+      const recipe = dailyRecommendation.value?.[mealType];
+      if (recipe) {
+        updateCompletedRecipe({
+          userId: authStore.user?.id,
+          dateKey: formatDateKey(new Date()),
+          mealType,
+          recipe,
+          checked: false
+        });
+      }
+    });
+
+    mealCompletionMap.value = {};
+    recommendationCompleted.value = {
+      breakfast: false,
+      lunch: false,
+      dinner: false,
+      snack: false
+    };
+    saveChecklistState();
+  };
+
+  const handleMoreActionSelect = async (key) => {
+    if (key === 'refresh') {
+      await handleRefreshRecommendation();
+      return;
+    }
+
+    if (key === 'clear-cache') {
+      localStorage.removeItem(CACHE_KEY);
+      dailyRecommendation.value = null;
+      message.success('已清空推荐缓存');
+      return;
+    }
+
+    if (key === 'reset-checklist') {
+      resetTodayChecklist();
+      message.success('已重置今日勾选状态');
+      return;
+    }
+
+    if (key === 'goto-week') {
+      goToWeekly();
+    }
   };
 
   const loadRecommendation = async (force = false) => {
@@ -365,7 +453,7 @@ const mealCompletionMap = ref({});
 // Routing overrides
   const goToProfile = () => router.push("/profile/view");
   const goToIntake = () => router.push("/intake");
-  const goToWeekly = () => router.push("/weekly");
+  const goToWeekly = () => router.push("/weekly-planner");
 
   const handleDeleteMealItem = (id) => {
     message.success("已删除该记录（演示使用）");
@@ -537,6 +625,24 @@ const overviewProtein = computed(() => {
   return Math.floor(todayIntake.value?.total_protein || 0);
 });
 
+const recommendationChartTotals = computed(() => {
+  return mealTypes.reduce(
+    (sum, type) => {
+      const recommendation = dailyRecommendation.value?.[type];
+      if (!recommendation) return sum;
+      sum.carbs += parseMacroValue(recommendation.carbohydrate ?? recommendation.carbs ?? recommendation.total_carbohydrate);
+      sum.protein += parseMacroValue(recommendation.protein ?? recommendation.total_protein);
+      sum.fat += parseMacroValue(recommendation.fat ?? recommendation.total_fat);
+      return sum;
+    },
+    { carbs: 0, protein: 0, fat: 0 }
+  );
+});
+
+const recommendationChartCarbs = computed(() => Math.floor(recommendationChartTotals.value.carbs));
+const recommendationChartProtein = computed(() => Math.floor(recommendationChartTotals.value.protein));
+const recommendationChartFat = computed(() => Math.floor(recommendationChartTotals.value.fat));
+
 // Meals List formatting
 const generateMealBlock = (label, type, code) => {
     const records = todayIntake.value?.records || [];
@@ -620,12 +726,12 @@ const initChart = () => {
           labelLine: {
             show: false
           },
-          data: overviewCarbs.value === 0 && overviewProtein.value === 0 && overviewFat.value === 0
+          data: recommendationChartCarbs.value === 0 && recommendationChartProtein.value === 0 && recommendationChartFat.value === 0
             ? [{ value: 1, name: '暂无数据', itemStyle: { color: '#f1f5f9' } }]
             : [
-              { value: overviewCarbs.value, name: '碳水', itemStyle: { color: '#fbbf24' } },
-              { value: overviewProtein.value, name: '蛋白', itemStyle: { color: '#fb7185' } },
-              { value: overviewFat.value, name: '脂肪', itemStyle: { color: '#818cf8' } }
+              { value: recommendationChartCarbs.value, name: '碳水', itemStyle: { color: '#fbbf24' } },
+              { value: recommendationChartProtein.value, name: '蛋白', itemStyle: { color: '#fb7185' } },
+              { value: recommendationChartFat.value, name: '脂肪', itemStyle: { color: '#818cf8' } }
             ]
         }
       ]
@@ -634,7 +740,7 @@ const initChart = () => {
   }
 };
 
-watch([overviewCarbs, overviewProtein, overviewFat, overviewCalories, checkedCaloriePercentage], () => {
+watch([recommendationChartCarbs, recommendationChartProtein, recommendationChartFat], () => {
   nextTick(() => {
     initChart();
   });
@@ -907,13 +1013,60 @@ onUnmounted(() => {
 .meals-actions {
   margin-left: auto;
   display: flex;
+  align-items: center;
   gap: 1rem;
+}
+
+.recommend-btn {
+  border: 1px solid #a7f3d0;
+  background: #ecfdf5;
+  color: #047857;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.3rem 0.65rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.recommend-btn:hover {
+  background: #d1fae5;
+  border-color: #6ee7b7;
+  transform: translateY(-1px);
+}
+
+.recommend-btn.pressed {
+  transform: scale(0.96);
+  background: #bbf7d0;
+}
+
+.recommend-btn.loading,
+.recommend-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.85;
+}
+
+.recommend-icon {
+  font-size: 0.95rem;
 }
 
 .action-icon {
   color: #64748b;
   font-size: 1.1rem;
   cursor: pointer;
+}
+
+.action-trigger {
+  border-radius: 8px;
+  padding: 4px;
+  transition: all 0.2s ease;
+}
+
+.action-trigger:hover {
+  background: #f1f5f9;
 }
 
 .action-icon:hover {

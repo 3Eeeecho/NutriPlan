@@ -1,7 +1,5 @@
 <template>
   <div class="page-container">
-    <TopNavigation />
-
     <div class="main-wrapper">
       <!-- 页面头部: 标题与操作 -->
       <div class="page-header">
@@ -272,7 +270,6 @@ import {
 import { 
   ArrowBack, Refresh, FitnessOutline, LeafOutline, WaterOutline, CheckmarkCircle 
 } from '@vicons/ionicons5';
-import TopNavigation from '@/components/layout/TopNavigation.vue';
 import MealItem from '@/components/MealItem.vue';
 import { getRecipeRecommendations, selectRecipePlan, getSelectedRecipePlan } from '@/api/recipeApi';
 import { addIntakeRecord, getTodayStatus } from '@/api/intakeApi';
