@@ -2,20 +2,29 @@
   <div v-if="authStore.isAuthenticated" class="etm-container">
     <div class="etm-main">
           <div class="etm-toolbar">
-            <div class="toggle-group">
-              <button class="toggle-btn active">日</button>
-              <button class="toggle-btn" @click="goToWeekly">周</button>
-            </div>
-            <div class="date-nav">
-              <n-icon class="nav-icon"><ChevronBackOutline /></n-icon>
-              <n-icon class="nav-icon"><CalendarOutline /></n-icon>
-              <n-icon class="nav-icon"><ChevronForwardOutline /></n-icon>
-              <span class="date-text">今天</span>
-            </div>
-            <div class="toolbar-actions">
-              <n-dropdown trigger="click" :options="moreActionOptions" @select="handleMoreActionSelect">
-                <n-icon class="action-icon action-trigger"><EllipsisVerticalOutline /></n-icon>
-              </n-dropdown>
+            <div class="toolbar-left">
+              <div class="toggle-group">
+                <button class="toggle-btn active">日</button>
+                <button class="toggle-btn" @click="goToWeekly">周</button>
+              </div>
+              <div class="date-nav">
+                <n-icon class="nav-icon" @click="goPrevDate"><ChevronBackOutline /></n-icon>
+                <n-popover trigger="click" placement="bottom" v-model:show="datePickerVisible">
+                  <template #trigger>
+                    <n-icon class="nav-icon"><CalendarOutline /></n-icon>
+                  </template>
+                  <n-date-picker
+                    v-model:value="selectedDateTimestamp"
+                    type="date"
+                    panel
+                    :is-date-disabled="disableFutureDate"
+                    :clearable="false"
+                    @update:value="handleDateChange"
+                  />
+                </n-popover>
+                <n-icon class="nav-icon" @click="goNextDate"><ChevronForwardOutline /></n-icon>
+                <span class="date-text">{{ selectedDateLabel }}</span>
+              </div>
             </div>
           </div>
 
@@ -187,7 +196,7 @@
 <script setup>
   import { onMounted, ref, computed } from "vue";
   import { useRouter } from "vue-router";
-  import { NIcon, NDropdown, useMessage, NInputNumber, NCheckbox } from "naive-ui";
+  import { NIcon, NDropdown, NDatePicker, NPopover, useMessage, NInputNumber, NCheckbox } from "naive-ui";
   import {
     ChevronBackOutline,
     CalendarOutline,
@@ -212,6 +221,9 @@ const authStore = useAuthStore();
 const nutritionData = ref(null);
 const todayIntake = ref(null);
 const mealCompletionMap = ref({});
+const selectedDate = ref(new Date());
+const selectedDateTimestamp = ref(new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()).getTime());
+const datePickerVisible = ref(false);
 
   const dailyRecommendation = ref(null);
   const recommendationCompleted = ref({
@@ -234,8 +246,45 @@ const mealCompletionMap = ref({});
   const CACHE_KEY = 'nutriplan_daily_recommendation';
 
   const getDateTag = () => {
-    const now = new Date();
-    return `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
+    return formatDateKey(selectedDate.value);
+  };
+
+  const disableFutureDate = (timestamp) => {
+    const target = new Date(timestamp);
+    const today = new Date();
+    const endOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999);
+    return target.getTime() > endOfToday.getTime();
+  };
+
+  const isSelectedToday = computed(() => formatDateKey(selectedDate.value) === formatDateKey(new Date()));
+
+  const selectedDateLabel = computed(() => {
+    if (isSelectedToday.value) return '今天';
+    return selectedDate.value.toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric', weekday: 'short' });
+  });
+
+  const setSelectedDate = (date) => {
+    selectedDate.value = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    selectedDateTimestamp.value = selectedDate.value.getTime();
+  };
+
+  const goPrevDate = async () => {
+    setSelectedDate(new Date(selectedDate.value.getFullYear(), selectedDate.value.getMonth(), selectedDate.value.getDate() - 1));
+    await loadSelectedDayData();
+  };
+
+  const goNextDate = async () => {
+    const next = new Date(selectedDate.value.getFullYear(), selectedDate.value.getMonth(), selectedDate.value.getDate() + 1);
+    if (disableFutureDate(next.getTime())) return;
+    setSelectedDate(next);
+    await loadSelectedDayData();
+  };
+
+  const handleDateChange = async (value) => {
+    if (!value) return;
+    setSelectedDate(new Date(value));
+    datePickerVisible.value = false;
+    await loadSelectedDayData();
   };
 
   const getChecklistStorageKey = () => {
@@ -246,7 +295,16 @@ const mealCompletionMap = ref({});
   const loadChecklistState = () => {
     try {
       const raw = localStorage.getItem(getChecklistStorageKey());
-      if (!raw) return;
+      if (!raw) {
+        mealCompletionMap.value = {};
+        recommendationCompleted.value = {
+          breakfast: false,
+          lunch: false,
+          dinner: false,
+          snack: false
+        };
+        return;
+      }
       const parsed = JSON.parse(raw);
       mealCompletionMap.value = parsed.mealCompletionMap || {};
       recommendationCompleted.value = {
@@ -288,7 +346,7 @@ const mealCompletionMap = ref({});
     if (recipe) {
       updateCompletedRecipe({
         userId: authStore.user?.id,
-        dateKey: formatDateKey(new Date()),
+        dateKey: formatDateKey(selectedDate.value),
         mealType,
         recipe,
         checked: !!checked
@@ -299,6 +357,10 @@ const mealCompletionMap = ref({});
   };
 
   const handleRefreshRecommendation = async () => {
+    if (!isSelectedToday.value) {
+      message.info('仅支持当天重新推荐');
+      return;
+    }
     recommendPressed.value = false;
     await loadRecommendation(true);
   };
@@ -310,7 +372,7 @@ const mealCompletionMap = ref({});
       if (recipe) {
         updateCompletedRecipe({
           userId: authStore.user?.id,
-          dateKey: formatDateKey(new Date()),
+          dateKey: formatDateKey(selectedDate.value),
           mealType,
           recipe,
           checked: false
@@ -355,8 +417,13 @@ const mealCompletionMap = ref({});
   const loadRecommendation = async (force = false) => {
     isRecommending.value = true;
     try {
-      const now = new Date();
-      const today = `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`;
+      const selectedDateKey = formatDateKey(selectedDate.value);
+      const today = formatDateKey(new Date());
+
+      if (selectedDateKey !== today) {
+        dailyRecommendation.value = null;
+        return;
+      }
 
       // Check cache if not forcing a refresh
       if (!force) {
@@ -413,27 +480,7 @@ const mealCompletionMap = ref({});
       }
     }
 
-    try {
-      const statusRes = await getTodayStatus();
-      todayIntake.value = {
-        ...statusRes,
-        total_energy: statusRes?.total_energy ?? statusRes?.totalEnergy ?? 0,
-        total_protein: statusRes?.total_protein ?? statusRes?.totalProtein ?? 0,
-        total_carbohydrate: statusRes?.total_carbohydrate ?? statusRes?.totalCarbohydrate ?? 0,
-        total_fat: statusRes?.total_fat ?? statusRes?.totalFat ?? 0,
-        records: statusRes?.records || []
-      };
-      loadChecklistState();
-    } catch (error) {
-      console.log("获取今日营养状态失败:", error);
-      todayIntake.value = {
-        total_energy: 0,
-        total_protein: 0,
-        total_carbohydrate: 0,
-        total_fat: 0,
-        records: []
-      };
-    }
+    await loadSelectedDayData();
 
     try {
       if (authStore.hasProfile) {
@@ -446,9 +493,35 @@ const mealCompletionMap = ref({});
       nutritionData.value = null;
     }
 
-    loadRecommendation();
   }
 });
+
+  const loadSelectedDayData = async () => {
+    try {
+      const statusRes = await getTodayStatus(formatDateKey(selectedDate.value));
+      todayIntake.value = {
+        ...statusRes,
+        total_energy: statusRes?.total_energy ?? statusRes?.totalEnergy ?? 0,
+        total_protein: statusRes?.total_protein ?? statusRes?.totalProtein ?? 0,
+        total_carbohydrate: statusRes?.total_carbohydrate ?? statusRes?.totalCarbohydrate ?? 0,
+        total_fat: statusRes?.total_fat ?? statusRes?.totalFat ?? 0,
+        records: statusRes?.records || []
+      };
+      loadChecklistState();
+      await loadRecommendation();
+    } catch (error) {
+      console.log("获取日期营养状态失败:", error);
+      todayIntake.value = {
+        total_energy: 0,
+        total_protein: 0,
+        total_carbohydrate: 0,
+        total_fat: 0,
+        records: []
+      };
+      dailyRecommendation.value = null;
+      loadChecklistState();
+    }
+  };
 
 // Routing overrides
   const goToProfile = () => router.push("/profile/view");
@@ -884,9 +957,16 @@ onUnmounted(() => {
 .etm-toolbar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
+  gap: 1.25rem;
   padding: 1.5rem 0 1rem;
   border-bottom: 1px solid #e2e8f0; /* slate-200 */
+}
+
+.toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
 .toggle-group {

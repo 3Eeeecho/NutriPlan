@@ -254,7 +254,6 @@
                     <span>蛋 {{ (item.calculatedProtein || item.calculated_protein || 0).toFixed(1) }}</span>
                     <span>碳 {{ (item.calculatedCarb || item.calculated_carb || 0).toFixed(1) }}</span>
                     <span>脂 {{ (item.calculatedFat || item.calculated_fat || 0).toFixed(1) }}</span>
-                    <span v-if="item.isCompletedRecipe" class="done-tag">已完成食谱</span>
                   </div>
                 </div>
               </div>
@@ -356,7 +355,6 @@ import {
 import { useAuthStore } from '@/store/auth';
 import { getTodayStatus, getWeeklyReport, addIntakeRecord, deleteIntakeRecord } from '@/api/intakeApi';
 import { recognizeFood, analyzeFoodText } from '@/api/foodRecognitionApi';
-import { buildCompletedRecordsForDate } from '@/utils/completedRecipes';
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -432,17 +430,14 @@ const weekColumns = computed(() => {
   return list.map((day) => {
     const date = day.date;
     const dateObj = new Date(date);
-    const backendRecords = Array.isArray(day.records) ? day.records : [];
-    const completedRecords = buildCompletedRecordsForDate(authStore.user?.id, date);
-    const records = [...backendRecords, ...completedRecords];
-    const completedEnergy = completedRecords.reduce((sum, item) => sum + Number(item.calculatedEnergy || 0), 0);
+    const records = Array.isArray(day.records) ? day.records : [];
 
     return {
       date,
       isToday: date === todayKey,
       displayDate: `${dateObj.getMonth() + 1}月${dateObj.getDate()}日`,
       weekLabel: dateObj.toLocaleDateString('zh-CN', { weekday: 'long' }),
-      totalEnergy: Math.round((day.total_energy || day.totalEnergy || 0) + completedEnergy),
+      totalEnergy: Math.round(day.total_energy || day.totalEnergy || 0),
       totalProtein: Number(day.total_protein || day.totalProtein || 0).toFixed(1),
       totalCarbohydrate: Number(day.total_carbohydrate || day.totalCarbohydrate || 0).toFixed(1),
       totalFat: Number(day.total_fat || day.totalFat || 0).toFixed(1),
@@ -1059,13 +1054,6 @@ const formatTime = (isoString) => {
   gap: 8px;
   color: #cbd5e1;
   font-size: 12px;
-}
-
-.done-tag {
-  color: #34d399;
-  border: 1px solid rgba(52, 211, 153, 0.35);
-  padding: 0 6px;
-  border-radius: 999px;
 }
 
 .day-empty {

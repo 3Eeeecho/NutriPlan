@@ -16,9 +16,9 @@ type IntakeService interface {
 	// 获取当日饮食记录列表
 	GetTodayRecords(userID uint) ([]models.DailyIntakeRecord, error)
 	// 获取当日营养汇总和达标率
-	GetTodayNutritionStatus(userID uint) (*NutritionStatus, error)
+	GetTodayNutritionStatus(userID uint, date time.Time) (*NutritionStatus, error)
 	// 获取一周的营养趋势报告
-	GetWeeklyReport(userID uint) (*WeeklyReport, error)
+	GetWeeklyReport(userID uint, startDate, endDate time.Time) (*WeeklyReport, error)
 }
 
 // NutritionStatus 当日营养状态
@@ -107,8 +107,8 @@ func (s *intakeServiceImpl) GetTodayRecords(userID uint) ([]models.DailyIntakeRe
 }
 
 // GetTodayNutritionStatus 获取当日营养汇总和达标率
-func (s *intakeServiceImpl) GetTodayNutritionStatus(userID uint) (*NutritionStatus, error) {
-	today := time.Now()
+func (s *intakeServiceImpl) GetTodayNutritionStatus(userID uint, date time.Time) (*NutritionStatus, error) {
+	targetDate := time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, date.Location())
 
 	// 获取用户信息和目标营养
 	user, err := s.userRepo.GetUserByID(userID)
@@ -119,20 +119,20 @@ func (s *intakeServiceImpl) GetTodayNutritionStatus(userID uint) (*NutritionStat
 	targets := s.nutriSvc.CalculateNutritionTargets(user)
 
 	// 获取今日记录
-	records, err := s.intakeRepo.GetByUserAndDate(userID, today)
+	records, err := s.intakeRepo.GetByUserAndDate(userID, targetDate)
 	if err != nil {
 		return nil, err
 	}
 
 	// 获取今日汇总
-	summary, err := s.intakeRepo.GetDailySummary(userID, today)
+	summary, err := s.intakeRepo.GetDailySummary(userID, targetDate)
 	if err != nil {
 		return nil, err
 	}
 
 	// 计算达标率
 	status := &NutritionStatus{
-		Date:               today,
+		Date:               targetDate,
 		Records:            records,
 		TotalEnergy:        summary.TotalEnergy,
 		TotalProtein:       summary.TotalProtein,
@@ -162,16 +162,9 @@ func (s *intakeServiceImpl) GetTodayNutritionStatus(userID uint) (*NutritionStat
 }
 
 // GetWeeklyReport 获取一周的营养趋势报告
-func (s *intakeServiceImpl) GetWeeklyReport(userID uint) (*WeeklyReport, error) {
-	// 计算本周的起止日期（周一到周日）
-	now := time.Now()
-	weekday := int(now.Weekday())
-	if weekday == 0 {
-		weekday = 7 // 将周日从0改为7
-	}
-	startDate := now.AddDate(0, 0, -(weekday - 1))
+func (s *intakeServiceImpl) GetWeeklyReport(userID uint, startDate, endDate time.Time) (*WeeklyReport, error) {
 	startDate = time.Date(startDate.Year(), startDate.Month(), startDate.Day(), 0, 0, 0, 0, startDate.Location())
-	endDate := startDate.AddDate(0, 0, 6)
+	endDate = time.Date(endDate.Year(), endDate.Month(), endDate.Day(), 0, 0, 0, 0, endDate.Location())
 
 	// 获取用户信息和目标营养
 	user, err := s.userRepo.GetUserByID(userID)

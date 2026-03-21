@@ -5,6 +5,7 @@ import (
 	"NutriPlan/internal/service"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -138,8 +139,18 @@ func (h *IntakeHandler) GetTodayStatus(c *gin.Context) {
 		return
 	}
 
-	// 获取当日营养状态
-	status, err := h.intakeService.GetTodayNutritionStatus(userID.(uint))
+	targetDate := time.Now()
+	if dateStr := c.Query("date"); dateStr != "" {
+		parsedDate, err := time.ParseInLocation("2006-01-02", dateStr, time.Local)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "date 参数格式错误，需为 YYYY-MM-DD"})
+			return
+		}
+		targetDate = parsedDate
+	}
+
+	// 获取指定日期营养状态
+	status, err := h.intakeService.GetTodayNutritionStatus(userID.(uint), targetDate)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "获取营养状态失败: " + err.Error()})
 		return
@@ -164,8 +175,41 @@ func (h *IntakeHandler) GetWeeklyReport(c *gin.Context) {
 		return
 	}
 
+	now := time.Now()
+	weekday := int(now.Weekday())
+	if weekday == 0 {
+		weekday = 7
+	}
+	startDate := now.AddDate(0, 0, -(weekday - 1))
+	startDate = time.Date(startDate.Year(), startDate.Month(), startDate.Day(), 0, 0, 0, 0, startDate.Location())
+	endDate := startDate.AddDate(0, 0, 6)
+
+	if startStr := c.Query("start_date"); startStr != "" {
+		parsedStart, err := time.ParseInLocation("2006-01-02", startStr, time.Local)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "start_date 参数格式错误，需为 YYYY-MM-DD"})
+			return
+		}
+		startDate = time.Date(parsedStart.Year(), parsedStart.Month(), parsedStart.Day(), 0, 0, 0, 0, parsedStart.Location())
+		endDate = startDate.AddDate(0, 0, 6)
+	}
+
+	if endStr := c.Query("end_date"); endStr != "" {
+		parsedEnd, err := time.ParseInLocation("2006-01-02", endStr, time.Local)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "end_date 参数格式错误，需为 YYYY-MM-DD"})
+			return
+		}
+		endDate = time.Date(parsedEnd.Year(), parsedEnd.Month(), parsedEnd.Day(), 0, 0, 0, 0, parsedEnd.Location())
+	}
+
+	if endDate.Before(startDate) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "end_date 不能早于 start_date"})
+		return
+	}
+
 	// 获取周报告
-	report, err := h.intakeService.GetWeeklyReport(userID.(uint))
+	report, err := h.intakeService.GetWeeklyReport(userID.(uint), startDate, endDate)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "获取周报告失败: " + err.Error()})
 		return
