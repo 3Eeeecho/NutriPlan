@@ -180,12 +180,16 @@ import {
 } from '@vicons/ionicons5'
 import { getShoppingLists, createShoppingList, deleteShoppingList, updateShoppingList, completeShoppingList, getShoppingListDetail } from '@/api/shoppingApi'
 import { getSelectedRecipePlan, getFavoriteList } from '@/api/recipeApi'
+import { useAuthStore } from '@/store/auth'
+import { formatDateKey } from '@/utils/completedRecipes'
+import { getRecommendationByDate } from '@/utils/recommendationCache'
 import PageLayout from '@/components/layout/PageLayout.vue'
 import BackButton from '@/components/layout/BackButton.vue'
 
 const router = useRouter()
 const message = useMessage()
 const dialog = useDialog()
+const authStore = useAuthStore()
 
 const loading = ref(false)
 const lists = ref([])
@@ -236,11 +240,21 @@ const loadSourceRecipes = async () => {
     ])
 
     const recipes = []
-    if (planRes) {
-      ['breakfast', 'lunch', 'dinner', 'snack'].forEach(type => {
-        const r = planRes[type + 'Recipe'] || planRes[type]
-        if (r) recipes.push({ ...r, source: 'plan' })
+
+    const appendPlanRecipes = (planLike) => {
+      if (!planLike || typeof planLike !== 'object') return
+      ;['breakfast', 'lunch', 'dinner', 'snack'].forEach((type) => {
+        const recipe = planLike[`${type}Recipe`] || planLike[type]
+        if (!recipe?.id) return
+        recipes.push({ ...recipe, source: 'plan' })
       })
+    }
+
+    if (planRes) {
+      appendPlanRecipes(planRes)
+    } else {
+      const todayRecommendation = getRecommendationByDate(authStore.user?.id, formatDateKey(new Date()))
+      appendPlanRecipes(todayRecommendation)
     }
     
     if (favRes && favRes.recipes) {
@@ -271,7 +285,7 @@ const sourceRecipes = computed(() => {
 // 创建清单
 const handleCreate = async () => {
   if (sourceRecipes.value.length === 0) {
-    message.warning('没有可用的食谱来源')
+    message.warning('没有可用的食谱来源，请先生成今日推荐或添加收藏')
     return
   }
   

@@ -74,7 +74,9 @@ func (r *intakeRepositoryImpl) GetByUserAndDate(userID uint, date time.Time) ([]
 // GetByUserAndWeek 获取某用户某一周的记录
 func (r *intakeRepositoryImpl) GetByUserAndWeek(userID uint, startDate, endDate time.Time) ([]models.DailyIntakeRecord, error) {
 	var records []models.DailyIntakeRecord
-	err := r.db.Where("user_id = ? AND record_date >= ? AND record_date <= ?", userID, startDate, endDate).
+	startOfDay := time.Date(startDate.Year(), startDate.Month(), startDate.Day(), 0, 0, 0, 0, startDate.Location())
+	endExclusive := time.Date(endDate.Year(), endDate.Month(), endDate.Day(), 0, 0, 0, 0, endDate.Location()).Add(24 * time.Hour)
+	err := r.db.Where("user_id = ? AND record_date >= ? AND record_date < ?", userID, startOfDay, endExclusive).
 		Order("record_date ASC, created_at DESC").
 		Find(&records).Error
 
@@ -106,6 +108,8 @@ func (r *intakeRepositoryImpl) GetDailySummary(userID uint, date time.Time) (*Da
 // GetWeeklySummary 获取一周的每日汇总
 func (r *intakeRepositoryImpl) GetWeeklySummary(userID uint, startDate, endDate time.Time) ([]DailyNutritionSummary, error) {
 	var summaries []DailyNutritionSummary
+	startOfDay := time.Date(startDate.Year(), startDate.Month(), startDate.Day(), 0, 0, 0, 0, startDate.Location())
+	endExclusive := time.Date(endDate.Year(), endDate.Month(), endDate.Day(), 0, 0, 0, 0, endDate.Location()).Add(24 * time.Hour)
 
 	// 按日期分组统计
 	err := r.db.Model(&models.DailyIntakeRecord{}).
@@ -117,7 +121,7 @@ func (r *intakeRepositoryImpl) GetWeeklySummary(userID uint, startDate, endDate 
 			COALESCE(SUM(calculated_fat), 0) as total_fat,
 			COUNT(*) as record_count
 		`).
-		Where("user_id = ? AND record_date >= ? AND record_date <= ?", userID, startDate, endDate).
+		Where("user_id = ? AND record_date >= ? AND record_date < ?", userID, startOfDay, endExclusive).
 		Group("DATE(record_date)").
 		Order("date ASC").
 		Scan(&summaries).Error

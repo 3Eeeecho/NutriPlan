@@ -139,7 +139,7 @@
                 </div>
 
                 <div style="padding: 0.75rem; margin-top: 0.5rem;">
-                  <button class="add-food-btn" style="width: 100%;" @click="goToIntake">+ 添加食物到 {{ mealInfo.name }}</button>
+                  <button class="add-food-btn" style="width: 100%;" @click="openAddFoodModal(mealInfo.type, mealInfo.name)">+ 添加食物到 {{ mealInfo.name }}</button>
                 </div>
               </div>
             </div>
@@ -190,13 +190,85 @@
             </div>
           </div>
         </div>
+
+        <n-modal
+          v-model:show="addFoodModalVisible"
+          preset="card"
+          class="add-food-modal"
+          :title="`添加食物到${selectedAddMealName}`"
+          style="
+            width: 620px;
+            max-width: 94vw;
+            --n-color: #1b1f26;
+            --n-border-color: rgba(45, 212, 191, 0.28);
+            --n-text-color: #e2e8f0;
+            --n-title-text-color: #f8fafc;
+            --n-close-icon-color: #cbd5e1;
+          "
+        >
+          <div class="add-food-modal-body">
+            <div class="add-food-banner">智能录入 · 支持文字估算与拍照识别</div>
+
+            <n-form :model="addFoodForm" label-placement="left" label-width="94" class="add-food-form">
+              <n-form-item label="食物名称">
+                <n-input-group>
+                  <n-input v-model:value="addFoodForm.food_name" placeholder="例如：一碗牛肉面，少辣" />
+                  <n-button
+                    class="add-food-ai-btn"
+                    type="primary"
+                    ghost
+                    :loading="analyzingText"
+                    :disabled="!addFoodForm.food_name"
+                    @click="handleAIAnalyze"
+                  >
+                    <template #icon><n-icon><Sparkles /></n-icon></template>
+                    AI 估算
+                  </n-button>
+                </n-input-group>
+              </n-form-item>
+
+              <n-form-item label="快捷识别">
+                <n-button class="add-food-upload-btn" type="primary" ghost @click="triggerAIUpload" :loading="recognizing">
+                  <template #icon><n-icon><Camera /></n-icon></template>
+                  拍照识别
+                </n-button>
+                <input ref="fileInputRef" type="file" accept="image/*" style="display:none" @change="handleImageSelect" />
+              </n-form-item>
+
+              <div class="add-food-grid">
+                <n-form-item label="摄入量(g)">
+                  <n-input-number v-model:value="addFoodForm.intake_amount" :step="10" :min="1" style="width: 100%;" />
+                </n-form-item>
+                <n-form-item label="热量(kcal)">
+                  <n-input-number v-model:value="addFoodForm.calculated_energy" :step="5" :min="0" style="width: 100%;" />
+                </n-form-item>
+                <n-form-item label="蛋白(g)">
+                  <n-input-number v-model:value="addFoodForm.calculated_protein" :step="0.5" :min="0" style="width: 100%;" />
+                </n-form-item>
+                <n-form-item label="碳水(g)">
+                  <n-input-number v-model:value="addFoodForm.calculated_carb" :step="0.5" :min="0" style="width: 100%;" />
+                </n-form-item>
+                <n-form-item label="脂肪(g)">
+                  <n-input-number v-model:value="addFoodForm.calculated_fat" :step="0.5" :min="0" style="width: 100%;" />
+                </n-form-item>
+              </div>
+            </n-form>
+          </div>
+
+          <template #footer>
+            <div class="add-food-modal-footer">
+              <n-button class="add-food-cancel-btn" @click="addFoodModalVisible = false">取消</n-button>
+              <n-button class="add-food-submit-btn" type="primary" :loading="addingFood" @click="handleSubmitAddFood">保存</n-button>
+            </div>
+          </template>
+        </n-modal>
   </div>
 </template>
 
 <script setup>
-  import { onMounted, ref, computed } from "vue";
+  import { onMounted, onUnmounted, nextTick, ref, computed, watch } from "vue";
   import { useRouter } from "vue-router";
-  import { NIcon, NDropdown, NDatePicker, NPopover, useMessage, NInputNumber, NCheckbox } from "naive-ui";
+  import { NIcon, NDropdown, NDatePicker, NPopover, useMessage, NInputNumber, NCheckbox, NModal, NForm, NFormItem, NInput, NButton, NInputGroup } from "naive-ui";
   import {
     ChevronBackOutline,
     CalendarOutline,
@@ -206,14 +278,18 @@
     PieChartOutline,
     FlameOutline,
     CreateOutline,
+    Camera,
+    Sparkles,
     CloseOutline,
     RestaurantOutline
   } from "@vicons/ionicons5";
 import { useAuthStore } from "@/store/auth";
 import { getNutritionRequirements } from "@/api/user";
-import { getTodayStatus } from "@/api/intakeApi";
+import { getTodayStatus, addIntakeRecord } from "@/api/intakeApi";
 import { getRecipeRecommendations } from "@/api/recipeApi";
+import { recognizeFood, analyzeFoodText } from "@/api/foodRecognitionApi";
 import { formatDateKey, updateCompletedRecipe } from "@/utils/completedRecipes";
+import { getRecommendationByDate, setRecommendationByDate, clearRecommendationMap } from '@/utils/recommendationCache';
 
 const router = useRouter();
 const message = useMessage();
@@ -234,6 +310,22 @@ const datePickerVisible = ref(false);
   });
   const isRecommending = ref(false);
   const recommendPressed = ref(false);
+  const addFoodModalVisible = ref(false);
+  const addingFood = ref(false);
+  const recognizing = ref(false);
+  const analyzingText = ref(false);
+  const fileInputRef = ref(null);
+  const aiData = ref(null);
+  const selectedAddMealType = ref('breakfast');
+  const selectedAddMealName = ref('早餐');
+  const addFoodForm = ref({
+    food_name: '',
+    intake_amount: 100,
+    calculated_energy: 0,
+    calculated_protein: 0,
+    calculated_carb: 0,
+    calculated_fat: 0
+  });
 
   const moreActionOptions = [
     { label: '立即重新推荐', key: 'refresh' },
@@ -243,7 +335,6 @@ const datePickerVisible = ref(false);
   ];
 
   const CHECKLIST_KEY_PREFIX = 'nutriplan_daily_checklist';
-  const CACHE_KEY = 'nutriplan_daily_recommendation';
 
   const getDateTag = () => {
     return formatDateKey(selectedDate.value);
@@ -397,7 +488,7 @@ const datePickerVisible = ref(false);
     }
 
     if (key === 'clear-cache') {
-      localStorage.removeItem(CACHE_KEY);
+      clearRecommendationMap(authStore.user?.id);
       dailyRecommendation.value = null;
       message.success('已清空推荐缓存');
       return;
@@ -419,26 +510,17 @@ const datePickerVisible = ref(false);
     try {
       const selectedDateKey = formatDateKey(selectedDate.value);
       const today = formatDateKey(new Date());
+      const cachedRecommendation = getRecommendationByDate(authStore.user?.id, selectedDateKey);
 
       if (selectedDateKey !== today) {
-        dailyRecommendation.value = null;
+        dailyRecommendation.value = cachedRecommendation;
         return;
       }
 
       // Check cache if not forcing a refresh
-      if (!force) {
-        const cached = localStorage.getItem(CACHE_KEY);
-        if (cached) {
-          try {
-            const parsed = JSON.parse(cached);
-            if (parsed.date === today && parsed.data) {
-              dailyRecommendation.value = parsed.data;
-              return; // Use cached data
-            }
-          } catch (e) {
-            console.warn("解析推荐缓存失败:", e);
-          }
-        }
+      if (!force && cachedRecommendation) {
+        dailyRecommendation.value = cachedRecommendation;
+        return;
       }
 
       const res = await getRecipeRecommendations(1);
@@ -450,11 +532,7 @@ const datePickerVisible = ref(false);
           snack: res.plans[0].snack
         };
 
-        // Update local storage cache
-        localStorage.setItem(CACHE_KEY, JSON.stringify({
-          date: today,
-          data: dailyRecommendation.value
-        }));
+        setRecommendationByDate(authStore.user?.id, today, dailyRecommendation.value);
 
         if (force) {
           message.success("食谱推荐已更新");
@@ -468,6 +546,41 @@ const datePickerVisible = ref(false);
     } finally {
       isRecommending.value = false;
     }
+  };
+
+  const normalizeMealType = (value = '') => {
+    const text = String(value).trim().toLowerCase();
+    const map = {
+      breakfast: 'breakfast',
+      lunch: 'lunch',
+      dinner: 'dinner',
+      snack: 'snack',
+      '1': 'breakfast',
+      '2': 'lunch',
+      '3': 'dinner',
+      '4': 'snack',
+      早餐: 'breakfast',
+      午餐: 'lunch',
+      晚餐: 'dinner',
+      加餐: 'snack'
+    };
+    return map[text] || 'snack';
+  };
+
+  const normalizeIntakeRecord = (record = {}) => {
+    const normalizedId = Number(record.ID ?? record.id ?? 0);
+    return {
+      ...record,
+      ID: Number.isFinite(normalizedId) ? normalizedId : 0,
+      mealType: normalizeMealType(record.mealType ?? record.meal_type),
+      foodName: record.foodName ?? record.food_name ?? '未命名食物',
+      intakeAmount: Number(record.intakeAmount ?? record.intake_amount ?? 0),
+      calculatedEnergy: Number(record.calculatedEnergy ?? record.calculated_energy ?? 0),
+      calculatedProtein: Number(record.calculatedProtein ?? record.calculated_protein ?? 0),
+      calculatedCarb: Number(record.calculatedCarb ?? record.calculated_carb ?? 0),
+      calculatedFat: Number(record.calculatedFat ?? record.calculated_fat ?? 0),
+      imageUrl: record.imageUrl ?? record.image_url ?? null
+    };
   };
 
   onMounted(async () => {
@@ -499,13 +612,14 @@ const datePickerVisible = ref(false);
   const loadSelectedDayData = async () => {
     try {
       const statusRes = await getTodayStatus(formatDateKey(selectedDate.value));
+      const rawRecords = Array.isArray(statusRes?.records) ? statusRes.records : [];
       todayIntake.value = {
         ...statusRes,
         total_energy: statusRes?.total_energy ?? statusRes?.totalEnergy ?? 0,
         total_protein: statusRes?.total_protein ?? statusRes?.totalProtein ?? 0,
         total_carbohydrate: statusRes?.total_carbohydrate ?? statusRes?.totalCarbohydrate ?? 0,
         total_fat: statusRes?.total_fat ?? statusRes?.totalFat ?? 0,
-        records: statusRes?.records || []
+        records: rawRecords.map(normalizeIntakeRecord).filter((item) => item.ID > 0)
       };
       loadChecklistState();
       await loadRecommendation();
@@ -525,7 +639,135 @@ const datePickerVisible = ref(false);
 
 // Routing overrides
   const goToProfile = () => router.push("/profile/view");
-  const goToIntake = () => router.push("/intake");
+  const mealTypeLabelMap = {
+    breakfast: '早餐',
+    lunch: '午餐',
+    dinner: '晚餐',
+    snack: '加餐'
+  };
+
+  const openAddFoodModal = (mealType = 'breakfast', mealName = '') => {
+    if (!isSelectedToday.value) {
+      message.warning('当前仅支持向今天添加食物');
+      return;
+    }
+
+    selectedAddMealType.value = mealTypeLabelMap[mealType] ? mealType : 'breakfast';
+    selectedAddMealName.value = mealName || mealTypeLabelMap[selectedAddMealType.value] || '餐次';
+    addFoodForm.value = {
+      food_name: '',
+      intake_amount: 100,
+      calculated_energy: 0,
+      calculated_protein: 0,
+      calculated_carb: 0,
+      calculated_fat: 0
+    };
+    aiData.value = null;
+    addFoodModalVisible.value = true;
+  };
+
+  watch(() => addFoodForm.value.intake_amount, (newVal) => {
+    if (!aiData.value || !(newVal > 0)) return;
+    const factor = Number(newVal) / 100;
+    addFoodForm.value.calculated_energy = Math.round(aiData.value.calories * factor);
+    addFoodForm.value.calculated_protein = Number((aiData.value.protein * factor).toFixed(1));
+    addFoodForm.value.calculated_carb = Number((aiData.value.carb * factor).toFixed(1));
+    addFoodForm.value.calculated_fat = Number((aiData.value.fat * factor).toFixed(1));
+  });
+
+  const triggerAIUpload = () => {
+    fileInputRef.value?.click();
+  };
+
+  const handleImageSelect = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    recognizing.value = true;
+    try {
+      const res = await recognizeFood(file);
+      addFoodForm.value.food_name = res.dish_name || addFoodForm.value.food_name;
+      addFoodForm.value.intake_amount = Number(res.estimated_weight || addFoodForm.value.intake_amount || 100);
+      addFoodForm.value.calculated_energy = Math.floor(Number(res.total_calories || 0));
+      addFoodForm.value.calculated_protein = Math.floor(Number(res.total_protein || 0));
+      addFoodForm.value.calculated_carb = Math.floor(Number(res.total_carbs || 0));
+      addFoodForm.value.calculated_fat = Math.floor(Number(res.total_fat || 0));
+
+      aiData.value = {
+        calories: Number(res.calories_per_100g || 0),
+        protein: Number(res.protein_per_100g || 0),
+        carb: Number(res.carbs_per_100g || 0),
+        fat: Number(res.fat_per_100g || 0)
+      };
+
+      message.success(`识别成功：${res.dish_name || '已回填营养数据'}`);
+    } catch (error) {
+      message.error('识别失败，请重试');
+    } finally {
+      recognizing.value = false;
+      event.target.value = '';
+    }
+  };
+
+  const handleAIAnalyze = async () => {
+    if (!addFoodForm.value.food_name) {
+      message.warning('请输入食物描述');
+      return;
+    }
+
+    analyzingText.value = true;
+    try {
+      const res = await analyzeFoodText(addFoodForm.value.food_name);
+      addFoodForm.value.food_name = res.dish_name || addFoodForm.value.food_name;
+      addFoodForm.value.intake_amount = Number(res.estimated_weight || addFoodForm.value.intake_amount || 100);
+      addFoodForm.value.calculated_energy = Math.floor(Number(res.total_calories || 0));
+      addFoodForm.value.calculated_protein = Math.floor(Number(res.total_protein || 0));
+      addFoodForm.value.calculated_carb = Math.floor(Number(res.total_carbs || 0));
+      addFoodForm.value.calculated_fat = Math.floor(Number(res.total_fat || 0));
+
+      aiData.value = {
+        calories: Number(res.calories_per_100g || 0),
+        protein: Number(res.protein_per_100g || 0),
+        carb: Number(res.carbs_per_100g || 0),
+        fat: Number(res.fat_per_100g || 0)
+      };
+
+      message.success('AI 分析完成');
+    } catch (error) {
+      message.error('分析失败，请重试');
+    } finally {
+      analyzingText.value = false;
+    }
+  };
+
+  const handleSubmitAddFood = async () => {
+    if (!addFoodForm.value.food_name) {
+      message.warning('请先填写食物名称');
+      return;
+    }
+
+    addingFood.value = true;
+    try {
+      await addIntakeRecord({
+        meal_type: selectedAddMealType.value,
+        food_name: addFoodForm.value.food_name,
+        intake_amount: Number(addFoodForm.value.intake_amount || 0),
+        calculated_energy: Number(addFoodForm.value.calculated_energy || 0),
+        calculated_protein: Number(addFoodForm.value.calculated_protein || 0),
+        calculated_carb: Number(addFoodForm.value.calculated_carb || 0),
+        calculated_fat: Number(addFoodForm.value.calculated_fat || 0)
+      });
+
+      addFoodModalVisible.value = false;
+      message.success('已添加到今日饮食记录');
+      await loadSelectedDayData();
+    } catch (error) {
+      message.error('添加失败，请稍后重试');
+    } finally {
+      addingFood.value = false;
+    }
+  };
+
   const goToWeekly = () => router.push("/weekly-planner");
 
   const handleDeleteMealItem = (id) => {
@@ -717,9 +959,9 @@ const recommendationChartProtein = computed(() => Math.floor(recommendationChart
 const recommendationChartFat = computed(() => Math.floor(recommendationChartTotals.value.fat));
 
 // Meals List formatting
-const generateMealBlock = (label, type, code) => {
+const generateMealBlock = (label, type) => {
     const records = todayIntake.value?.records || [];
-    const typeRecords = records.filter(r => r.mealType === type || r.mealType === code || r.mealType === label.toLowerCase());
+  const typeRecords = records.filter((record) => normalizeMealType(record.mealType) === type);
     const checkedRecords = typeRecords.filter((record) => !!mealCompletionMap.value[record.ID]);
     const recommendationMacro = getRecommendationMacro(type);
 
@@ -754,16 +996,15 @@ const generateMealBlock = (label, type, code) => {
     };
   };const mealsList = computed(() => {
   return [
-    generateMealBlock('早餐', 'breakfast', 1),
-    generateMealBlock('午餐', 'lunch', 2),
-    generateMealBlock('晚餐', 'dinner', 3),
-    generateMealBlock('加餐', 'snack', 4)
+      generateMealBlock('早餐', 'breakfast'),
+      generateMealBlock('午餐', 'lunch'),
+      generateMealBlock('晚餐', 'dinner'),
+      generateMealBlock('加餐', 'snack')
   ];
 });
 
 // ECharts logic
 import * as echarts from 'echarts';
-import { watch, onUnmounted, nextTick } from 'vue';
 
 const macroChartRef = ref(null);
 let donutChart = null;
@@ -1307,6 +1548,153 @@ onUnmounted(() => {
 
 .add-food-btn:hover {
   background: #ecfdf5; /* emerald-50 */
+}
+
+:deep(.add-food-modal.n-card),
+:deep(.add-food-modal),
+:deep(.n-modal.add-food-modal),
+:deep(.n-modal.add-food-modal .n-card),
+:deep(.add-food-modal .n-card) {
+  background: linear-gradient(160deg, #20242d 0%, #1b1f26 100%);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: 18px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+}
+
+:deep(.add-food-modal.n-card .n-card-header),
+:deep(.n-modal.add-food-modal .n-card .n-card-header),
+:deep(.add-food-modal .n-card-header) {
+  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+  padding-bottom: 12px;
+}
+
+:deep(.add-food-modal.n-card .n-card-header__main),
+:deep(.n-modal.add-food-modal .n-card-header__main),
+:deep(.add-food-modal .n-card-header__main) {
+  color: #f8fafc;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+:deep(.add-food-modal.n-card .n-base-close),
+:deep(.n-modal.add-food-modal .n-base-close),
+:deep(.add-food-modal .n-base-close) {
+  color: #cbd5e1;
+}
+
+:deep(.add-food-modal.n-card .n-card__content),
+:deep(.n-modal.add-food-modal .n-card__content),
+:deep(.add-food-modal .n-card__content) {
+  color: #e2e8f0;
+}
+
+:deep(.add-food-modal.n-card .n-card__footer),
+:deep(.n-modal.add-food-modal .n-card__footer),
+:deep(.add-food-modal .n-card__footer) {
+  border-top: 1px solid rgba(148, 163, 184, 0.18);
+  padding-top: 14px;
+}
+
+.add-food-modal-body {
+  padding-top: 6px;
+}
+
+.add-food-banner {
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(45, 212, 191, 0.35);
+  background: linear-gradient(135deg, rgba(13, 59, 70, 0.62) 0%, rgba(45, 212, 191, 0.16) 100%);
+  color: #99f6e4;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.add-food-form :deep(.n-form-item-label__text) {
+  color: #d1d5db;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.add-food-form :deep(.n-input),
+.add-food-form :deep(.n-input-number) {
+  background: rgba(15, 23, 42, 0.62);
+  border-color: rgba(71, 85, 105, 0.85);
+}
+
+.add-food-form :deep(.n-input__input-el),
+.add-food-form :deep(.n-input-number-input) {
+  color: #f8fafc;
+}
+
+.add-food-form :deep(.n-input-number-suffix),
+.add-food-form :deep(.n-input-number-button) {
+  color: #cbd5e1;
+}
+
+.add-food-form :deep(.n-input__placeholder),
+.add-food-form :deep(.n-input-number-input::placeholder) {
+  color: #94a3b8;
+}
+
+.add-food-ai-btn,
+.add-food-upload-btn {
+  border-radius: 10px;
+  border-color: rgba(45, 212, 191, 0.62) !important;
+  color: #99f6e4 !important;
+  font-weight: 700;
+}
+
+.add-food-ai-btn:hover,
+.add-food-upload-btn:hover {
+  background: rgba(45, 212, 191, 0.16) !important;
+  border-color: rgba(45, 212, 191, 0.76) !important;
+}
+
+.add-food-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 12px;
+}
+
+.add-food-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.add-food-cancel-btn {
+  min-width: 86px;
+  border-radius: 10px;
+  border-color: rgba(148, 163, 184, 0.6);
+  color: #e5e7eb;
+  background: transparent;
+}
+
+.add-food-cancel-btn:hover {
+  border-color: rgba(203, 213, 225, 0.95);
+  color: #ffffff;
+}
+
+.add-food-submit-btn {
+  min-width: 86px;
+  border-radius: 10px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+  border: none;
+  box-shadow: 0 10px 22px rgba(20, 184, 166, 0.32);
+}
+
+.add-food-submit-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 26px rgba(20, 184, 166, 0.4);
+}
+
+@media (max-width: 768px) {
+  .add-food-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Right: Nutrition */

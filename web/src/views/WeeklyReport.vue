@@ -69,12 +69,15 @@ import { useRouter } from 'vue-router'
 import { useMessage, NCard, NSpin } from 'naive-ui'
 import * as echarts from 'echarts'
 import { getWeeklyReport } from '@/api/intakeApi'
+import { useAuthStore } from '@/store/auth'
+import { buildCompletedRecordsForDate } from '@/utils/completedRecipes'
 import PageLayout from '@/components/layout/PageLayout.vue'
 import BackButton from '@/components/layout/BackButton.vue'
 import StatCard from '@/components/ui/StatCard.vue'
 
 const router = useRouter()
 const message = useMessage()
+const authStore = useAuthStore()
 
 const chartRef = ref(null)
 const compareChartRef = ref(null)
@@ -83,6 +86,67 @@ let compareChartInstance = null
 
 const loading = ref(false)
 const report = ref({})
+
+const normalizeDateKey = (value) => {
+  const match = String(value || '').match(/^(\d{4})-(\d{1,2})-(\d{1,2})/)
+  if (!match) return String(value || '')
+  return `${match[1]}-${String(match[2]).padStart(2, '0')}-${String(match[3]).padStart(2, '0')}`
+}
+
+function mergeCompletedRecipesToReport(data) {
+  const source = data || {}
+  const dailyData = Array.isArray(source.daily_data) ? source.daily_data : []
+
+  let weekEnergy = 0
+  let weekProtein = 0
+  let weekCarb = 0
+  let weekFat = 0
+  let dayCount = 0
+
+  const mergedDailyData = dailyData.map((day) => {
+    const dateKey = normalizeDateKey(day?.date)
+    const completedRecords = buildCompletedRecordsForDate(authStore.user?.id, dateKey)
+
+    const completedTotals = completedRecords.reduce((sum, record) => {
+      sum.energy += Number(record.calculatedEnergy || 0)
+      sum.protein += Number(record.calculatedProtein || 0)
+      sum.carb += Number(record.calculatedCarb || 0)
+      sum.fat += Number(record.calculatedFat || 0)
+      return sum
+    }, { energy: 0, protein: 0, carb: 0, fat: 0 })
+
+    const totalEnergy = Number(day?.total_energy || day?.totalEnergy || 0) + completedTotals.energy
+    const totalProtein = Number(day?.total_protein || day?.totalProtein || 0) + completedTotals.protein
+    const totalCarbohydrate = Number(day?.total_carbohydrate || day?.totalCarbohydrate || 0) + completedTotals.carb
+    const totalFat = Number(day?.total_fat || day?.totalFat || 0) + completedTotals.fat
+
+    if (totalEnergy > 0 || totalProtein > 0 || totalCarbohydrate > 0 || totalFat > 0) {
+      dayCount += 1
+      weekEnergy += totalEnergy
+      weekProtein += totalProtein
+      weekCarb += totalCarbohydrate
+      weekFat += totalFat
+    }
+
+    return {
+      ...day,
+      total_energy: totalEnergy,
+      total_protein: totalProtein,
+      total_carbohydrate: totalCarbohydrate,
+      total_fat: totalFat,
+      records: [...completedRecords, ...(Array.isArray(day?.records) ? day.records : [])]
+    }
+  })
+
+  return {
+    ...source,
+    daily_data: mergedDailyData,
+    avg_energy: dayCount > 0 ? weekEnergy / dayCount : 0,
+    avg_protein: dayCount > 0 ? weekProtein / dayCount : 0,
+    avg_carb: dayCount > 0 ? weekCarb / dayCount : 0,
+    avg_fat: dayCount > 0 ? weekFat / dayCount : 0
+  }
+}
 
 // 设计系统颜色
 const colors = {
@@ -107,7 +171,7 @@ async function loadWeeklyReport() {
   loading.value = true
   try {
     const data = await getWeeklyReport()
-    report.value = data
+    report.value = mergeCompletedRecipesToReport(data)
     await nextTick()
     initTrendChart()
     initCompareChart()

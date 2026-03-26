@@ -1,206 +1,209 @@
 <template>
-  <div class="weekly-page">
-    <div class="weekly-container">
-      <div class="weekly-header">
-        <div class="left-actions">
-          <n-button quaternary circle @click="router.push('/home')">
-            <template #icon><n-icon><ChevronBackOutline /></n-icon></template>
-          </n-button>
-          <div class="view-toggle">
-            <n-button size="small" @click="router.push('/home')">日</n-button>
-            <n-button size="small" type="primary">周</n-button>
-          </div>
-          <h2 class="title">本周计划</h2>
-        </div>
-
-        <div class="right-actions">
-          <div class="week-range-controls">
-            <n-button quaternary circle @click="goPrevWeek">
+  <n-config-provider :theme-overrides="tealTheme">
+    <div class="weekly-page">
+      <div class="weekly-container">
+        <div class="weekly-header">
+          <div class="left-actions">
+            <n-button quaternary circle @click="router.push('/home')">
               <template #icon><n-icon><ChevronBackOutline /></n-icon></template>
             </n-button>
-            <n-date-picker
-              v-model:value="selectedWeekRange"
-              type="daterange"
-              :clearable="false"
-              @update:value="handleWeekRangeChange"
-            />
-            <n-button quaternary circle @click="goNextWeek">
-              <template #icon><n-icon><ChevronForwardOutline /></n-icon></template>
+            <div class="view-toggle">
+              <n-button size="small" @click="router.push('/home')">日</n-button>
+              <n-button size="small" type="primary">周</n-button>
+            </div>
+            <h2 class="title">本周计划</h2>
+          </div>
+
+          <div class="right-actions">
+            <div class="week-range-controls">
+              <n-button quaternary circle @click="goPrevWeek">
+                <template #icon><n-icon><ChevronBackOutline /></n-icon></template>
+              </n-button>
+              <n-date-picker
+                v-model:value="selectedWeekRange"
+                type="daterange"
+                :clearable="false"
+                @update:value="handleWeekRangeChange"
+              />
+              <n-button quaternary circle @click="goNextWeek">
+                <template #icon><n-icon><ChevronForwardOutline /></n-icon></template>
+              </n-button>
+            </div>
+            <n-button @click="loadWeeklyData" :loading="loading" type="primary" ghost>
+              <template #icon><n-icon><RefreshOutline /></n-icon></template>
+              重新加载
             </n-button>
           </div>
-          <n-button @click="loadWeeklyData" :loading="loading" type="primary" ghost>
-            <template #icon><n-icon><RefreshOutline /></n-icon></template>
-            重新加载
-          </n-button>
         </div>
-      </div>
 
-      <div v-if="loading" class="loading-wrap">
-        <n-spin size="large" />
-      </div>
+        <div v-if="loading" class="loading-wrap">
+          <n-spin size="large" />
+        </div>
 
-      <div v-else class="week-columns">
-        <div
-          v-for="day in weekColumns"
-          :key="day.date"
-          class="day-column"
-          :class="{ 'is-today': day.isToday }"
-        >
-          <div class="day-header">
-            <div class="day-date">{{ day.displayDate }}</div>
-            <div class="day-week-label">{{ day.weekLabel }}</div>
-            <div class="day-kcal">{{ day.totalEnergy }} 千卡</div>
-          </div>
+        <div v-else class="week-columns">
+          <div
+            v-for="day in weekColumns"
+            :key="day.date"
+            class="day-column"
+            :class="{ 'is-today': day.isToday }"
+          >
+            <div class="day-header">
+              <div class="day-date">{{ day.displayDate }}</div>
+              <div class="day-week-label">{{ day.weekLabel }}</div>
+              <div class="day-kcal">{{ day.totalEnergy }} 千卡</div>
+            </div>
 
-          <div v-if="day.records.length === 0" class="day-empty">
-            暂无已规划餐次
-          </div>
+            <div v-if="day.records.length === 0" class="day-empty">
+              暂无已规划餐次
+            </div>
 
-          <div v-else class="meal-section-list">
-            <div
-              v-for="meal in getMealSections(day.records)"
-              :key="`${day.date}-${meal.type}`"
-              class="meal-section"
-            >
-              <div class="meal-title-row">
-                <span class="meal-title" @dblclick.stop="openMealNoteEditor(day.date, meal.type)">{{ getMealTypeLabel(meal.type) }}</span>
-                <div class="meal-title-actions">
-                  <span class="meal-total">{{ meal.energy }} 千卡</span>
-                  <n-dropdown
-                    trigger="click"
-                    :options="getMealActionOptions(day.date, meal.type)"
-                    @select="(key) => handleMealAction(key, day.date, meal.type)"
-                  >
-                    <n-icon class="meal-action-icon"><EllipsisVerticalOutline /></n-icon>
-                  </n-dropdown>
-                </div>
-              </div>
-
-              <div v-if="isMealNoteEditing(day.date, meal.type)" class="meal-note-editor">
-                <n-input
-                  v-model:value="mealNoteDraftMap[getMealNoteKey(day.date, meal.type)]"
-                  type="textarea"
-                  :autosize="{ minRows: 2, maxRows: 6 }"
-                  placeholder="输入该餐备注..."
-                  class="meal-note-input"
-                />
-                <div class="meal-note-actions">
-                  <button class="note-icon-btn" @click="deleteMealNoteInline(day.date, meal.type)">
-                    <n-icon><CloseOutline /></n-icon>
-                  </button>
-                  <button class="note-icon-btn save" @click="saveMealNoteInline(day.date, meal.type)">
-                    <n-icon><SaveOutline /></n-icon>
-                  </button>
-                </div>
-              </div>
+            <div v-else class="meal-section-list">
               <div
-                v-else-if="hasMealNote(day.date, meal.type)"
-                class="meal-note-display"
-                @dblclick.stop="openMealNoteEditor(day.date, meal.type)"
+                v-for="meal in getMealSections(day.records)"
+                :key="`${day.date}-${meal.type}`"
+                class="meal-section"
               >
-                {{ mealNoteMap[getMealNoteKey(day.date, meal.type)] }}
-              </div>
-
-              <div
-                v-for="item in meal.items"
-                :key="item.ID || item.id"
-                class="meal-item-card"
-                :class="{ 'recommend-card': item.isRecommendationRecipe }"
-              >
-                <div v-if="item.imageUrl" class="meal-item-image-wrap">
-                  <img :src="item.imageUrl" alt="meal-image" class="meal-item-image" />
+                <div class="meal-title-row">
+                  <span class="meal-title" @dblclick.stop="openMealNoteEditor(day.date, meal.type)">{{ getMealTypeLabel(meal.type) }}</span>
+                  <div class="meal-title-actions">
+                    <span class="meal-total">{{ meal.energy }} 千卡</span>
+                    <n-dropdown
+                      trigger="click"
+                      :options="getMealActionOptions(day.date, meal.type)"
+                      @select="(key) => handleMealAction(key, day.date, meal.type)"
+                    >
+                      <n-icon class="meal-action-icon"><EllipsisVerticalOutline /></n-icon>
+                    </n-dropdown>
+                  </div>
                 </div>
-                <div class="meal-item-name">{{ item.foodName || item.food_name }}</div>
-                <div class="meal-item-meta">
-                  <span>{{ Math.round(item.intakeAmount || item.intake_amount || 0) }} {{ item.intakeUnit || 'g' }}</span>
-                  <span>{{ Math.round(item.calculatedEnergy || item.calculated_energy || 0) }} kcal</span>
-                  <span>蛋 {{ Number(item.calculatedProtein || item.calculated_protein || 0).toFixed(1) }}</span>
-                  <span>碳 {{ Number(item.calculatedCarb || item.calculated_carb || 0).toFixed(1) }}</span>
-                  <span>脂 {{ Number(item.calculatedFat || item.calculated_fat || 0).toFixed(1) }}</span>
-                  <span v-if="item.isRecommendationRecipe" class="recommend-tag">推荐食谱</span>
+
+                <div v-if="isMealNoteEditing(day.date, meal.type)" class="meal-note-editor">
+                  <n-input
+                    v-model:value="mealNoteDraftMap[getMealNoteKey(day.date, meal.type)]"
+                    type="textarea"
+                    :autosize="{ minRows: 2, maxRows: 6 }"
+                    placeholder="输入该餐备注..."
+                    class="meal-note-input"
+                  />
+                  <div class="meal-note-actions">
+                    <button class="note-icon-btn" @click="deleteMealNoteInline(day.date, meal.type)">
+                      <n-icon><CloseOutline /></n-icon>
+                    </button>
+                    <button class="note-icon-btn save" @click="saveMealNoteInline(day.date, meal.type)">
+                      <n-icon><SaveOutline /></n-icon>
+                    </button>
+                  </div>
+                </div>
+                <div
+                  v-else-if="hasMealNote(day.date, meal.type)"
+                  class="meal-note-display"
+                  @dblclick.stop="openMealNoteEditor(day.date, meal.type)"
+                >
+                  {{ mealNoteMap[getMealNoteKey(day.date, meal.type)] }}
+                </div>
+
+                <div
+                  v-for="item in meal.items"
+                  :key="item.ID || item.id"
+                  class="meal-item-card"
+                  :class="{ 'recommend-card': item.isRecommendationRecipe }"
+                >
+                  <div v-if="item.imageUrl" class="meal-item-image-wrap">
+                    <img :src="item.imageUrl" alt="meal-image" class="meal-item-image" />
+                  </div>
+                  <div class="meal-item-name">{{ item.foodName || item.food_name }}</div>
+                  <div class="meal-item-meta">
+                    <span>{{ Math.round(item.intakeAmount || item.intake_amount || 0) }} {{ item.intakeUnit || 'g' }}</span>
+                    <span>{{ Math.round(item.calculatedEnergy || item.calculated_energy || 0) }} kcal</span>
+                    <span>蛋 {{ Number(item.calculatedProtein || item.calculated_protein || 0).toFixed(1) }}</span>
+                    <span>碳 {{ Number(item.calculatedCarb || item.calculated_carb || 0).toFixed(1) }}</span>
+                    <span>脂 {{ Number(item.calculatedFat || item.calculated_fat || 0).toFixed(1) }}</span>
+                    <span v-if="item.isRecommendationRecipe" class="recommend-tag">推荐食谱</span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
+
+        <n-modal v-model:show="addFoodModalVisible" preset="card" title="添加自定义食物" style="width: 460px; max-width: 92vw;">
+          <n-form :model="addFoodForm" label-placement="left" label-width="88">
+            <n-form-item label="食物名称">
+              <n-input v-model:value="addFoodForm.food_name" placeholder="例如：无糖酸奶" />
+            </n-form-item>
+            <n-form-item label="摄入量(g)">
+              <n-input-number v-model:value="addFoodForm.intake_amount" :step="10" :min="1" style="width: 100%;" />
+            </n-form-item>
+            <n-form-item label="热量(kcal)">
+              <n-input-number v-model:value="addFoodForm.calculated_energy" :step="5" :min="0" style="width: 100%;" />
+            </n-form-item>
+            <n-form-item label="蛋白(g)">
+              <n-input-number v-model:value="addFoodForm.calculated_protein" :step="0.5" :min="0" style="width: 100%;" />
+            </n-form-item>
+            <n-form-item label="碳水(g)">
+              <n-input-number v-model:value="addFoodForm.calculated_carb" :step="0.5" :min="0" style="width: 100%;" />
+            </n-form-item>
+            <n-form-item label="脂肪(g)">
+              <n-input-number v-model:value="addFoodForm.calculated_fat" :step="0.5" :min="0" style="width: 100%;" />
+            </n-form-item>
+          </n-form>
+          <template #footer>
+            <div class="modal-footer">
+              <n-button @click="addFoodModalVisible = false">取消</n-button>
+              <n-button type="primary" :loading="submitting" @click="handleSubmitCustomFood">保存</n-button>
+            </div>
+          </template>
+        </n-modal>
+
+        <n-modal v-model:show="deleteFoodModalVisible" preset="card" title="删除食物" style="width: 460px; max-width: 92vw;">
+          <n-form label-placement="left" label-width="90">
+            <n-form-item label="选择食物">
+              <n-select
+                v-model:value="selectedDeleteRecordId"
+                :options="deleteFoodOptions"
+                placeholder="请选择要删除的食物"
+              />
+            </n-form-item>
+          </n-form>
+          <template #footer>
+            <div class="modal-footer">
+              <n-button @click="deleteFoodModalVisible = false">取消</n-button>
+              <n-popconfirm
+                @positive-click="handleDeleteFood"
+                positive-text="确认删除"
+                negative-text="取消"
+              >
+                <template #trigger>
+                  <n-button type="error" :loading="deleting" :disabled="!selectedDeleteRecordId">删除</n-button>
+                </template>
+                确定删除该食物记录吗？
+              </n-popconfirm>
+            </div>
+          </template>
+        </n-modal>
+
+        <n-modal v-model:show="deleteRecommendModalVisible" preset="card" title="删除推荐食谱" style="width: 420px; max-width: 90vw;">
+          <div style="color: #475569; line-height: 1.7;">确定删除该餐次的推荐食谱吗？删除后将不再显示在本周计划中。</div>
+          <template #footer>
+            <div class="modal-footer">
+              <n-button @click="deleteRecommendModalVisible = false">取消</n-button>
+              <n-button type="primary" :loading="deleting" @click="handleDeleteRecommendation">确定删除</n-button>
+            </div>
+          </template>
+        </n-modal>
       </div>
-
-      <n-modal v-model:show="addFoodModalVisible" preset="card" title="添加自定义食物" style="width: 460px; max-width: 92vw;">
-        <n-form :model="addFoodForm" label-placement="left" label-width="88">
-          <n-form-item label="食物名称">
-            <n-input v-model:value="addFoodForm.food_name" placeholder="例如：无糖酸奶" />
-          </n-form-item>
-          <n-form-item label="摄入量(g)">
-            <n-input-number v-model:value="addFoodForm.intake_amount" :step="10" :min="1" style="width: 100%;" />
-          </n-form-item>
-          <n-form-item label="热量(kcal)">
-            <n-input-number v-model:value="addFoodForm.calculated_energy" :step="5" :min="0" style="width: 100%;" />
-          </n-form-item>
-          <n-form-item label="蛋白(g)">
-            <n-input-number v-model:value="addFoodForm.calculated_protein" :step="0.5" :min="0" style="width: 100%;" />
-          </n-form-item>
-          <n-form-item label="碳水(g)">
-            <n-input-number v-model:value="addFoodForm.calculated_carb" :step="0.5" :min="0" style="width: 100%;" />
-          </n-form-item>
-          <n-form-item label="脂肪(g)">
-            <n-input-number v-model:value="addFoodForm.calculated_fat" :step="0.5" :min="0" style="width: 100%;" />
-          </n-form-item>
-        </n-form>
-        <template #footer>
-          <div class="modal-footer">
-            <n-button @click="addFoodModalVisible = false">取消</n-button>
-            <n-button type="primary" :loading="submitting" @click="handleSubmitCustomFood">保存</n-button>
-          </div>
-        </template>
-      </n-modal>
-
-      <n-modal v-model:show="deleteFoodModalVisible" preset="card" title="删除食物" style="width: 460px; max-width: 92vw;">
-        <n-form label-placement="left" label-width="90">
-          <n-form-item label="选择食物">
-            <n-select
-              v-model:value="selectedDeleteRecordId"
-              :options="deleteFoodOptions"
-              placeholder="请选择要删除的食物"
-            />
-          </n-form-item>
-        </n-form>
-        <template #footer>
-          <div class="modal-footer">
-            <n-button @click="deleteFoodModalVisible = false">取消</n-button>
-            <n-popconfirm
-              @positive-click="handleDeleteFood"
-              positive-text="确认删除"
-              negative-text="取消"
-            >
-              <template #trigger>
-                <n-button type="error" :loading="deleting" :disabled="!selectedDeleteRecordId">删除</n-button>
-              </template>
-              确定删除该食物记录吗？
-            </n-popconfirm>
-          </div>
-        </template>
-      </n-modal>
-
-      <n-modal v-model:show="deleteRecommendModalVisible" preset="card" title="删除推荐食谱" style="width: 420px; max-width: 90vw;">
-        <div style="color: #475569; line-height: 1.7;">确定删除该餐次的推荐食谱吗？删除后将不再显示在本周计划中。</div>
-        <template #footer>
-          <div class="modal-footer">
-            <n-button @click="deleteRecommendModalVisible = false">取消</n-button>
-            <n-button type="error" @click="handleDeleteRecommendation">确认删除</n-button>
-          </div>
-        </template>
-      </n-modal>
     </div>
-  </div>
+  </n-config-provider>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, onActivated } from 'vue'
 import { useRouter } from 'vue-router'
-import { NButton, NIcon, NSpin, NDropdown, NModal, NForm, NFormItem, NInput, NInputNumber, NSelect, NPopconfirm, NDatePicker, useMessage } from 'naive-ui'
+import { NButton, NIcon, NSpin, NDropdown, NModal, NForm, NFormItem, NInput, NInputNumber, NDatePicker, NConfigProvider, useMessage } from 'naive-ui'
 import { ChevronBackOutline, ChevronForwardOutline, RefreshOutline, EllipsisVerticalOutline, CloseOutline, SaveOutline } from '@vicons/ionicons5'
 import { getWeeklyReport, getTodayStatus, addIntakeRecord, deleteIntakeRecord } from '@/api/intakeApi'
 import { useAuthStore } from '@/store/auth'
+import { loadRecommendationMapWithMigration, removeRecommendationMealByDate } from '@/utils/recommendationCache'
 
 const router = useRouter()
 const message = useMessage()
@@ -208,7 +211,7 @@ const authStore = useAuthStore()
 
 const loading = ref(false)
 const weeklyReport = ref({ daily_data: [] })
-const recommendationCache = ref({ date: '', data: null })
+const recommendationMap = ref({})
 const addFoodModalVisible = ref(false)
 const submitting = ref(false)
 const deleting = ref(false)
@@ -221,8 +224,16 @@ const mealNoteMap = ref({})
 const mealNoteDraftMap = ref({})
 const mealNoteEditingMap = ref({})
 const selectedWeekRange = ref(null)
-const RECOMMENDATION_CACHE_KEY = 'nutriplan_daily_recommendation'
 const WEEKLY_NOTE_KEY_PREFIX = 'nutriplan_weekly_meal_note'
+
+const tealTheme = {
+  common: {
+    primaryColor: '#0d9488',
+    primaryColorHover: '#0f766e',
+    primaryColorPressed: '#115e59',
+    primaryColorSuppl: '#14b8a6'
+  }
+}
 
 const addFoodForm = ref({
   food_name: '',
@@ -316,20 +327,7 @@ const saveMealNotes = () => {
 }
 
 const loadRecommendationCache = () => {
-  try {
-    const raw = localStorage.getItem(RECOMMENDATION_CACHE_KEY)
-    if (!raw) {
-      recommendationCache.value = { date: '', data: null }
-      return
-    }
-    const parsed = JSON.parse(raw)
-    recommendationCache.value = {
-      date: normalizeDateKey(parsed?.date || ''),
-      data: parsed?.data || null
-    }
-  } catch (error) {
-    recommendationCache.value = { date: '', data: null }
-  }
+  recommendationMap.value = loadRecommendationMapWithMigration(authStore.user?.id)
 }
 
 const buildWeeklyReportByDailyStatus = async (startDate, endDate) => {
@@ -370,9 +368,8 @@ const buildWeeklyReportByDailyStatus = async (startDate, endDate) => {
 }
 
 const buildRecommendationRecordsForDate = (dateKey) => {
-  if (normalizeDateKey(recommendationCache.value.date) !== normalizeDateKey(dateKey) || !recommendationCache.value.data) return []
-
-  const source = recommendationCache.value.data
+  const source = recommendationMap.value[normalizeDateKey(dateKey)]
+  if (!source) return []
   const mealOrder = ['breakfast', 'lunch', 'dinner', 'snack']
 
   return mealOrder
@@ -678,24 +675,17 @@ const handleDeleteRecommendation = async () => {
   const { date, mealType } = selectedMealContext.value
   if (!date || !mealType) return
 
-  if (normalizeDateKey(recommendationCache.value.date) !== normalizeDateKey(date) || !recommendationCache.value.data) {
+  const normalizedDate = normalizeDateKey(date)
+  const dayRecommendation = recommendationMap.value[normalizedDate]
+
+  if (!dayRecommendation) {
     deleteRecommendModalVisible.value = false
     message.info('当前日期没有可删除的推荐食谱')
     return
   }
 
-  const nextData = { ...(recommendationCache.value.data || {}) }
-  delete nextData[mealType]
-
-  recommendationCache.value = {
-    date: recommendationCache.value.date,
-    data: nextData
-  }
-
-  localStorage.setItem(RECOMMENDATION_CACHE_KEY, JSON.stringify({
-    date: recommendationCache.value.date,
-    data: nextData
-  }))
+  removeRecommendationMealByDate(authStore.user?.id, normalizedDate, mealType)
+  recommendationMap.value = loadRecommendationMapWithMigration(authStore.user?.id)
 
   deleteRecommendModalVisible.value = false
   await loadWeeklyData()
@@ -795,7 +785,7 @@ onUnmounted(() => {
 <style scoped>
 .weekly-page {
   min-height: 100vh;
-  background: #f5f7fa;
+  background: #0b1417;
   padding: 0;
 }
 
@@ -804,9 +794,9 @@ onUnmounted(() => {
   width: 100%;
   margin: 0;
   padding: 18px;
-  background: #141923;
+  background: linear-gradient(180deg, #0f1f24 0%, #0c171d 100%);
   border-radius: 0;
-  border: 1px solid #242c3b;
+  border: 1px solid #1f3b43;
 }
 
 .weekly-header {
@@ -843,8 +833,8 @@ onUnmounted(() => {
 }
 
 .week-range-controls :deep(.n-input) {
-  background: #0f172a;
-  border-color: #334155;
+  background: #0d1d24;
+  border-color: #244750;
 }
 
 .title {
@@ -869,15 +859,15 @@ onUnmounted(() => {
 
 .day-column {
   min-height: 620px;
-  background: #1b2230;
-  border: 1px solid #2a3345;
+  background: #102129;
+  border: 1px solid #21414b;
   border-radius: 12px;
   padding: 12px;
 }
 
 .day-column.is-today {
-  border-color: #f97316;
-  box-shadow: inset 0 0 0 1px rgba(249, 115, 22, 0.35);
+  border-color: #0d9488;
+  box-shadow: inset 0 0 0 1px rgba(13, 148, 136, 0.4);
 }
 
 .day-header {
@@ -893,25 +883,25 @@ onUnmounted(() => {
   margin-top: 2px;
   font-size: 33px;
   font-weight: 700;
-  color: #60a5fa;
+  color: #2dd4bf;
 }
 
 .day-column.is-today .day-week-label {
-  color: #fb923c;
+  color: #14b8a6;
 }
 
 .day-kcal {
   margin-top: 6px;
-  color: #a7f3d0;
+  color: #5eead4;
   font-size: 13px;
 }
 
 .day-empty {
-  border: 1px dashed #334155;
+  border: 1px dashed #2c5059;
   border-radius: 10px;
   padding: 22px 8px;
   text-align: center;
-  color: #94a3b8;
+  color: #8aa9b1;
   font-size: 13px;
 }
 
@@ -922,8 +912,8 @@ onUnmounted(() => {
 }
 
 .meal-section {
-  background: #232b3a;
-  border: 1px solid #334155;
+  background: #152831;
+  border: 1px solid #2a4c56;
   border-radius: 10px;
   padding: 8px;
 }
@@ -949,33 +939,33 @@ onUnmounted(() => {
 }
 
 .meal-total {
-  color: #94a3b8;
+  color: #90aeb6;
   font-size: 12px;
 }
 
 .meal-note {
   margin-bottom: 8px;
   font-size: 12px;
-  color: #93c5fd;
-  border: 1px dashed rgba(147, 197, 253, 0.35);
+  color: #ccfbf1;
+  border: 1px dashed rgba(20, 184, 166, 0.4);
   border-radius: 6px;
   padding: 4px 8px;
 }
 
 .meal-note-editor {
   margin-bottom: 8px;
-  border: 1px solid #334155;
+  border: 1px solid #2a4c56;
   border-radius: 8px;
-  background: #151c28;
+  background: #0f1b21;
   padding: 8px;
 }
 
 .meal-note-display {
   margin-bottom: 8px;
-  border: 1px solid rgba(96, 165, 250, 0.35);
+  border: 1px solid rgba(20, 184, 166, 0.4);
   border-radius: 8px;
-  background: rgba(15, 23, 42, 0.75);
-  color: #c7d2fe;
+  background: rgba(15, 23, 42, 0.78);
+  color: #f0fdfa;
   padding: 8px 10px;
   font-size: 12px;
   line-height: 1.6;
@@ -1015,7 +1005,7 @@ onUnmounted(() => {
 }
 
 .note-icon-btn.save {
-  color: #60a5fa;
+  color: #2dd4bf;
 }
 
 .meal-action-icon {
@@ -1033,8 +1023,8 @@ onUnmounted(() => {
 }
 
 .meal-item-card {
-  background: #111827;
-  border: 1px solid #263043;
+  background: #0e1b22;
+  border: 1px solid #264954;
   border-radius: 8px;
   padding: 8px;
 }
@@ -1054,7 +1044,7 @@ onUnmounted(() => {
   border-radius: 8px;
   overflow: hidden;
   margin-bottom: 8px;
-  background: #0b1220;
+  background: #0a171d;
 }
 
 .meal-item-image {
@@ -1064,7 +1054,7 @@ onUnmounted(() => {
 }
 
 .meal-item-name {
-  color: #60a5fa;
+  color: #2dd4bf;
   font-weight: 600;
   font-size: 15px;
   margin-bottom: 6px;
@@ -1079,8 +1069,8 @@ onUnmounted(() => {
 }
 
 .recommend-tag {
-  color: #60a5fa;
-  border: 1px solid rgba(96, 165, 250, 0.4);
+  color: #2dd4bf;
+  border: 1px solid rgba(20, 184, 166, 0.45);
   padding: 0 6px;
   border-radius: 999px;
 }
