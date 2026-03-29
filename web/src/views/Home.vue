@@ -1,1483 +1,1397 @@
 ﻿<template>
-  <div v-if="authStore.isAuthenticated" class="etm-container">
-    <div class="etm-main">
-          <div class="etm-toolbar">
-            <div class="toolbar-left">
-              <div class="toggle-group">
-                <button class="toggle-btn active">日</button>
-                <button class="toggle-btn" @click="goToWeekly">周</button>
-              </div>
-              <div class="date-nav">
-                <n-icon class="nav-icon" @click="goPrevDate"><ChevronBackOutline /></n-icon>
-                <n-popover trigger="click" placement="bottom" v-model:show="datePickerVisible">
-                  <template #trigger>
-                    <n-icon class="nav-icon"><CalendarOutline /></n-icon>
-                  </template>
-                  <n-date-picker
-                    v-model:value="selectedDateTimestamp"
-                    type="date"
-                    panel
-                    :is-date-disabled="disableFutureDate"
-                    :clearable="false"
-                    @update:value="handleDateChange"
-                  />
-                </n-popover>
-                <n-icon class="nav-icon" @click="goNextDate"><ChevronForwardOutline /></n-icon>
-                <span class="date-text">{{ selectedDateLabel }}</span>
-              </div>
-            </div>
+  <div class="nutrition-dashboard">
+    <header class="top-header glass-card">
+      <div class="brand-wrap">
+        <h1 class="brand">基于用户健康数据与营养模型的饮食推荐系统</h1>
+      </div>
+
+      <div class="top-actions">
+      </div>
+    </header>
+
+    <main class="dashboard-grid">
+      <section class="center-panel">
+        <div class="section-head">
+          <div>
+            <p class="kicker">营养记录</p>
+            <h2 class="headline">{{ 日期标题 }}</h2>
           </div>
-
-          <div class="etm-content">
-            <div class="etm-meals">
-              <div class="meals-header">
-                <h2 class="section-title">饮食记录</h2>
-                <div class="meals-calories">
-                  <div class="pie-icon-placeholder" :style="{ background: 'conic-gradient(#10b981 ' + caloriePercentage + '%, #e2e8f0 ' + caloriePercentage + '%)' }"></div>
-                  <span>{{ caloriesConsumed }} 千卡</span>
-                </div>
-                <div class="meals-actions">
-                  <button
-                    class="recommend-btn"
-                    :class="{ pressed: recommendPressed, loading: isRecommending }"
-                    :disabled="isRecommending"
-                    @mousedown="recommendPressed = true"
-                    @mouseup="recommendPressed = false"
-                    @mouseleave="recommendPressed = false"
-                    @click="handleRefreshRecommendation"
-                  >
-                    <n-icon class="recommend-icon" :class="{ 'animate-spin': isRecommending }"><RefreshOutline /></n-icon>
-                    <span>{{ isRecommending ? '推荐中...' : '重新推荐' }}</span>
-                  </button>
-                  <n-dropdown trigger="click" :options="moreActionOptions" @select="handleMoreActionSelect">
-                    <n-icon class="action-icon action-trigger"><EllipsisVerticalOutline /></n-icon>
-                  </n-dropdown>
-                </div>
-              </div>
-              <div class="daily-calorie-progress">
-                <div class="daily-calorie-track">
-                  <div class="daily-calorie-fill" :style="{ width: checkedCaloriePercentage + '%' }"></div>
-                </div>
-                <div class="daily-calorie-text">今日已完成 {{ checkedCaloriePercentage.toFixed(0) }}%</div>
-              </div>
-
-              <div class="meal-block" v-for="mealInfo in mealsList" :key="mealInfo.type">
-                <div class="meal-header">
-                  <div class="meal-title-group">
-                    <h3>{{ mealInfo.name }}</h3>
-                    <div class="meal-calories text-emerald-600 font-bold ml-2">
-                      <div
-                        class="meal-macro-pie"
-                        :style="{ background: mealInfo.macroGradient }"
-                        :title="`已勾选占比：碳水 ${mealInfo.checkedCarbs}g / 蛋白质 ${mealInfo.checkedProtein}g / 脂肪 ${mealInfo.checkedFat}g`"
-                      ></div>
-                      <span class="meal-checked-calories">{{ mealInfo.checkedCalories }} 千卡</span>
-                    </div>
-                  </div>
-                  <n-icon class="action-icon"><EllipsisVerticalOutline /></n-icon>
-                </div>
-
-                <div style="padding: 0.75rem;">
-                  <div v-if="dailyRecommendation && dailyRecommendation[mealInfo.type] && dailyRecommendation[mealInfo.type].id" style="margin-bottom: 1rem;">
-                    <div style="font-size: 12px; color: #059669; margin-bottom: 8px; font-weight: 500; display: flex; align-items: center;">
-                      <n-icon style="margin-right: 4px;"><FlameOutline /></n-icon> 推荐食谱
-                    </div>
-                    <div class="meal-card" style="border: 1px solid #d1fae5; background: #ecfdf5; cursor: pointer; border-radius: 12px; display: flex; gap: 1rem; padding: 0.75rem; align-items: center;" @click="router.push('/recipes/' + dailyRecommendation[mealInfo.type].id)">
-                      <div style="flex-shrink: 0; display: flex; align-items: center; justify-content: center;" @click.stop>
-                        <n-checkbox
-                          :checked="recommendationCompleted[mealInfo.type]"
-                          @update:checked="(checked) => handleRecommendationChecked(mealInfo.type, checked)"
-                          size="large"
-                        />
-                      </div>
-                      <div class="meal-img" style="background: #ffffff; border: 1px solid #e2e8f0; width: 48px; height: 48px; flex-shrink: 0; border-radius: 8px; overflow: hidden;">
-                        <img :src="dailyRecommendation[mealInfo.type].image_url" v-if="dailyRecommendation[mealInfo.type].image_url" style="width: 100%; height: 100%; object-fit: cover;" />
-                        <div class="img-placeholder" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #94a3b8;" v-else>
-                          <n-icon size="20"><RestaurantOutline /></n-icon>
-                        </div>
-                      </div>
-                      <div class="meal-details" style="flex-grow: 1;">
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                          <div class="meal-name" style="margin: 0; font-weight: bold; color: #2563eb; text-decoration: underline; text-decoration-color: #93c5fd; text-underline-offset: 4px;">{{ dailyRecommendation[mealInfo.type].name }}</div>
-                          <span style="font-size: 10px; padding: 2px 6px; background: #d1fae5; color: #047857; border-radius: 4px; border: 1px solid #a7f3d0; white-space: nowrap;">推荐方案</span>
-                        </div>
-                        <div style="font-size: 12px; color: #94a3b8; margin-top: 4px;">约 {{ dailyRecommendation[mealInfo.type].energy || 0 }} 千卡</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="meal-items" v-if="mealInfo.items.length > 0">
-                  <div class="meal-card" style="border-bottom: 1px solid #f1f5f9; cursor: pointer; padding-bottom: 1rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.75rem;" v-for="item in mealInfo.items" :key="item.id">
-                    <div style="flex-shrink: 0; display: flex; align-items: center; justify-content: center;" @click.stop>
-                      <n-checkbox
-                        :checked="item.completed"
-                        @update:checked="(checked) => handleMealItemChecked(item.id, checked)"
-                        size="large"
-                      />
-                    </div>
-                    <div class="meal-img" style="flex-shrink: 0; width: 60px; height: 60px; border-radius: 8px; overflow: hidden;" :style="{ opacity: item.completed ? 0.5 : 1 }">
-                      <img v-if="item.image" :src="item.image" :alt="item.foodName" style="width: 100%; height: 100%; object-fit: cover;" />
-                      <div v-else class="img-placeholder" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #94a3b8; background: #f1f5f9;">
-                        <n-icon size="20"><RestaurantOutline /></n-icon>
-                      </div>
-                    </div>
-                    <div class="meal-details" style="flex-grow: 1;">
-                      <div style="display: flex; align-items: center; gap: 8px;">
-                        <span class="meal-name" :style="{ margin: 0, color: item.completed ? '#94a3b8' : '#1e293b', fontWeight: 500, textDecoration: item.completed ? 'line-through' : 'none', transition: 'all 0.3s' }">{{ item.foodName }}</span>
-                        <span style="font-size: 10px; padding: 2px 6px; background: #f1f5f9; color: #64748b; border-radius: 4px;">自带食物</span>
-                      </div>
-                      <div style="font-size: 12px; color: #94a3b8; margin-top: 4px;">每 100g 约 {{ item.calories || 0 }} 千卡</div>
-                    </div>
-                    <div class="meal-serving" style="display: flex; align-items: center; gap: 12px;">
-                      <n-input-number v-model:value="item.intakeAmount" size="small" :step="10" :min="1" suffix="克" style="width: 100px;" />
-                      <button @click.stop="handleDeleteMealItem(item.id)" style="background: none; border: none; color: #cbd5e1; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px;">
-                        <n-icon size="22"><CloseOutline /></n-icon>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <div style="padding: 0.75rem; margin-top: 0.5rem;">
-                  <button class="add-food-btn" style="width: 100%;" @click="goToIntake">+ 添加食物到 {{ mealInfo.name }}</button>
-                </div>
-              </div>
-            </div>
-
-            <div class="etm-nutrition">
-              <div class="nutrition-header">
-                <h2 class="section-title">营养概览</h2>
-                <div class="nutrition-actions">
-                  <button class="icon-btn active"><n-icon><PieChartOutline /></n-icon></button>
-                  <button class="icon-btn"><n-icon><FlameOutline /></n-icon></button>
-                </div>
-              </div>
-
-              <div class="nutrition-card">
-                <div class="chart-container">
-                  <div ref="macroChartRef" style="width: 280px; height: 280px;"></div>
-                </div>
-
-                <div class="stats-table">
-                  <div class="stats-header compact">
-                    <span>营养项</span>
-                    <span class="col-right">数值</span>
-                  </div>
-                  <div class="stats-row compact-row highlight">
-                    <span>卡路里</span>
-                    <span class="col-right">{{ overviewCalories }} 千卡</span>
-                  </div>
-                  <div class="stats-row compact-row">
-                    <span class="text-amber-500 font-medium">碳水化合物</span>
-                    <span class="col-right">{{ overviewCarbs }}克</span>
-                  </div>
-                  <div class="stats-row compact-row">
-                    <span class="text-indigo-400 font-medium">脂肪</span>
-                    <span class="col-right">{{ overviewFat }}克</span>
-                  </div>
-                  <div class="stats-row compact-row">
-                    <span class="text-rose-500 font-medium">蛋白质</span>
-                    <span class="col-right">{{ overviewProtein }}克</span>
-                  </div>
-
-                  <button class="detailed-btn" @click="goToProfile">详细营养信息</button>
-                </div>
-              </div>
-
-              <div class="funny-character">
-                <span class="avocado-emoji"></span>
-              </div>
-            </div>
+          <div class="date-controls">
+            <button class="icon-circle soft" aria-label="上一天" @click="上一天"><n-icon><ChevronBackOutline /></n-icon></button>
+            <button class="icon-circle soft" aria-label="下一天" :disabled="是否今天" @click="下一天"><n-icon><ChevronForwardOutline /></n-icon></button>
           </div>
         </div>
+
+        <p v-if="加载中" class="loading-tip">正在同步饮食数据...</p>
+
+        <div class="timeline">
+          <article
+            v-for="meal in 时间线餐次"
+            :key="meal.type"
+            class="timeline-row"
+            :class="meal.variant"
+            draggable="true"
+            @dragstart="开始拖拽餐次(meal.type)"
+            @dragover.prevent
+            @drop="放置餐次(meal.type)"
+            @dragend="结束拖拽餐次"
+          >
+            <div class="time-col">
+              <span class="dot" />
+              <div class="time-editor" @click.stop>
+                <button v-if="编辑时间餐次 !== meal.type" class="time-display-btn" @click="开始编辑时间(meal.type)">{{ meal.time }}</button>
+                <input
+                  v-else
+                  type="time"
+                  class="time-input"
+                  :value="meal.time"
+                  @input="(event) => 更新餐次时间(meal.type, event.target.value)"
+                  @blur="结束编辑时间"
+                  @keyup.enter="结束编辑时间"
+                />
+              </div>
+            </div>
+
+            <div class="timeline-content glass-card">
+              <div class="meal-head">
+                <div class="meal-title-wrap">
+                  <input
+                    v-if="编辑名称餐次 === meal.type"
+                    v-model="编辑名称内容"
+                    class="meal-name-input"
+                    maxlength="16"
+                    @blur="保存名称编辑(meal.type)"
+                    @keyup.enter="保存名称编辑(meal.type)"
+                  />
+                  <h3 v-else>{{ meal.name }}</h3>
+                  <button
+                    v-if="编辑名称餐次 !== meal.type"
+                    class="rename-btn"
+                    aria-label="编辑餐次名称"
+                    title="编辑餐次名称"
+                    @click.stop="开始编辑名称(meal.type, meal.name)"
+                  >
+                    <n-icon><CreateOutline /></n-icon>
+                  </button>
+                </div>
+                <p v-if="meal.kcal" class="kcal">{{ meal.kcal }}</p>
+              </div>
+
+              <template v-if="meal.variant === 'filled'">
+                <div class="meal-inline">
+                  <div class="mini-icon">{{ meal.icon }}</div>
+                  <div class="bar-track">
+                    <div class="bar-fill" :style="{ width: meal.progress + '%' }" />
+                  </div>
+                  <button class="icon-circle xsmall" aria-label="编辑">
+                    <n-icon><CreateOutline /></n-icon>
+                  </button>
+                </div>
+                <button class="detail-btn detail-unified" @click.stop="切换详情餐次(meal.type)">查看详情</button>
+              </template>
+
+              <template v-else-if="meal.variant === 'logged'">
+                <div class="logged-card">
+                  <div class="status-row">
+                    <span class="status-badge">状态：已记录</span>
+                    <span class="status-kcal">{{ meal.kcal }}</span>
+                  </div>
+                  <div class="bar-track strong">
+                    <div class="bar-fill" :style="{ width: meal.progress + '%' }" />
+                  </div>
+                  <button class="detail-btn detail-unified" @click.stop="切换详情餐次(meal.type)">查看详情</button>
+                </div>
+              </template>
+
+              <template v-else>
+                <div class="meal-actions">
+                  <button class="ghost-record" @click="去记录餐次">+ 记录餐次</button>
+                  <button class="detail-btn empty detail-unified" @click.stop="切换详情餐次(meal.type)">查看详情</button>
+                </div>
+              </template>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="right-panel">
+        <div class="overview-card glass-card">
+          <span class="floating-red top-right"><n-icon><SparklesOutline /></n-icon></span>
+          <div class="ring-wrap">
+            <div class="calorie-ring" :style="ringStyle">
+              <div class="ring-center">
+                <h3>{{ 剩余热量 }}</h3>
+                <p>剩余千卡</p>
+              </div>
+            </div>
+            <p class="goal-text">每日目标：{{ 每日目标热量 }} 千卡</p>
+          </div>
+
+          <div class="macro-stack">
+            <article v-for="macro in 宏量卡片" :key="macro.label" class="macro-card">
+              <div class="macro-left">
+                <span class="macro-icon" :style="{ background: macro.soft }">{{ macro.icon }}</span>
+                <div>
+                  <p class="macro-label">{{ macro.label }}</p>
+                  <p class="macro-target">目标：{{ macro.target }}</p>
+                </div>
+              </div>
+              <p class="macro-value">{{ macro.value }}</p>
+            </article>
+          </div>
+        </div>
+
+        <div class="details-card glass-card">
+          <span class="floating-red lower-right"><n-icon><HeartOutline /></n-icon></span>
+          <div class="details-head">
+            <h3>{{ 当前详情标题 }}</h3>
+            <p>{{ 当前详情时间 }}</p>
+          </div>
+
+          <div class="micro-grid">
+            <div v-for="line in 详情营养条" :key="line.label" class="micro-item">
+              <div class="micro-top">
+                <span>{{ line.label }}</span>
+                <span>{{ line.value }}</span>
+              </div>
+              <div class="micro-track">
+                <div class="micro-fill" :style="{ width: line.progress + '%', background: line.color }" />
+              </div>
+            </div>
+          </div>
+
+          <div class="food-table">
+            <div class="table-head">
+              <span>食物项</span>
+              <span>份量</span>
+              <span>热量</span>
+            </div>
+
+            <div v-if="!当前详情食物.length" class="food-row food-empty">
+              <div class="food-name">暂无记录</div>
+              <span>-</span>
+              <span class="strong-text">-</span>
+            </div>
+
+            <div v-for="food in 当前详情食物" :key="food.id" class="food-row">
+              <div class="food-name">
+                <span class="thumb" :style="{ background: food.bg }">{{ food.emoji }}</span>
+                <span>{{ food.name }}</span>
+              </div>
+              <span>{{ food.portion }}</span>
+              <span class="strong-text">{{ food.kcal }}</span>
+            </div>
+          </div>
+
+          <div class="add-more">
+            <input type="text" placeholder="为这餐添加更多食物..." />
+            <button class="plus-btn" aria-label="添加食物">+</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
   </div>
 </template>
 
 <script setup>
-  import { onMounted, ref, computed } from "vue";
-  import { useRouter } from "vue-router";
-  import { NIcon, NDropdown, NDatePicker, NPopover, useMessage, NInputNumber, NCheckbox } from "naive-ui";
-  import {
-    ChevronBackOutline,
-    CalendarOutline,
-    ChevronForwardOutline,
-    EllipsisVerticalOutline,
-    RefreshOutline,
-    PieChartOutline,
-    FlameOutline,
-    CreateOutline,
-    CloseOutline,
-    RestaurantOutline
-  } from "@vicons/ionicons5";
-import { useAuthStore } from "@/store/auth";
-import { getNutritionRequirements } from "@/api/user";
-import { getTodayStatus } from "@/api/intakeApi";
-import { getRecipeRecommendations } from "@/api/recipeApi";
-import { formatDateKey, updateCompletedRecipe } from "@/utils/completedRecipes";
+import { computed, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { NIcon } from 'naive-ui'
+import {
+  ChevronBackOutline,
+  ChevronForwardOutline,
+  CreateOutline,
+  HeartOutline,
+  SparklesOutline
+} from '@vicons/ionicons5'
+import { getTodayStatus } from '@/api/intakeApi'
+import { getNutritionRequirements } from '@/api/user'
+import { useAuthStore } from '@/store/auth'
 
-const router = useRouter();
-const message = useMessage();
-const authStore = useAuthStore();
-const nutritionData = ref(null);
-const todayIntake = ref(null);
-const mealCompletionMap = ref({});
-const selectedDate = ref(new Date());
-const selectedDateTimestamp = ref(new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()).getTime());
-const datePickerVisible = ref(false);
+const router = useRouter()
+const authStore = useAuthStore()
 
-  const dailyRecommendation = ref(null);
-  const recommendationCompleted = ref({
-    breakfast: false,
-    lunch: false,
-    dinner: false,
-    snack: false
-  });
-  const isRecommending = ref(false);
-  const recommendPressed = ref(false);
+const 加载中 = ref(false)
+const 已选日期 = ref(new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()))
+const 编辑时间餐次 = ref('')
+const 编辑名称餐次 = ref('')
+const 编辑名称内容 = ref('')
+const 拖拽源餐次 = ref('')
+const 每日状态 = ref({
+  records: [],
+  totalEnergy: 0,
+  totalProtein: 0,
+  totalCarbohydrate: 0,
+  totalFat: 0,
+  targetEnergy: 2500,
+  targetProtein: 150,
+  targetCarbohydrate: 220,
+  targetFat: 60
+})
+const 详情餐次类型 = ref('breakfast')
 
-  const moreActionOptions = [
-    { label: '立即重新推荐', key: 'refresh' },
-    { label: '清空推荐缓存', key: 'clear-cache' },
-    { label: '重置今日勾选', key: 'reset-checklist' },
-    { label: '前往周计划', key: 'goto-week' }
-  ];
+const 餐次时间本地键 = 'nutriplan_home_meal_times'
+const 餐次顺序本地键 = 'nutriplan_home_meal_order'
+const 餐次名称本地键 = 'nutriplan_home_meal_names'
+const 默认餐次时间 = {
+  breakfast: '08:15',
+  lunch: '12:30',
+  snack: '16:00',
+  dinner: '19:30'
+}
+const 餐次时间映射 = ref({ ...默认餐次时间 })
 
-  const CHECKLIST_KEY_PREFIX = 'nutriplan_daily_checklist';
-  const CACHE_KEY = 'nutriplan_daily_recommendation';
+const 餐次配置 = [
+  { type: 'breakfast', name: '早餐', time: '08:15', icon: '🥣', ratio: 0.16, emoji: '🍳', bg: 'linear-gradient(135deg, #78b7ff, #4d84d7)' },
+  { type: 'lunch', name: '午餐', time: '12:30', icon: '🥗', ratio: 0.32, emoji: '🥗', bg: 'linear-gradient(135deg, #8cc7a5, #5e9b77)' },
+  { type: 'snack', name: '下午加餐', time: '16:00', icon: '🍎', ratio: 0.2, emoji: '🍎', bg: 'linear-gradient(135deg, #f7ba80, #e08d4f)' },
+  { type: 'dinner', name: '晚餐', time: '19:30', icon: '🍽️', ratio: 0.32, emoji: '🍽️', bg: 'linear-gradient(135deg, #afcf78, #7ca451)' }
+]
+const 默认餐次顺序 = 餐次配置.map((item) => item.type)
+const 默认餐次名称 = Object.fromEntries(餐次配置.map((item) => [item.type, item.name]))
+const 餐次顺序 = ref([...默认餐次顺序])
+const 餐次名称映射 = ref({ ...默认餐次名称 })
 
-  const getDateTag = () => {
-    return formatDateKey(selectedDate.value);
-  };
+const 安全数值 = (value) => {
+  const number = Number(value)
+  return Number.isFinite(number) ? number : 0
+}
 
-  const disableFutureDate = (timestamp) => {
-    const target = new Date(timestamp);
-    const today = new Date();
-    const endOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999);
-    return target.getTime() > endOfToday.getTime();
-  };
+const 转日期参数 = (date) => {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
 
-  const isSelectedToday = computed(() => formatDateKey(selectedDate.value) === formatDateKey(new Date()));
+const 格式化时间 = (value) => {
+  if (!value) return '记录于 --:--'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return '记录于 --:--'
+  const hour = String(date.getHours()).padStart(2, '0')
+  const minute = String(date.getMinutes()).padStart(2, '0')
+  return `记录于 ${hour}:${minute}`
+}
 
-  const selectedDateLabel = computed(() => {
-    if (isSelectedToday.value) return '今天';
-    return selectedDate.value.toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric', weekday: 'short' });
-  });
+const 归一化餐次 = (value) => {
+  if (value === 1 || value === '1' || value === '早餐' || value === 'breakfast') return 'breakfast'
+  if (value === 2 || value === '2' || value === '午餐' || value === 'lunch') return 'lunch'
+  if (value === 3 || value === '3' || value === '晚餐' || value === 'dinner') return 'dinner'
+  if (value === 4 || value === '4' || value === '加餐' || value === '下午加餐' || value === 'snack') return 'snack'
+  return ''
+}
 
-  const setSelectedDate = (date) => {
-    selectedDate.value = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-    selectedDateTimestamp.value = selectedDate.value.getTime();
-  };
+const 获取餐次记录 = (type) => {
+  return (每日状态.value.records || []).filter((item) => 归一化餐次(item.mealType || item.meal_type) === type)
+}
 
-  const goPrevDate = async () => {
-    setSelectedDate(new Date(selectedDate.value.getFullYear(), selectedDate.value.getMonth(), selectedDate.value.getDate() - 1));
-    await loadSelectedDayData();
-  };
-
-  const goNextDate = async () => {
-    const next = new Date(selectedDate.value.getFullYear(), selectedDate.value.getMonth(), selectedDate.value.getDate() + 1);
-    if (disableFutureDate(next.getTime())) return;
-    setSelectedDate(next);
-    await loadSelectedDayData();
-  };
-
-  const handleDateChange = async (value) => {
-    if (!value) return;
-    setSelectedDate(new Date(value));
-    datePickerVisible.value = false;
-    await loadSelectedDayData();
-  };
-
-  const getChecklistStorageKey = () => {
-    const userId = authStore.user?.id || 'guest';
-    return `${CHECKLIST_KEY_PREFIX}_${userId}_${getDateTag()}`;
-  };
-
-  const loadChecklistState = () => {
-    try {
-      const raw = localStorage.getItem(getChecklistStorageKey());
-      if (!raw) {
-        mealCompletionMap.value = {};
-        recommendationCompleted.value = {
-          breakfast: false,
-          lunch: false,
-          dinner: false,
-          snack: false
-        };
-        return;
-      }
-      const parsed = JSON.parse(raw);
-      mealCompletionMap.value = parsed.mealCompletionMap || {};
-      recommendationCompleted.value = {
-        breakfast: !!parsed.recommendationCompleted?.breakfast,
-        lunch: !!parsed.recommendationCompleted?.lunch,
-        dinner: !!parsed.recommendationCompleted?.dinner,
-        snack: !!parsed.recommendationCompleted?.snack
-      };
-    } catch (error) {
-      console.warn('加载勾选状态失败', error);
+const 加载餐次时间配置 = () => {
+  try {
+    const raw = localStorage.getItem(餐次时间本地键)
+    if (!raw) return
+    const parsed = JSON.parse(raw)
+    餐次时间映射.value = {
+      ...默认餐次时间,
+      ...parsed
     }
-  };
-
-  const saveChecklistState = () => {
-    localStorage.setItem(
-      getChecklistStorageKey(),
-      JSON.stringify({
-        mealCompletionMap: mealCompletionMap.value,
-        recommendationCompleted: recommendationCompleted.value
-      })
-    );
-  };
-
-  const handleMealItemChecked = (itemId, checked) => {
-    mealCompletionMap.value = {
-      ...mealCompletionMap.value,
-      [itemId]: !!checked
-    };
-    saveChecklistState();
-  };
-
-  const handleRecommendationChecked = (mealType, checked) => {
-    recommendationCompleted.value = {
-      ...recommendationCompleted.value,
-      [mealType]: !!checked
-    };
-
-    const recipe = dailyRecommendation.value?.[mealType];
-    if (recipe) {
-      updateCompletedRecipe({
-        userId: authStore.user?.id,
-        dateKey: formatDateKey(selectedDate.value),
-        mealType,
-        recipe,
-        checked: !!checked
-      });
-    }
-
-    saveChecklistState();
-  };
-
-  const handleRefreshRecommendation = async () => {
-    if (!isSelectedToday.value) {
-      message.info('仅支持当天重新推荐');
-      return;
-    }
-    recommendPressed.value = false;
-    await loadRecommendation(true);
-  };
-
-  const resetTodayChecklist = () => {
-    const recommendationTypes = ['breakfast', 'lunch', 'dinner', 'snack'];
-    recommendationTypes.forEach((mealType) => {
-      const recipe = dailyRecommendation.value?.[mealType];
-      if (recipe) {
-        updateCompletedRecipe({
-          userId: authStore.user?.id,
-          dateKey: formatDateKey(selectedDate.value),
-          mealType,
-          recipe,
-          checked: false
-        });
-      }
-    });
-
-    mealCompletionMap.value = {};
-    recommendationCompleted.value = {
-      breakfast: false,
-      lunch: false,
-      dinner: false,
-      snack: false
-    };
-    saveChecklistState();
-  };
-
-  const handleMoreActionSelect = async (key) => {
-    if (key === 'refresh') {
-      await handleRefreshRecommendation();
-      return;
-    }
-
-    if (key === 'clear-cache') {
-      localStorage.removeItem(CACHE_KEY);
-      dailyRecommendation.value = null;
-      message.success('已清空推荐缓存');
-      return;
-    }
-
-    if (key === 'reset-checklist') {
-      resetTodayChecklist();
-      message.success('已重置今日勾选状态');
-      return;
-    }
-
-    if (key === 'goto-week') {
-      goToWeekly();
-    }
-  };
-
-  const loadRecommendation = async (force = false) => {
-    isRecommending.value = true;
-    try {
-      const selectedDateKey = formatDateKey(selectedDate.value);
-      const today = formatDateKey(new Date());
-
-      if (selectedDateKey !== today) {
-        dailyRecommendation.value = null;
-        return;
-      }
-
-      // Check cache if not forcing a refresh
-      if (!force) {
-        const cached = localStorage.getItem(CACHE_KEY);
-        if (cached) {
-          try {
-            const parsed = JSON.parse(cached);
-            if (parsed.date === today && parsed.data) {
-              dailyRecommendation.value = parsed.data;
-              return; // Use cached data
-            }
-          } catch (e) {
-            console.warn("解析推荐缓存失败:", e);
-          }
-        }
-      }
-
-      const res = await getRecipeRecommendations(1);
-      if (res && res.plans && res.plans.length > 0) {
-        dailyRecommendation.value = {
-          breakfast: res.plans[0].breakfast,
-          lunch: res.plans[0].lunch,
-          dinner: res.plans[0].dinner,
-          snack: res.plans[0].snack
-        };
-
-        // Update local storage cache
-        localStorage.setItem(CACHE_KEY, JSON.stringify({
-          date: today,
-          data: dailyRecommendation.value
-        }));
-
-        if (force) {
-          message.success("食谱推荐已更新");
-        }
-      }
-    } catch (e) {
-      console.error("加载食谱推荐失败", e);
-      if (force) {
-        message.error("加载推荐失败");
-      }
-    } finally {
-      isRecommending.value = false;
-    }
-  };
-
-  onMounted(async () => {
-  if (authStore.isAuthenticated) {
-    if (!authStore.user || !authStore.profile) {
-      try {
-        await authStore.loadProfile();
-      } catch (error) {
-        console.error("加载档案失败:", error);
-      }
-    }
-
-    await loadSelectedDayData();
-
-    try {
-      if (authStore.hasProfile) {
-        nutritionData.value = await getNutritionRequirements();
-      } else {
-        nutritionData.value = null;
-      }
-    } catch (error) {
-      console.log("获取营养目标失败:", error);
-      nutritionData.value = null;
-    }
-
+  } catch (error) {
+    console.warn('读取餐次时间配置失败', error)
   }
-});
+}
 
-  const loadSelectedDayData = async () => {
-    try {
-      const statusRes = await getTodayStatus(formatDateKey(selectedDate.value));
-      todayIntake.value = {
-        ...statusRes,
-        total_energy: statusRes?.total_energy ?? statusRes?.totalEnergy ?? 0,
-        total_protein: statusRes?.total_protein ?? statusRes?.totalProtein ?? 0,
-        total_carbohydrate: statusRes?.total_carbohydrate ?? statusRes?.totalCarbohydrate ?? 0,
-        total_fat: statusRes?.total_fat ?? statusRes?.totalFat ?? 0,
-        records: statusRes?.records || []
-      };
-      loadChecklistState();
-      await loadRecommendation();
-    } catch (error) {
-      console.log("获取日期营养状态失败:", error);
-      todayIntake.value = {
-        total_energy: 0,
-        total_protein: 0,
-        total_carbohydrate: 0,
-        total_fat: 0,
-        records: []
-      };
-      dailyRecommendation.value = null;
-      loadChecklistState();
+const 保存餐次时间配置 = () => {
+  localStorage.setItem(餐次时间本地键, JSON.stringify(餐次时间映射.value))
+}
+
+const 加载餐次个性化配置 = () => {
+  try {
+    const orderRaw = localStorage.getItem(餐次顺序本地键)
+    if (orderRaw) {
+      const parsedOrder = JSON.parse(orderRaw)
+      const validOrder = parsedOrder.filter((type) => 默认餐次顺序.includes(type))
+      const missing = 默认餐次顺序.filter((type) => !validOrder.includes(type))
+      餐次顺序.value = [...validOrder, ...missing]
     }
-  };
 
-// Routing overrides
-  const goToProfile = () => router.push("/profile/view");
-  const goToIntake = () => router.push("/intake");
-  const goToWeekly = () => router.push("/weekly-planner");
-
-  const handleDeleteMealItem = (id) => {
-    message.success("已删除该记录（演示使用）");
-    // In real app, call delete API and refresh
-  };// Calorie calcs
-const calorieTarget = computed(() => {
-  if (nutritionData.value && nutritionData.value.target_calorie) return Math.floor(nutritionData.value.target_calorie);
-  return Math.floor(authStore.profile?.tdee || 0);
-});
-
-const caloriesConsumed = computed(() => Math.floor(todayIntake.value?.total_energy || 0));
-
-const checkedCalories = computed(() => {
-  const records = todayIntake.value?.records || [];
-  const checkedFromRecords = records
-    .filter((record) => !!mealCompletionMap.value[record.ID])
-    .reduce((sum, record) => sum + (record.calculatedEnergy || 0), 0);
-
-  const recommendationTypes = ["breakfast", "lunch", "dinner", "snack"];
-  const checkedFromRecommendations = recommendationTypes.reduce((sum, type) => {
-    if (!recommendationCompleted.value?.[type]) return sum;
-    const recommendation = dailyRecommendation.value?.[type];
-    if (!recommendation) return sum;
-    const energy = Number(recommendation.energy ?? recommendation.calories ?? 0);
-    return sum + (Number.isFinite(energy) ? energy : 0);
-  }, 0);
-
-  return Math.floor(checkedFromRecords + checkedFromRecommendations);
-});
-
-const caloriePercentage = computed(() => {
-  if (!calorieTarget.value) return 0;
-  return Math.min(100, Math.max(0, (caloriesConsumed.value / calorieTarget.value) * 100));
-});
-
-const checkedCaloriePercentage = computed(() => {
-  if (allRecommendedChecked.value) return 100;
-  if (!calorieTarget.value) return 0;
-  return Math.min(100, Math.max(0, (checkedCalories.value / calorieTarget.value) * 100));
-});
-
-// Macro calcs
-const totalCarbs = computed(() => Math.floor(todayIntake.value?.total_carbohydrate || 0));
-const totalFat = computed(() => Math.floor(todayIntake.value?.total_fat || 0));
-const totalProtein = computed(() => Math.floor(todayIntake.value?.total_protein || 0));
-
-const targetCarbs = computed(() => Math.floor(nutritionData.value?.target_carbohydrate || 0));
-const targetFat = computed(() => Math.floor(nutritionData.value?.target_fat || 0));
-const targetProtein = computed(() => Math.floor(nutritionData.value?.target_protein || 0));
-
-const macroTotal = computed(() => totalCarbs.value + totalFat.value + totalProtein.value);
-
-const carbPercentage = computed(() => macroTotal.value ? Math.round((totalCarbs.value / macroTotal.value) * 100) : 0);
-const fatPercentage = computed(() => macroTotal.value ? Math.round((totalFat.value / macroTotal.value) * 100) : 0);
-const proteinPercentage = computed(() => macroTotal.value ? Math.round((totalProtein.value / macroTotal.value) * 100) : 0);
-
-const macroConicGradient = computed(() => {
-  if (macroTotal.value === 0) return 'background: conic-gradient(#e2e8f0 100%)';
-  const fatEnd = fatPercentage.value;
-  const proteinEnd = fatEnd + proteinPercentage.value;
-  return 'background: conic-gradient(#818cf8 0% ' + fatEnd + '%, #fb7185 ' + fatEnd + '% ' + proteinEnd + '%, #fbbf24 ' + proteinEnd + '% 100%)';
-});
-
-const buildMacroGradient = (fat, protein, carbs) => {
-  const total = fat + protein + carbs;
-  if (!total) return 'conic-gradient(#e2e8f0 100%)';
-  const fatEnd = Math.round((fat / total) * 100);
-  const proteinEnd = fatEnd + Math.round((protein / total) * 100);
-  return `conic-gradient(#818cf8 0% ${fatEnd}%, #fb7185 ${fatEnd}% ${proteinEnd}%, #fbbf24 ${proteinEnd}% 100%)`;
-};
-
-const parseMacroValue = (value) => {
-  const number = Number(value);
-  return Number.isFinite(number) ? number : 0;
-};
-
-const getRecommendationMacro = (mealType) => {
-  if (!recommendationCompleted.value?.[mealType]) {
-    return { fat: 0, protein: 0, carbs: 0 };
+    const nameRaw = localStorage.getItem(餐次名称本地键)
+    if (nameRaw) {
+      const parsedName = JSON.parse(nameRaw)
+      餐次名称映射.value = {
+        ...默认餐次名称,
+        ...parsedName
+      }
+    }
+  } catch (error) {
+    console.warn('读取餐次个性化配置失败', error)
   }
-  const recommendation = dailyRecommendation.value?.[mealType];
-  if (!recommendation) {
-    return { fat: 0, protein: 0, carbs: 0 };
+}
+
+const 保存餐次顺序配置 = () => {
+  localStorage.setItem(餐次顺序本地键, JSON.stringify(餐次顺序.value))
+}
+
+const 保存餐次名称配置 = () => {
+  localStorage.setItem(餐次名称本地键, JSON.stringify(餐次名称映射.value))
+}
+
+const 开始编辑时间 = (mealType) => {
+  编辑时间餐次.value = mealType
+}
+
+const 更新餐次时间 = (mealType, value) => {
+  if (!value) return
+  餐次时间映射.value = {
+    ...餐次时间映射.value,
+    [mealType]: value
   }
-  return {
-    fat: parseMacroValue(recommendation.fat ?? recommendation.total_fat),
-    protein: parseMacroValue(recommendation.protein ?? recommendation.total_protein),
-    carbs: parseMacroValue(recommendation.carbohydrate ?? recommendation.carbs ?? recommendation.total_carbohydrate)
-  };
-};
+}
 
-const getRecommendationCheckedEnergy = (mealType) => {
-  if (!recommendationCompleted.value?.[mealType]) {
-    return 0;
+const 结束编辑时间 = () => {
+  if (!编辑时间餐次.value) return
+  保存餐次时间配置()
+  编辑时间餐次.value = ''
+}
+
+const 开始编辑名称 = (mealType, currentName) => {
+  编辑名称餐次.value = mealType
+  编辑名称内容.value = currentName || 餐次名称映射.value[mealType] || ''
+}
+
+const 保存名称编辑 = (mealType) => {
+  const nextName = 编辑名称内容.value.trim()
+  if (!nextName) {
+    编辑名称餐次.value = ''
+    编辑名称内容.value = ''
+    return
   }
-  const recommendation = dailyRecommendation.value?.[mealType];
-  if (!recommendation) {
-    return 0;
+  餐次名称映射.value = {
+    ...餐次名称映射.value,
+    [mealType]: nextName
   }
-  return parseMacroValue(recommendation.energy ?? recommendation.calories);
-};
+  保存餐次名称配置()
+  编辑名称餐次.value = ''
+  编辑名称内容.value = ''
+}
 
-const mealTypes = ["breakfast", "lunch", "dinner", "snack"];
+const 开始拖拽餐次 = (mealType) => {
+  拖拽源餐次.value = mealType
+}
 
-const allRecommendedChecked = computed(() => {
-  const availableTypes = mealTypes.filter((type) => !!dailyRecommendation.value?.[type]?.id);
-  if (availableTypes.length === 0) return false;
-  return availableTypes.every((type) => !!recommendationCompleted.value?.[type]);
-});
+const 放置餐次 = (targetType) => {
+  const sourceType = 拖拽源餐次.value
+  if (!sourceType || sourceType === targetType) return
 
-const checkedNutritionTotals = computed(() => {
-  const records = todayIntake.value?.records || [];
-  const checkedRecords = records.filter((record) => !!mealCompletionMap.value[record.ID]);
+  const nextOrder = [...餐次顺序.value]
+  const sourceIndex = nextOrder.indexOf(sourceType)
+  const targetIndex = nextOrder.indexOf(targetType)
+  if (sourceIndex < 0 || targetIndex < 0) return
 
-  const fromRecords = checkedRecords.reduce(
-    (sum, record) => {
-      sum.calories += parseMacroValue(record.calculatedEnergy);
-      sum.carbs += parseMacroValue(record.calculatedCarb);
-      sum.fat += parseMacroValue(record.calculatedFat);
-      sum.protein += parseMacroValue(record.calculatedProtein);
-      return sum;
-    },
-    { calories: 0, carbs: 0, fat: 0, protein: 0 }
-  );
+  nextOrder.splice(sourceIndex, 1)
+  nextOrder.splice(targetIndex, 0, sourceType)
+  餐次顺序.value = nextOrder
+  保存餐次顺序配置()
+}
 
-  const fromRecommendations = mealTypes.reduce(
-    (sum, type) => {
-      if (!recommendationCompleted.value?.[type]) return sum;
-      const recommendation = dailyRecommendation.value?.[type];
-      if (!recommendation) return sum;
-      sum.calories += parseMacroValue(recommendation.energy ?? recommendation.calories);
-      sum.carbs += parseMacroValue(recommendation.carbohydrate ?? recommendation.carbs ?? recommendation.total_carbohydrate);
-      sum.fat += parseMacroValue(recommendation.fat ?? recommendation.total_fat);
-      sum.protein += parseMacroValue(recommendation.protein ?? recommendation.total_protein);
-      return sum;
-    },
-    { calories: 0, carbs: 0, fat: 0, protein: 0 }
-  );
+const 结束拖拽餐次 = () => {
+  拖拽源餐次.value = ''
+}
 
-  return {
-    calories: fromRecords.calories + fromRecommendations.calories,
-    carbs: fromRecords.carbs + fromRecommendations.carbs,
-    fat: fromRecords.fat + fromRecommendations.fat,
-    protein: fromRecords.protein + fromRecommendations.protein
-  };
-});
+const 日期标题 = computed(() => {
+  const now = new Date()
+  const isToday = now.toDateString() === 已选日期.value.toDateString()
+  const month = 已选日期.value.getMonth() + 1
+  const day = 已选日期.value.getDate()
+  return isToday ? `今天，${month}月${day}日` : `${month}月${day}日`
+})
 
-const overviewCalories = computed(() => {
-  const checkedValue = Math.floor(checkedNutritionTotals.value.calories);
-  if (checkedValue > 0) return checkedValue;
-  return Math.floor(todayIntake.value?.total_energy || 0);
-});
+const 是否今天 = computed(() => new Date().toDateString() === 已选日期.value.toDateString())
 
-const overviewCarbs = computed(() => {
-  const checkedValue = Math.floor(checkedNutritionTotals.value.carbs);
-  if (checkedValue > 0) return checkedValue;
-  return Math.floor(todayIntake.value?.total_carbohydrate || 0);
-});
+const 每日目标热量 = computed(() => Math.round(安全数值(每日状态.value.targetEnergy)))
+const 已摄入热量 = computed(() => Math.round(安全数值(每日状态.value.totalEnergy)))
+const 剩余热量 = computed(() => Math.max(0, 每日目标热量.value - 已摄入热量.value).toLocaleString('zh-CN'))
 
-const overviewFat = computed(() => {
-  const checkedValue = Math.floor(checkedNutritionTotals.value.fat);
-  if (checkedValue > 0) return checkedValue;
-  return Math.floor(todayIntake.value?.total_fat || 0);
-});
+const 时间线餐次 = computed(() => {
+  const 配置映射 = Object.fromEntries(餐次配置.map((item) => [item.type, item]))
+  return 餐次顺序.value.map((type) => {
+    const 基础配置 = 配置映射[type]
+    if (!基础配置) return null
 
-const overviewProtein = computed(() => {
-  const checkedValue = Math.floor(checkedNutritionTotals.value.protein);
-  if (checkedValue > 0) return checkedValue;
-  return Math.floor(todayIntake.value?.total_protein || 0);
-});
-
-const recommendationChartTotals = computed(() => {
-  return mealTypes.reduce(
-    (sum, type) => {
-      const recommendation = dailyRecommendation.value?.[type];
-      if (!recommendation) return sum;
-      sum.carbs += parseMacroValue(recommendation.carbohydrate ?? recommendation.carbs ?? recommendation.total_carbohydrate);
-      sum.protein += parseMacroValue(recommendation.protein ?? recommendation.total_protein);
-      sum.fat += parseMacroValue(recommendation.fat ?? recommendation.total_fat);
-      return sum;
-    },
-    { carbs: 0, protein: 0, fat: 0 }
-  );
-});
-
-const recommendationChartCarbs = computed(() => Math.floor(recommendationChartTotals.value.carbs));
-const recommendationChartProtein = computed(() => Math.floor(recommendationChartTotals.value.protein));
-const recommendationChartFat = computed(() => Math.floor(recommendationChartTotals.value.fat));
-
-// Meals List formatting
-const generateMealBlock = (label, type, code) => {
-    const records = todayIntake.value?.records || [];
-    const typeRecords = records.filter(r => r.mealType === type || r.mealType === code || r.mealType === label.toLowerCase());
-    const checkedRecords = typeRecords.filter((record) => !!mealCompletionMap.value[record.ID]);
-    const recommendationMacro = getRecommendationMacro(type);
-
-    const calories = typeRecords.reduce((sum, r) => sum + (r.calculatedEnergy || 0), 0);
-    const fat = typeRecords.reduce((sum, r) => sum + (r.calculatedFat || 0), 0);
-    const protein = typeRecords.reduce((sum, r) => sum + (r.calculatedProtein || 0), 0);
-    const carbs = typeRecords.reduce((sum, r) => sum + (r.calculatedCarb || 0), 0);
-    const checkedCalories = checkedRecords.reduce((sum, r) => sum + (r.calculatedEnergy || 0), 0) + getRecommendationCheckedEnergy(type);
-    const checkedFat = checkedRecords.reduce((sum, r) => sum + (r.calculatedFat || 0), 0) + recommendationMacro.fat;
-    const checkedProtein = checkedRecords.reduce((sum, r) => sum + (r.calculatedProtein || 0), 0) + recommendationMacro.protein;
-    const checkedCarbs = checkedRecords.reduce((sum, r) => sum + (r.calculatedCarb || 0), 0) + recommendationMacro.carbs;
-
+    const config = {
+      ...基础配置,
+      name: 餐次名称映射.value[type] || 基础配置.name
+    }
+    const records = 获取餐次记录(config.type)
+    const consumed = Math.round(records.reduce((sum, item) => sum + 安全数值(item.calculatedEnergy || item.calculated_energy), 0))
+    const target = Math.max(1, Math.round(每日目标热量.value * config.ratio))
+    const progress = Math.min(100, Math.round((consumed / target) * 100))
     return {
-      name: label,
-      type: type,
-      calories: Math.floor(calories),
-      fat: Math.floor(fat),
-      protein: Math.floor(protein),
-      carbs: Math.floor(carbs),
-      checkedCalories: Math.floor(checkedCalories),
-      checkedFat: Math.floor(checkedFat),
-      checkedProtein: Math.floor(checkedProtein),
-      checkedCarbs: Math.floor(checkedCarbs),
-      macroGradient: buildMacroGradient(checkedFat, checkedProtein, checkedCarbs),
-      items: typeRecords.map(r => ({
-        id: r.ID,
-        foodName: r.foodName,
-        intakeAmount: r.intakeAmount,
-        image: r.imageUrl || null,
-        completed: !!mealCompletionMap.value[r.ID]
-      }))
-    };
-  };const mealsList = computed(() => {
+      ...config,
+      time: 餐次时间映射.value[config.type] || config.time,
+      records,
+      consumed,
+      target,
+      kcal: consumed > 0 ? `${consumed} / ${target} 千卡` : '',
+      progress,
+      variant: consumed > 0 ? (config.type === 'lunch' ? 'logged' : 'filled') : 'empty'
+    }
+  }).filter(Boolean)
+})
+
+const 宏量卡片 = computed(() => {
+  const totalCarbs = Math.round(安全数值(每日状态.value.totalCarbohydrate))
+  const totalProtein = Math.round(安全数值(每日状态.value.totalProtein))
+  const totalFat = Math.round(安全数值(每日状态.value.totalFat))
+
+  const targetCarbs = Math.round(安全数值(每日状态.value.targetCarbohydrate))
+  const targetProtein = Math.round(安全数值(每日状态.value.targetProtein))
+  const targetFat = Math.round(安全数值(每日状态.value.targetFat))
+
   return [
-    generateMealBlock('早餐', 'breakfast', 1),
-    generateMealBlock('午餐', 'lunch', 2),
-    generateMealBlock('晚餐', 'dinner', 3),
-    generateMealBlock('加餐', 'snack', 4)
-  ];
-});
+    { label: '碳水', value: `${totalCarbs}g`, target: `${targetCarbs}g`, icon: '🌾', soft: 'rgba(255, 186, 108, 0.22)' },
+    { label: '蛋白质', value: `${totalProtein}g`, target: `${targetProtein}g`, icon: '💧', soft: 'rgba(116, 163, 255, 0.2)' },
+    { label: '脂肪', value: `${totalFat}g`, target: `${targetFat}g`, icon: '🟡', soft: 'rgba(255, 215, 83, 0.22)' }
+  ]
+})
 
-// ECharts logic
-import * as echarts from 'echarts';
-import { watch, onUnmounted, nextTick } from 'vue';
+const 当前详情餐次 = computed(() => {
+  const current = 时间线餐次.value.find((item) => item.type === 详情餐次类型.value)
+  if (current) return current
+  return 时间线餐次.value.find((item) => item.records.length > 0) || 时间线餐次.value[1] || 时间线餐次.value[0]
+})
 
-const macroChartRef = ref(null);
-let donutChart = null;
+const 当前详情标题 = computed(() => `${当前详情餐次.value?.name || '餐次'}详情`)
 
-const initChart = () => {
-  if (macroChartRef.value) {
-    if (!donutChart) {
-      donutChart = echarts.init(macroChartRef.value);
-    }
-    const option = {
-      tooltip: {
-        trigger: 'item'
-      },
-      series: [
-        {
-          name: '营养素',
-          type: 'pie',
-          radius: ['0%', '78%'],
-          avoidLabelOverlap: false,
-          itemStyle: {
-            borderRadius: 10,
-            borderColor: '#fff',
-            borderWidth: 2
-          },
-          label: {
-            show: true,
-            position: 'inside',
-            formatter: '{b}\n{d}%',
-            color: '#ffffff',
-            fontWeight: 700,
-            fontSize: 12
-          },
-          labelLine: {
-            show: false
-          },
-          data: recommendationChartCarbs.value === 0 && recommendationChartProtein.value === 0 && recommendationChartFat.value === 0
-            ? [{ value: 1, name: '暂无数据', itemStyle: { color: '#f1f5f9' } }]
-            : [
-              { value: recommendationChartCarbs.value, name: '碳水', itemStyle: { color: '#fbbf24' } },
-              { value: recommendationChartProtein.value, name: '蛋白', itemStyle: { color: '#fb7185' } },
-              { value: recommendationChartFat.value, name: '脂肪', itemStyle: { color: '#818cf8' } }
-            ]
-        }
-      ]
-    };
-    donutChart.setOption(option);
+const 当前详情时间 = computed(() => {
+  const record = 当前详情餐次.value?.records?.[0]
+  return 格式化时间(record?.createdAt || record?.CreatedAt)
+})
+
+const 详情营养条 = computed(() => {
+  const records = 当前详情餐次.value?.records || []
+  const ratio = 当前详情餐次.value?.ratio || 0.25
+  const protein = records.reduce((sum, item) => sum + 安全数值(item.calculatedProtein || item.calculated_protein), 0)
+  const carbs = records.reduce((sum, item) => sum + 安全数值(item.calculatedCarb || item.calculated_carb), 0)
+  const fat = records.reduce((sum, item) => sum + 安全数值(item.calculatedFat || item.calculated_fat), 0)
+
+  const targetProtein = Math.max(1, 安全数值(每日状态.value.targetProtein) * ratio)
+  const targetCarbs = Math.max(1, 安全数值(每日状态.value.targetCarbohydrate) * ratio)
+  const targetFat = Math.max(1, 安全数值(每日状态.value.targetFat) * ratio)
+
+  return [
+    { label: '蛋白质', value: `${Math.round(protein)}g`, progress: Math.min(100, Math.round((protein / targetProtein) * 100)), color: '#4e8fff' },
+    { label: '碳水', value: `${Math.round(carbs)}g`, progress: Math.min(100, Math.round((carbs / targetCarbs) * 100)), color: '#ff8d2f' },
+    { label: '脂肪', value: `${Math.round(fat)}g`, progress: Math.min(100, Math.round((fat / targetFat) * 100)), color: '#f5c84b' }
+  ]
+})
+
+const 当前详情食物 = computed(() => {
+  const meal = 当前详情餐次.value
+  const fallback = { emoji: meal?.emoji || '🍽️', bg: meal?.bg || 'linear-gradient(135deg, #7aa694, #4f7a69)' }
+  return (meal?.records || []).map((item, index) => ({
+    id: item.id || item.ID || `${meal.type}-${index}`,
+    name: item.foodName || item.food_name || '未知食物',
+    portion: `${Math.round(安全数值(item.intakeAmount || item.intake_amount))}g`,
+    kcal: `${Math.round(安全数值(item.calculatedEnergy || item.calculated_energy))} 千卡`,
+    emoji: fallback.emoji,
+    bg: fallback.bg
+  }))
+})
+
+const ringStyle = computed(() => {
+  const goal = Math.max(1, 每日目标热量.value)
+  const progress = Math.min(100, Math.round((已摄入热量.value / goal) * 100))
+  return {
+    background: `conic-gradient(#2f7c63 0 ${progress}%, #dbe8e1 ${progress}% 100%)`
   }
-};
+})
 
-watch([recommendationChartCarbs, recommendationChartProtein, recommendationChartFat], () => {
-  nextTick(() => {
-    initChart();
-  });
-}, { deep: true });
-
-onMounted(() => {
-  nextTick(() => {
-    initChart();
-  });
-  
-  // Resize chart on window resize
-  window.addEventListener('resize', () => {
-    if (donutChart) {
-      donutChart.resize();
+const 同步看板数据 = async () => {
+  加载中.value = true
+  try {
+    if (authStore.isAuthenticated && !authStore.profile) {
+      await authStore.loadProfile()
     }
-  });
-});
 
-onUnmounted(() => {
-  if (donutChart) {
-    window.removeEventListener('resize', () => donutChart.resize());
-    donutChart.dispose();
+    const [status, nutrition] = await Promise.all([
+      getTodayStatus(转日期参数(已选日期.value)),
+      getNutritionRequirements().catch(() => null)
+    ])
+
+    每日状态.value = {
+      records: status?.records || [],
+      totalEnergy: 安全数值(status?.total_energy ?? status?.totalEnergy),
+      totalProtein: 安全数值(status?.total_protein ?? status?.totalProtein),
+      totalCarbohydrate: 安全数值(status?.total_carbohydrate ?? status?.totalCarbohydrate),
+      totalFat: 安全数值(status?.total_fat ?? status?.totalFat),
+      targetEnergy: 安全数值(status?.target_energy ?? status?.targetEnergy ?? nutrition?.target_calorie ?? nutrition?.targetCalorie) || 2500,
+      targetProtein: 安全数值(status?.target_protein ?? status?.targetProtein ?? nutrition?.target_protein ?? nutrition?.targetProtein) || 150,
+      targetCarbohydrate: 安全数值(status?.target_carbohydrate ?? status?.targetCarbohydrate ?? nutrition?.target_carbohydrate ?? nutrition?.targetCarbohydrate) || 220,
+      targetFat: 安全数值(status?.target_fat ?? status?.targetFat ?? nutrition?.target_fat ?? nutrition?.targetFat) || 60
+    }
+
+    const hasCurrent = 时间线餐次.value.some((item) => item.type === 详情餐次类型.value)
+    if (!hasCurrent) {
+      详情餐次类型.value = 'breakfast'
+    }
+  } catch (error) {
+    console.error('加载首页看板数据失败', error)
+    每日状态.value = {
+      ...每日状态.value,
+      records: []
+    }
+  } finally {
+    加载中.value = false
   }
-});
+}
+
+const 上一天 = async () => {
+  已选日期.value = new Date(已选日期.value.getFullYear(), 已选日期.value.getMonth(), 已选日期.value.getDate() - 1)
+  await 同步看板数据()
+}
+
+const 下一天 = async () => {
+  if (是否今天.value) return
+  已选日期.value = new Date(已选日期.value.getFullYear(), 已选日期.value.getMonth(), 已选日期.value.getDate() + 1)
+  await 同步看板数据()
+}
+
+const 切换详情餐次 = (mealType) => {
+  详情餐次类型.value = mealType
+}
+
+const 去记录餐次 = () => {
+  router.push('/intake')
+}
+
+onMounted(async () => {
+  加载餐次时间配置()
+  加载餐次个性化配置()
+  await 同步看板数据()
+})
 </script>
 
 <style scoped>
-/* Modern Theme Base */
-.etm-container {
+:global(body) {
+  font-family: 'Inter', 'Segoe UI', Roboto, Arial, sans-serif;
+}
+
+.nutrition-dashboard {
   min-height: 100vh;
-  background-color: #f8fafc; /* slate-50 */
-  color: #1e293b; /* slate-800 */
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  padding: 16px;
+  background:
+    radial-gradient(circle at 90% 8%, rgba(231, 244, 238, 0.9), transparent 30%),
+    radial-gradient(circle at 12% 70%, rgba(206, 231, 220, 0.7), transparent 32%),
+    #edf4f0;
+  color: #16382f;
 }
 
-.etm-wrapper {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 1rem 2rem;
+.glass-card {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(248, 253, 250, 0.92));
+  border: 1px solid rgba(22, 56, 47, 0.08);
+  border-radius: 22px;
+  box-shadow: 0 12px 30px rgba(18, 64, 50, 0.09);
 }
 
-.etm-layout {
-  display: grid;
-  grid-template-columns: 250px minmax(0, 1fr);
-  gap: 1.5rem;
-  align-items: start;
-}
-
-.etm-main {
-  min-width: 0;
-}
-
-.etm-sidebar {
-  position: sticky;
-  top: 1rem;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 1rem;
-  padding: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.sidebar-profile {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid #f1f5f9;
-}
-
-.sidebar-avatar {
-  width: 42px;
-  height: 42px;
-  border-radius: 999px;
-  background: #10b981;
-  color: #ffffff;
-  font-weight: 700;
+.top-header {
+  height: 72px;
+  padding: 0 20px;
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-bottom: 14px;
 }
 
-.sidebar-user {
-  min-width: 0;
-}
-
-.sidebar-name {
-  font-weight: 700;
-  color: #1e293b;
-  line-height: 1.1;
-}
-
-.sidebar-sub {
-  color: #94a3b8;
-  font-size: 0.78rem;
-  margin-top: 0.2rem;
-}
-
-.sidebar-menu {
-  display: flex;
-  flex-direction: column;
-  gap: 0.45rem;
-}
-
-.sidebar-item,
-.sidebar-logout {
-  border: none;
-  background: transparent;
-  color: #334155;
-  border-radius: 0.65rem;
-  padding: 0.55rem 0.7rem;
+.brand-wrap {
   width: 100%;
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-  text-align: left;
-  transition: all 0.2s;
-  font-size: 0.92rem;
+  justify-content: center;
 }
 
-.sidebar-item:hover,
-.sidebar-logout:hover {
-  background: #f8fafc;
-}
-
-.sidebar-item.active {
-  background: #ecfdf5;
-  color: #047857;
-  font-weight: 600;
-}
-
-.sidebar-logout {
-  margin-top: auto;
-  color: #b45309;
-}
-
-/* Toolbar */
-.etm-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 1.25rem;
-  padding: 1.5rem 0 1rem;
-  border-bottom: 1px solid #e2e8f0; /* slate-200 */
-}
-
-.toolbar-left {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.toggle-group {
-  display: flex;
-  background: #f1f5f9; /* slate-100 */
-  border-radius: 6px;
-  overflow: hidden;
-}
-
-.toggle-btn {
-  background: none;
-  border: none;
-  color: #64748b; /* slate-500 */
-  padding: 0.4rem 1rem;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.toggle-btn.active {
-  background: #10b981; /* emerald-500 */
-  color: #fff;
-}
-
-.date-nav {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #1e293b;
-}
-
-.nav-icon {
-  cursor: pointer;
-  color: #64748b;
-  transition: color 0.2s;
-}
-
-.nav-icon:hover {
-  color: #10b981;
-}
-
-.date-text {
-  min-width: 80px;
+.brand {
+  margin: 0;
+  font-size: 1.7rem;
+  letter-spacing: -0.02em;
+  color: #1b5f4b;
   text-align: center;
 }
 
-.toolbar-actions .action-icon {
-  font-size: 1.2rem;
-  color: #64748b;
-  cursor: pointer;
-}
-
-/* Content Layout */
-.etm-content {
-  display: grid;
-  grid-template-columns: 1fr 380px;
-  gap: 2rem;
-  padding: 1.5rem 0;
-}
-
-/* Left: Meals */
-.meals-header {
+.global-nav {
   display: flex;
-  align-items: center;
-  margin-bottom: 1rem;
+  gap: 30px;
 }
 
-.daily-calorie-progress {
-  margin: -0.2rem 0 1rem;
-}
-
-.daily-calorie-track {
-  width: 100%;
-  height: 5px;
-  border-radius: 999px;
-  background: #e2e8f0;
-  overflow: hidden;
-}
-
-.daily-calorie-fill {
-  height: 100%;
-  border-radius: 999px;
-  background: linear-gradient(90deg, #fb923c, #f97316);
-  transition: width 0.3s ease;
-}
-
-.daily-calorie-text {
-  margin-top: 0.4rem;
-  font-size: 0.84rem;
-  color: #64748b;
+.nav-link {
+  text-decoration: none;
+  color: #4f7f71;
   font-weight: 600;
-}
-
-.section-title {
-  font-size: 1.4rem;
-  font-weight: 600;
-  color: #1e293b;
-  margin-right: 1.5rem;
-  margin-bottom: 0;
-}
-
-.meals-calories {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: #64748b;
-  font-size: 0.9rem;
-}
-
-.pie-icon-placeholder {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: conic-gradient(#10b981 75%, #e2e8f0 75%);
-}
-
-.pie-icon-placeholder.small {
-  width: 12px;
-  height: 12px;
-}
-
-.meals-actions {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.recommend-btn {
-  border: 1px solid #a7f3d0;
-  background: #ecfdf5;
-  color: #047857;
-  border-radius: 999px;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.78rem;
-  font-weight: 600;
-  padding: 0.3rem 0.65rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.recommend-btn:hover {
-  background: #d1fae5;
-  border-color: #6ee7b7;
-  transform: translateY(-1px);
-}
-
-.recommend-btn.pressed {
-  transform: scale(0.96);
-  background: #bbf7d0;
-}
-
-.recommend-btn.loading,
-.recommend-btn:disabled {
-  cursor: not-allowed;
-  opacity: 0.85;
-}
-
-.recommend-icon {
-  font-size: 0.95rem;
-}
-
-.action-icon {
-  color: #64748b;
-  font-size: 1.1rem;
-  cursor: pointer;
-}
-
-.action-trigger {
-  border-radius: 8px;
-  padding: 4px;
-  transition: all 0.2s ease;
-}
-
-.action-trigger:hover {
-  background: #f1f5f9;
-}
-
-.action-icon:hover {
-  color: #1e293b;
-}
-
-.meal-block {
-  background: #ffffff;
-  border-radius: 1rem; /* rounded-2xl */
-  margin-bottom: 1.5rem;
-  overflow: hidden;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* shadow-sm */
-  border: 1px solid #f1f5f9;
-}
-
-.meal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem 1.25rem;
-  border-bottom: 1px solid #f1f5f9;
-}
-
-.meal-title-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-}
-
-.meal-title-group h3 {
-  margin: 0;
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #1e293b;
-}
-
-.meal-calories {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.85rem;
-  color: #64748b;
-}
-
-.meal-macro-pie {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  border: 1px solid #e2e8f0;
-  flex-shrink: 0;
-}
-
-.meal-checked-calories {
-  color: #64748b;
-  font-size: 0.85rem;
-  font-weight: 600;
-}
-
-.meal-items {
-  padding: 0.5rem;
-}
-
-.meal-card {
-  display: flex;
-  align-items: center;
-  padding: 0.75rem;
-  gap: 1rem;
-  border-radius: 0.75rem;
-  transition: background 0.2s;
-}
-
-.meal-card:hover {
-  background: #f8fafc;
-}
-
-.meal-checkbox {
-  width: 18px;
-  height: 18px;
-  border: 2px solid #cbd5e1;
-  border-radius: 4px;
-}
-
-.meal-img {
-  width: 60px;
-  height: 60px;
-  border-radius: 8px;
-  overflow: hidden;
-  background: #f1f5f9;
-  flex-shrink: 0;
-}
-
-.meal-img img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.img-placeholder {
-  width: 100%;
-  height: 100%;
-  background: #e2e8f0;
-}
-
-.meal-details {
-  flex-grow: 1;
-}
-
-.meal-name {
-  color: #1e293b;
-  font-weight: 500;
-  margin-bottom: 0.4rem;
-  cursor: pointer;
-  transition: color 0.2s;
-}
-
-.meal-name:hover {
-  color: #10b981;
-}
-
-.meal-serving {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.serving-value {
-  background: #f1f5f9;
-  color: #1e293b;
-  padding: 0.2rem 0.6rem;
-  border-radius: 4px;
-  font-size: 0.85rem;
-  border: 1px solid #e2e8f0;
-}
-
-.serving-unit {
-  font-size: 0.85rem;
-  color: #64748b;
-  display: flex;
-  align-items: center;
-  gap: 0.2rem;
-  cursor: pointer;
-}
-
-.empty-meal {
-  padding: 1rem;
-}
-
-.add-food-btn {
-  background: none;
-  border: 1px dashed #a7f3d0; /* emerald-200 */
-  color: #059669; /* emerald-600 */
-  width: 100%;
-  padding: 0.75rem;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: colors 0.2s;
-}
-
-.add-food-btn:hover {
-  background: #ecfdf5; /* emerald-50 */
-}
-
-/* Right: Nutrition */
-.nutrition-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-}
-
-.nutrition-actions {
-  display: flex;
-  background: #f1f5f9;
-  border-radius: 6px;
-  padding: 2px;
-}
-
-.icon-btn {
-  background: none;
-  border: none;
-  color: #64748b;
-  padding: 0.4rem 0.6rem;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.icon-btn.active {
-  background: #ffffff;
-  color: #10b981;
-  border-radius: 6px;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-}
-
-.nutrition-card {
-  background: #ffffff;
-  border-radius: 1rem; /* rounded-2xl */
-  padding: 1.5rem;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* shadow-sm */
-  border: 1px solid #f1f5f9;
-}
-
-/* Chart */
-.chart-container {
-  display: flex;
-  justify-content: center;
-  margin: 2rem 0;
   position: relative;
 }
 
-/* Stats Table */
-.stats-table {
-  font-size: 0.9rem;
+.nav-link.active,
+.nav-link:hover {
+  color: #1e6f57;
 }
 
-.stats-header {
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
-  color: #64748b;
-  margin-bottom: 0.5rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid #e2e8f0;
+.nav-link.active::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -10px;
+  height: 2px;
+  border-radius: 999px;
+  background: #2f7c63;
 }
 
-.stats-header.compact {
-  grid-template-columns: 2fr 1fr;
-}
-
-.col-center { text-align: right; margin-right: 1.5rem; }
-.col-right { text-align: right; }
-
-.stats-row {
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
-  padding: 0.4rem 0;
+.top-actions {
+  display: flex;
   align-items: center;
-  color: #1e293b;
+  gap: 10px;
 }
 
-.stats-row.compact-row {
-  grid-template-columns: 2fr 1fr;
-  padding: 0.5rem 0;
-}
-
-.stats-row.highlight {
+.loading-tip {
+  margin: 0 0 10px;
+  color: #5d8778;
+  font-size: 0.86rem;
   font-weight: 600;
+}
+
+.icon-circle {
+  width: 38px;
+  height: 38px;
+  border: 1px solid rgba(30, 111, 87, 0.18);
+  border-radius: 50%;
+  background: #f6fcf9;
+  color: #245f4d;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.icon-circle:hover {
+  transform: translateY(-1px);
+  background: #eaf4ef;
+}
+
+.icon-circle:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.icon-circle.soft {
+  width: 34px;
+  height: 34px;
+  background: #edf5f1;
+}
+
+.icon-circle.xsmall {
+  width: 30px;
+  height: 30px;
+}
+
+.profile-pill {
+  height: 42px;
+  border-radius: 999px;
+  background: #f2faf6;
+  border: 1px solid rgba(30, 111, 87, 0.16);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 6px 4px 14px;
+}
+
+.profile-meta {
+  line-height: 1.05;
+}
+
+.profile-name {
+  margin: 0;
+  font-size: 0.84rem;
+  color: #214f42;
+  font-weight: 700;
+}
+
+.profile-tier {
+  margin: 2px 0 0;
+  font-size: 0.7rem;
+  color: #709486;
+}
+
+.avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #1b6b53, #2f7c63);
+  color: white;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: minmax(460px, 0.92fr) minmax(420px, 1fr);
+  gap: 18px;
+}
+
+.sidebar {
+  min-height: calc(100vh - 118px);
+  padding: 18px 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.org-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.org-logo {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #2f7c63;
+  color: white;
+}
+
+.org-title {
+  margin: 0;
+  font-weight: 700;
+  color: #1f5445;
+}
+
+.org-subtitle {
+  margin: 2px 0 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.64rem;
+  color: #6d9385;
+}
+
+.menu-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.menu-item {
+  border: none;
+  border-radius: 14px;
+  background: transparent;
+  color: #467264;
+  height: 45px;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.96rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+}
+
+.menu-item:hover {
+  background: #e9f3ee;
+}
+
+.menu-item.active {
+  color: #225944;
+  background: #ffffff;
+  box-shadow: inset 0 0 0 1px rgba(37, 101, 80, 0.18), 0 6px 14px rgba(34, 88, 69, 0.08);
+}
+
+.record-btn {
+  margin-top: auto;
+  border: none;
+  height: 48px;
+  border-radius: 999px;
+  background: linear-gradient(140deg, #2f7c63, #3a9a78);
+  color: white;
+  font-weight: 700;
   font-size: 0.95rem;
-  margin-bottom: 0.5rem;
-}
-
-.stats-row.disabled {
-  color: #94a3b8;
-}
-
-.stats-item {
-  margin-bottom: 0.5rem;
-}
-
-.stats-item .stats-row {
-  padding-bottom: 0.1rem;
-}
-
-.mini-progress-container {
-  padding-right: 1.5rem; /* match col-right */
-  padding-left: 0.2rem;
-  margin-bottom: 0.2rem;
-}
-
-/* Colors for specific text since Tailwind might not build correctly if dynamically injected */
-.text-amber-500 { color: #f59e0b; }
-.text-indigo-400 { color: #818cf8; }
-.text-rose-500 { color: #f43f5e; }
-.text-gray-400 { color: #9ca3af; }
-.font-medium { font-weight: 500; }
-
-.stats-divider {
-  height: 1px;
-  background: #e2e8f0;
-  margin: 0.5rem 0;
-}
-
-.edit-icon {
-  font-size: 0.9rem;
-  vertical-align: middle;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   cursor: pointer;
-  color: #64748b;
+  box-shadow: 0 10px 24px rgba(43, 117, 91, 0.3);
 }
 
-.edit-icon:hover {
-  color: #10b981;
+.center-panel {
+  background: rgba(250, 254, 252, 0.56);
+  border: 1px solid rgba(29, 90, 71, 0.08);
+  border-radius: 24px;
+  padding: 20px;
 }
 
-.detailed-btn {
-  width: 100%;
-  margin-top: 1.5rem;
-  padding: 0.6rem;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  color: #64748b;
+.section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.kicker {
+  margin: 0;
+  font-size: 0.88rem;
+  color: #6f9587;
+  font-weight: 600;
+}
+
+.headline {
+  margin: 4px 0 0;
+  font-size: 1.45rem;
+  color: #214f42;
+}
+
+.date-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.timeline {
+  padding-left: 18px;
+  border-left: 2px solid rgba(52, 125, 99, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.timeline-row {
+  display: grid;
+  grid-template-columns: 92px 1fr;
+  gap: 10px;
+  position: relative;
+  cursor: grab;
+}
+
+.timeline-row:active {
+  cursor: grabbing;
+}
+
+.time-col {
+  padding-top: 10px;
+  position: relative;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #2f7c63;
+  position: absolute;
+  left: -24px;
+  top: 13px;
+  border: 2px solid #e8f3ee;
+}
+
+.time {
+  font-size: 0.78rem;
+  color: #709486;
+  font-weight: 600;
+}
+
+.timeline-content {
+  padding: 14px;
+  max-width: 720px;
+}
+
+.time-editor {
+  min-height: 24px;
+  display: flex;
+  align-items: center;
+}
+
+.time-display-btn {
+  border: none;
+  background: transparent;
+  color: #709486;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0;
+  cursor: pointer;
+}
+
+.time-input {
+  width: 92px;
+  border: 1px solid rgba(47, 124, 99, 0.25);
   border-radius: 8px;
+  background: #f4faf6;
+  color: #3f6f60;
+  padding: 3px 6px;
+  font-size: 0.78rem;
+}
+
+.meal-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 12px;
+}
+
+.meal-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.meal-head h3 {
+  margin: 0;
+  font-size: 1.26rem;
+  color: #204c3f;
+}
+
+.meal-name-input {
+  width: 150px;
+  border: 1px solid rgba(47, 124, 99, 0.28);
+  border-radius: 8px;
+  background: #f4faf6;
+  color: #2c6251;
+  padding: 5px 8px;
+  font-size: 0.96rem;
+  font-weight: 700;
+}
+
+.rename-btn {
+  border: none;
+  border-radius: 999px;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: rgba(47, 124, 99, 0.12);
+  color: #2a6a56;
+  display: grid;
+  place-items: center;
   cursor: pointer;
-  transition: all 0.2s;
-  font-weight: 500;
 }
 
-.detailed-btn:hover {
-  background: #10b981;
-  color: #fff;
-  border-color: #10b981;
+.rename-btn:hover {
+  background: rgba(47, 124, 99, 0.2);
 }
 
-.funny-character {
-  text-align: right;
-  margin-top: 2rem;
-  opacity: 0.8;
-}
-.avocado-emoji {
-  font-size: 4rem;
-  display: inline-block;
-  animation: float 3s ease-in-out infinite;
+.kcal {
+  margin: 0;
+  color: #5f8678;
+  font-weight: 700;
+  font-size: 0.92rem;
 }
 
-@keyframes float {
-  0% { transform: translateY(0px) rotate(0deg); }
-  50% { transform: translateY(-10px) rotate(5deg); }
-  100% { transform: translateY(0px) rotate(0deg); }
+.meal-inline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
-@media (max-width: 900px) {
-  .etm-layout { grid-template-columns: 1fr; }
-  .etm-sidebar { position: static; }
-  .etm-content { grid-template-columns: 1fr; }
-  .chart-container { margin: 1rem 0; }
+.mini-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #e4f2eb;
+  display: grid;
+  place-items: center;
+}
+
+.bar-track {
+  flex: 1;
+  height: 10px;
+  border-radius: 999px;
+  background: #deebe4;
+  overflow: hidden;
+}
+
+.bar-track.strong {
+  background: rgba(222, 235, 228, 0.35);
+}
+
+.bar-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #2f7c63, #52ad8b);
+}
+
+.logged-card {
+  border-radius: 24px;
+  background: linear-gradient(145deg, #21684f, #2f7c63);
+  color: white;
+  padding: 16px;
+}
+
+.status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.status-badge {
+  font-size: 0.78rem;
+  opacity: 0.92;
+}
+
+.status-kcal {
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.detail-btn {
+  margin-top: 12px;
+  margin-left: auto;
+  display: block;
+  border: none;
+  border-radius: 999px;
+  height: 34px;
+  min-width: 118px;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.detail-btn.detail-unified {
+  min-width: 126px;
+}
+
+.ghost-record {
+  width: 100%;
+  height: 54px;
+  border-radius: 999px;
+  border: 1.5px dashed rgba(53, 113, 91, 0.34);
+  background: rgba(255, 255, 255, 0.55);
+  color: #547f70;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.meal-actions {
+  display: grid;
+  gap: 10px;
+}
+
+.detail-btn.empty {
+  margin-top: 0;
+  min-width: 100%;
+  height: 42px;
+  background: rgba(66, 120, 99, 0.12);
+  color: #2d6553;
+}
+
+.right-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 0;
+}
+
+.overview-card {
+  padding: 16px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  position: relative;
+}
+
+.floating-red {
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: white;
+  background: linear-gradient(145deg, #f14652, #e12f3c);
+  box-shadow: 0 8px 16px rgba(241, 70, 82, 0.35);
+}
+
+.floating-red.top-right {
+  right: 14px;
+  top: -10px;
+}
+
+.floating-red.lower-right {
+  right: 16px;
+  bottom: -12px;
+}
+
+.ring-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.calorie-ring {
+  width: 190px;
+  height: 190px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+}
+
+.ring-center {
+  width: 142px;
+  height: 142px;
+  border-radius: 50%;
+  background: #f6fbf8;
+  display: grid;
+  place-items: center;
+  text-align: center;
+}
+
+.ring-center h3 {
+  margin: 0;
+  font-size: 2rem;
+  color: #1f5a46;
+}
+
+.ring-center p {
+  margin: 2px 0 0;
+  font-size: 0.8rem;
+  color: #668f80;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.goal-text {
+  margin: 8px 0 0;
+  font-size: 0.95rem;
+  color: #5a8375;
+  font-weight: 600;
+}
+
+.macro-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  justify-content: center;
+}
+
+.macro-card {
+  border-radius: 18px;
+  background: #f8fcfa;
+  border: 1px solid rgba(35, 89, 71, 0.08);
+  padding: 10px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.macro-left {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.macro-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+}
+
+.macro-label {
+  margin: 0;
+  color: #245946;
+  font-weight: 700;
+}
+
+.macro-target {
+  margin: 2px 0 0;
+  color: #6d9384;
+  font-size: 0.77rem;
+}
+
+.macro-value {
+  margin: 0;
+  color: #1f5947;
+  font-weight: 800;
+  font-size: 1.16rem;
+}
+
+.details-card {
+  padding: 16px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 520px;
+}
+
+.details-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.details-head h3 {
+  margin: 0;
+  color: #235747;
+  font-size: 1.62rem;
+}
+
+.details-head p {
+  margin: 0;
+  color: #6b9283;
+  font-size: 0.86rem;
+}
+
+.micro-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.micro-top {
+  display: flex;
+  justify-content: space-between;
+  color: #507c6d;
+  font-size: 0.82rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.micro-track {
+  height: 5px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #dde8e2;
+}
+
+.micro-fill {
+  height: 100%;
+}
+
+.food-table {
+  border-radius: 16px;
+  background: #f8fcfa;
+  border: 1px solid rgba(30, 86, 68, 0.08);
+  padding: 10px 12px;
+  flex: 1;
+}
+
+.table-head,
+.food-row {
+  display: grid;
+  grid-template-columns: 1.6fr 0.7fr 0.7fr;
+  align-items: center;
+}
+
+.table-head {
+  color: #709384;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 6px;
+  font-weight: 700;
+}
+
+.food-row {
+  height: 54px;
+  border-top: 1px solid rgba(28, 84, 67, 0.08);
+  font-size: 0.95rem;
+  color: #295c4c;
+}
+
+.food-empty {
+  color: #7d9f92;
+}
+
+.food-name {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-weight: 600;
+}
+
+.thumb {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  color: #f4fffb;
+}
+
+.strong-text {
+  font-weight: 800;
+}
+
+.add-more {
+  margin-top: 12px;
+  border-radius: 999px;
+  height: 48px;
+  border: 1px solid rgba(40, 97, 78, 0.18);
+  background: #eef6f1;
+  display: flex;
+  align-items: center;
+  padding: 6px;
+}
+
+.add-more input {
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 0 12px;
+  color: #2c6251;
+  flex: 1;
+}
+
+.add-more input::placeholder {
+  color: #7b9e90;
+}
+
+.plus-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: none;
+  background: #2f7c63;
+  color: white;
+  font-size: 1.3rem;
+  cursor: pointer;
+}
+
+@media (max-width: 1360px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .right-panel {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 980px) {
+  .global-nav {
+    display: none;
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    min-height: auto;
+  }
+
+  .overview-card {
+    grid-template-columns: 1fr;
+  }
+
+  .timeline-row {
+    grid-template-columns: 72px 1fr;
+  }
 }
 </style>
