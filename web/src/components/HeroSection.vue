@@ -5,7 +5,9 @@
       <div class="hero__nav-right">
         <n-dropdown v-if="authStore.isAuthenticated" :options="userOptions" @select="handleSelect">
           <div class="user-avatar-container">
-            <n-avatar round :size="36" src="https://ui-avatars.com/api/?name=User&background=random" />
+            <n-avatar round :size="36" :src="userAvatarSrc">
+              {{ userInitial }}
+            </n-avatar>
             <span class="username">{{ authStore.user?.username || '用户' }}</span>
           </div>
         </n-dropdown>
@@ -77,7 +79,7 @@
 </template>
 
 <script setup>
-import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { NDropdown, NAvatar } from 'naive-ui'
 import { useAuthStore } from '@/store/auth'
@@ -86,6 +88,16 @@ const router = useRouter()
 const authStore = useAuthStore()
 const isDemoVisible = ref(false)
 const demoVideoRef = ref(null)
+
+const userDisplayName = computed(() => authStore.user?.username || '用户')
+const userInitial = computed(() => userDisplayName.value.slice(0, 1).toUpperCase())
+const userAvatarSrc = computed(() => {
+  const avatarFromProfile = authStore.profile?.avatar_url || authStore.profile?.avatarUrl || authStore.user?.avatar_url || authStore.user?.avatarUrl
+  if (avatarFromProfile) {
+    return avatarFromProfile
+  }
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(userDisplayName.value)}&background=10b981&color=ffffff`
+})
 
 const userOptions = [
   { label: '进入控制台', key: 'dashboard' },

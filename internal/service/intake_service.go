@@ -165,6 +165,9 @@ func (s *intakeServiceImpl) GetTodayNutritionStatus(userID uint, date time.Time)
 func (s *intakeServiceImpl) GetWeeklyReport(userID uint, startDate, endDate time.Time) (*WeeklyReport, error) {
 	startDate = time.Date(startDate.Year(), startDate.Month(), startDate.Day(), 0, 0, 0, 0, startDate.Location())
 	endDate = time.Date(endDate.Year(), endDate.Month(), endDate.Day(), 0, 0, 0, 0, endDate.Location())
+	if endDate.Before(startDate) {
+		return nil, errors.New("end_date 不能早于 start_date")
+	}
 
 	// 获取用户信息和目标营养
 	user, err := s.userRepo.GetUserByID(userID)
@@ -192,9 +195,8 @@ func (s *intakeServiceImpl) GetWeeklyReport(userID uint, startDate, endDate time
 		summaryMap[dateKey] = &summaries[i]
 	}
 
-	// 遍历7天，填充数据
-	for i := 0; i < 7; i++ {
-		currentDate := startDate.AddDate(0, 0, i)
+	// 按请求区间逐天填充数据
+	for currentDate := startDate; !currentDate.After(endDate); currentDate = currentDate.AddDate(0, 0, 1) {
 		dateKey := currentDate.Format("2006-01-02")
 
 		data := DailyNutritionData{

@@ -343,7 +343,7 @@
 
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import { 
   NButton, NIcon, NGrid, NGi, NCard, NProgress, NTimeline, NTimelineItem, 
   NTag, NEmpty, NSpin, NModal, NForm, NFormItem, NInput, NInputNumber, 
@@ -357,6 +357,7 @@ import { getTodayStatus, getWeeklyReport, addIntakeRecord, deleteIntakeRecord } 
 import { recognizeFood, analyzeFoodText } from '@/api/foodRecognitionApi';
 
 const router = useRouter();
+const route = useRoute();
 const authStore = useAuthStore();
 const message = useMessage();
 
@@ -394,6 +395,27 @@ const mealOptions = [
   { label: '🍎 加餐', value: 'snack' }
 ];
 
+const openAddFoodFromRoute = async () => {
+  if (route.query?.action !== 'add-food') return;
+
+  const requestedMealType = String(route.query?.mealType || '').trim().toLowerCase();
+  const mealType = ['breakfast', 'lunch', 'dinner', 'snack'].includes(requestedMealType)
+    ? requestedMealType
+    : 'breakfast';
+  recordForm.value = {
+    meal_type: mealType,
+    food_name: '',
+    intake_amount: 100,
+    calculated_energy: 0,
+    calculated_protein: 0,
+    calculated_carb: 0,
+    calculated_fat: 0
+  };
+  showAddModal.value = true;
+
+  await router.replace({ path: '/intake' });
+};
+
 // Computed
 const sortedRecords = computed(() => {
   if (!nutritionStatus.value.records) return [];
@@ -410,7 +432,7 @@ const energyPercentage = computed(() => {
 const energyColor = computed(() => {
   const p = energyPercentage.value;
   if (p > 100) return '#ef4444'; // Red if exceeded
-  return '#10b981'; // Green normally
+  return '#0d9488'; // Teal normally
 });
 
 const weekRangeText = computed(() => {
@@ -463,6 +485,7 @@ onMounted(() => {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
   });
   loadData();
+  openAddFoodFromRoute();
 });
 
 // Methods
@@ -796,13 +819,13 @@ const formatTime = (isoString) => {
 }
 
 .camera-btn {
-  box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.3), 0 4px 6px -2px rgba(16, 185, 129, 0.1);
+  box-shadow: 0 10px 15px -3px rgba(13, 148, 136, 0.3), 0 4px 6px -2px rgba(13, 148, 136, 0.1);
   transition: transform 0.2s;
 }
 
 .camera-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 20px 25px -5px rgba(16, 185, 129, 0.4), 0 10px 10px -5px rgba(16, 185, 129, 0.1);
+  box-shadow: 0 20px 25px -5px rgba(13, 148, 136, 0.4), 0 10px 10px -5px rgba(13, 148, 136, 0.1);
 }
 
 /* Timeline Card */
@@ -905,7 +928,7 @@ const formatTime = (isoString) => {
 
 .ai-loading-content {
   text-align: center;
-  color: #10b981;
+  color: #0d9488;
   font-weight: 600;
 }
 
@@ -958,8 +981,8 @@ const formatTime = (isoString) => {
 }
 
 .day-column.is-today {
-  border-color: #f97316;
-  box-shadow: inset 0 0 0 1px rgba(249, 115, 22, 0.35);
+  border-color: #0d9488;
+  box-shadow: inset 0 0 0 1px rgba(13, 148, 136, 0.4);
 }
 
 .day-header {
@@ -975,16 +998,16 @@ const formatTime = (isoString) => {
   margin-top: 2px;
   font-size: 28px;
   font-weight: 700;
-  color: #60a5fa;
+  color: #2dd4bf;
 }
 
 .day-column.is-today .day-week-label {
-  color: #fb923c;
+  color: #14b8a6;
 }
 
 .day-kcal {
   margin-top: 4px;
-  color: #a7f3d0;
+  color: #5eead4;
   font-size: 13px;
 }
 
@@ -1042,7 +1065,7 @@ const formatTime = (isoString) => {
 }
 
 .meal-item-name {
-  color: #60a5fa;
+  color: #2dd4bf;
   font-weight: 600;
   font-size: 15px;
   margin-bottom: 6px;
