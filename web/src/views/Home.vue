@@ -4,32 +4,29 @@
       <div class="brand-wrap">
         <h1 class="brand">基于用户健康数据与营养模型的饮食推荐系统</h1>
       </div>
-
-      <div class="top-actions">
-      </div>
     </header>
 
     <main class="dashboard-grid">
       <section class="center-panel">
-        <div class="section-head">
-          <div>
-            <p class="kicker">营养记录</p>
-            <h2 class="headline">{{ 日期标题 }}</h2>
-          </div>
-          <div class="date-controls">
-            <button class="icon-circle soft" aria-label="上一天" @click="上一天"><n-icon><ChevronBackOutline /></n-icon></button>
-            <button class="icon-circle soft" aria-label="下一天" :disabled="是否今天" @click="下一天"><n-icon><ChevronForwardOutline /></n-icon></button>
-          </div>
-        </div>
-
         <p v-if="加载中" class="loading-tip">正在同步饮食数据...</p>
+
+        <div class="record-ops glass-card">
+          <div class="ops-left">
+            <button class="icon-circle soft" aria-label="上一天记录" @click="上一天"><n-icon><ChevronBackOutline /></n-icon></button>
+            <button class="icon-circle soft" aria-label="下一天记录" :disabled="是否今天" @click="下一天"><n-icon><ChevronForwardOutline /></n-icon></button>
+            <p class="ops-date">{{ 日期标题 }}</p>
+          </div>
+          <label class="calendar-picker">
+            <n-icon><CalendarOutline /></n-icon>
+            <input type="date" :value="日期输入值" :max="今日日期输入值" @change="选择日期" />
+          </label>
+        </div>
 
         <div class="timeline">
           <article
             v-for="meal in 时间线餐次"
             :key="meal.type"
             class="timeline-row"
-            :class="meal.variant"
             draggable="true"
             @dragstart="开始拖拽餐次(meal.type)"
             @dragover.prevent
@@ -52,7 +49,7 @@
               </div>
             </div>
 
-            <div class="timeline-content glass-card">
+            <div class="timeline-content glass-card meal-card" :class="`meal-${meal.type}`">
               <div class="meal-head">
                 <div class="meal-title-wrap">
                   <input
@@ -66,49 +63,46 @@
                   <h3 v-else>{{ meal.name }}</h3>
                   <button
                     v-if="编辑名称餐次 !== meal.type"
-                    class="rename-btn"
+                    class="rename-link"
                     aria-label="编辑餐次名称"
-                    title="编辑餐次名称"
+                    title="改名"
                     @click.stop="开始编辑名称(meal.type, meal.name)"
                   >
-                    <n-icon><CreateOutline /></n-icon>
+                    改名
                   </button>
                 </div>
-                <p v-if="meal.kcal" class="kcal">{{ meal.kcal }}</p>
+                <p class="kcal">{{ meal.kcal || '--' }}</p>
               </div>
 
-              <template v-if="meal.variant === 'filled'">
-                <div class="meal-inline">
-                  <div class="mini-icon">{{ meal.icon }}</div>
-                  <div class="bar-track">
-                    <div class="bar-fill" :style="{ width: meal.progress + '%' }" />
-                  </div>
-                  <button class="icon-circle xsmall" aria-label="编辑">
-                    <n-icon><CreateOutline /></n-icon>
-                  </button>
-                </div>
-                <button class="detail-btn detail-unified" @click.stop="切换详情餐次(meal.type)">查看详情</button>
-              </template>
+              <div class="meal-hero">
+                <div class="hero-badge">{{ meal.icon }}</div>
+                <div class="hero-illustration">{{ meal.hero }}</div>
+              </div>
 
-              <template v-else-if="meal.variant === 'logged'">
-                <div class="logged-card">
-                  <div class="status-row">
-                    <span class="status-badge">状态：已记录</span>
-                    <span class="status-kcal">{{ meal.kcal }}</span>
-                  </div>
-                  <div class="bar-track strong">
-                    <div class="bar-fill" :style="{ width: meal.progress + '%' }" />
-                  </div>
-                  <button class="detail-btn detail-unified" @click.stop="切换详情餐次(meal.type)">查看详情</button>
-                </div>
-              </template>
+              <div v-if="meal.type === 'snack'" class="snack-group">
+                <article v-for="snack in snackCards" :key="snack.label" class="snack-mini-card">
+                  <span class="mini-emoji">{{ snack.emoji }}</span>
+                  <span class="mini-label">{{ snack.label }}</span>
+                  <button class="mini-plus" aria-label="添加">+</button>
+                </article>
+              </div>
+              <div v-else class="food-hints">
+                <span v-for="hint in meal.hints" :key="hint" class="food-chip">{{ hint }}</span>
+              </div>
 
-              <template v-else>
-                <div class="meal-actions">
-                  <button class="ghost-record" @click="去记录餐次">+ 记录餐次</button>
-                  <button class="detail-btn empty detail-unified" @click.stop="切换详情餐次(meal.type)">查看详情</button>
-                </div>
-              </template>
+              <div class="bar-track">
+                <div class="bar-fill" :style="{ width: meal.progress + '%' }" />
+              </div>
+
+              <div class="meal-actions">
+                <button class="record-btn-main" @click="去记录餐次">
+                  <n-icon><AddCircleOutline /></n-icon>
+                  <span>{{ meal.type === 'snack' ? '记录餐次' : '记录今日餐次' }}</span>
+                </button>
+                <button class="detail-link" @click.stop="切换详情餐次(meal.type)">查看详情</button>
+              </div>
+
+              <div v-if="meal.variant === 'logged'" class="footer-tip">状态：已记录</div>
             </div>
           </article>
         </div>
@@ -142,11 +136,12 @@
         </div>
 
         <div class="details-card glass-card">
-          <span class="floating-red lower-right"><n-icon><HeartOutline /></n-icon></span>
           <div class="details-head">
             <h3>{{ 当前详情标题 }}</h3>
             <p>{{ 当前详情时间 }}</p>
           </div>
+
+          <p v-if="!当前详情食物.length" class="sample-note">今日暂无记录，以下为示例食谱</p>
 
           <div class="micro-grid">
             <div v-for="line in 详情营养条" :key="line.label" class="micro-item">
@@ -167,16 +162,11 @@
               <span>热量</span>
             </div>
 
-            <div v-if="!当前详情食物.length" class="food-row food-empty">
-              <div class="food-name">暂无记录</div>
-              <span>-</span>
-              <span class="strong-text">-</span>
-            </div>
-
-            <div v-for="food in 当前详情食物" :key="food.id" class="food-row">
+            <div v-for="food in 展示详情食物" :key="food.id" class="food-row">
               <div class="food-name">
                 <span class="thumb" :style="{ background: food.bg }">{{ food.emoji }}</span>
                 <span>{{ food.name }}</span>
+                <span v-if="food.sample" class="sample-tag">示例</span>
               </div>
               <span>{{ food.portion }}</span>
               <span class="strong-text">{{ food.kcal }}</span>
@@ -190,7 +180,6 @@
         </div>
       </section>
     </main>
-
   </div>
 </template>
 
@@ -199,10 +188,10 @@ import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { NIcon } from 'naive-ui'
 import {
+  AddCircleOutline,
+  CalendarOutline,
   ChevronBackOutline,
   ChevronForwardOutline,
-  CreateOutline,
-  HeartOutline,
   SparklesOutline
 } from '@vicons/ionicons5'
 import { getTodayStatus } from '@/api/intakeApi'
@@ -243,11 +232,17 @@ const 默认餐次时间 = {
 const 餐次时间映射 = ref({ ...默认餐次时间 })
 
 const 餐次配置 = [
-  { type: 'breakfast', name: '早餐', time: '08:15', icon: '🥣', ratio: 0.16, emoji: '🍳', bg: 'linear-gradient(135deg, #78b7ff, #4d84d7)' },
-  { type: 'lunch', name: '午餐', time: '12:30', icon: '🥗', ratio: 0.32, emoji: '🥗', bg: 'linear-gradient(135deg, #8cc7a5, #5e9b77)' },
-  { type: 'snack', name: '下午加餐', time: '16:00', icon: '🍎', ratio: 0.2, emoji: '🍎', bg: 'linear-gradient(135deg, #f7ba80, #e08d4f)' },
-  { type: 'dinner', name: '晚餐', time: '19:30', icon: '🍽️', ratio: 0.32, emoji: '🍽️', bg: 'linear-gradient(135deg, #afcf78, #7ca451)' }
+  { type: 'breakfast', name: '早餐', time: '08:15', icon: '🍳', hero: '🍳🍞', hints: ['🍓', '🥣', '🥛'], ratio: 0.16, emoji: '🍳', bg: 'linear-gradient(135deg, #ffdb96, #ffb56f)' },
+  { type: 'lunch', name: '午餐', time: '12:30', icon: '🥗', hero: '🥗🍽️', hints: ['🥦', '🍗', '🍚'], ratio: 0.32, emoji: '🥗', bg: 'linear-gradient(135deg, #bdeecb, #88dbc8)' },
+  { type: 'snack', name: '下午加餐', time: '16:00', icon: '🫐', hero: '🥜🍎', hints: ['🥜', '🍓', '🍵'], ratio: 0.2, emoji: '🍎', bg: 'linear-gradient(135deg, #ffe7c8, #ffd6ad)' },
+  { type: 'dinner', name: '晚餐', time: '19:30', icon: '🥩', hero: '🥩🍷', hints: ['🥔', '🥬', '🍷'], ratio: 0.32, emoji: '🍽️', bg: 'linear-gradient(135deg, #d9ecff, #bcdcff)' }
 ]
+const snackCards = [
+  { label: '坚果/种子', emoji: '🥜' },
+  { label: '水果', emoji: '🍓' },
+  { label: '茶点', emoji: '🍵' }
+]
+
 const 默认餐次顺序 = 餐次配置.map((item) => item.type)
 const 默认餐次名称 = Object.fromEntries(餐次配置.map((item) => [item.type, item.name]))
 const 餐次顺序 = ref([...默认餐次顺序])
@@ -291,10 +286,7 @@ const 加载餐次时间配置 = () => {
     const raw = localStorage.getItem(餐次时间本地键)
     if (!raw) return
     const parsed = JSON.parse(raw)
-    餐次时间映射.value = {
-      ...默认餐次时间,
-      ...parsed
-    }
+    餐次时间映射.value = { ...默认餐次时间, ...parsed }
   } catch (error) {
     console.warn('读取餐次时间配置失败', error)
   }
@@ -317,10 +309,7 @@ const 加载餐次个性化配置 = () => {
     const nameRaw = localStorage.getItem(餐次名称本地键)
     if (nameRaw) {
       const parsedName = JSON.parse(nameRaw)
-      餐次名称映射.value = {
-        ...默认餐次名称,
-        ...parsedName
-      }
+      餐次名称映射.value = { ...默认餐次名称, ...parsedName }
     }
   } catch (error) {
     console.warn('读取餐次个性化配置失败', error)
@@ -397,12 +386,30 @@ const 结束拖拽餐次 = () => {
   拖拽源餐次.value = ''
 }
 
+const 从日期字符串创建日期 = (value) => {
+  if (!value) return null
+  const [year, month, day] = value.split('-').map((item) => Number(item))
+  if (!year || !month || !day) return null
+  const date = new Date(year, month - 1, day)
+  return Number.isNaN(date.getTime()) ? null : date
+}
+
+const 今日日期输入值 = computed(() => 转日期参数(new Date()))
+const 日期输入值 = computed(() => 转日期参数(已选日期.value))
+
+const 选择日期 = async (event) => {
+  const nextDate = 从日期字符串创建日期(event?.target?.value)
+  if (!nextDate) return
+  已选日期.value = nextDate
+  await 同步看板数据()
+}
+
 const 日期标题 = computed(() => {
   const now = new Date()
   const isToday = now.toDateString() === 已选日期.value.toDateString()
   const month = 已选日期.value.getMonth() + 1
   const day = 已选日期.value.getDate()
-  return isToday ? `今天，${month}月${day}日` : `${month}月${day}日`
+  return isToday ? `今天, ${month}月${day}日` : `${month}月${day}日`
 })
 
 const 是否今天 = computed(() => new Date().toDateString() === 已选日期.value.toDateString())
@@ -494,8 +501,46 @@ const 当前详情食物 = computed(() => {
     portion: `${Math.round(安全数值(item.intakeAmount || item.intake_amount))}g`,
     kcal: `${Math.round(安全数值(item.calculatedEnergy || item.calculated_energy))} 千卡`,
     emoji: fallback.emoji,
-    bg: fallback.bg
+    bg: fallback.bg,
+    sample: false
   }))
+})
+
+const 示例食谱映射 = {
+  breakfast: [
+    { name: '牛油果全麦吐司', portion: '130g', kcal: '285 千卡', emoji: '🥑' },
+    { name: '蓝莓酸奶碗', portion: '180g', kcal: '210 千卡', emoji: '🫐' }
+  ],
+  lunch: [
+    { name: '鸡胸肉藜麦沙拉', portion: '260g', kcal: '420 千卡', emoji: '🥗' },
+    { name: '南瓜浓汤', portion: '220g', kcal: '165 千卡', emoji: '🎃' }
+  ],
+  snack: [
+    { name: '混合坚果', portion: '35g', kcal: '195 千卡', emoji: '🥜' },
+    { name: '苹果切片', portion: '120g', kcal: '62 千卡', emoji: '🍎' }
+  ],
+  dinner: [
+    { name: '香煎三文鱼配芦笋', portion: '240g', kcal: '468 千卡', emoji: '🐟' },
+    { name: '黑椒菌菇意面', portion: '210g', kcal: '338 千卡', emoji: '🍝' }
+  ]
+}
+
+const 示例详情食物 = computed(() => {
+  const meal = 当前详情餐次.value
+  const list = 示例食谱映射[meal?.type] || []
+  return list.map((item, index) => ({
+    id: `sample-${meal?.type || 'meal'}-${index}`,
+    name: item.name,
+    portion: item.portion,
+    kcal: item.kcal,
+    emoji: item.emoji,
+    bg: meal?.bg || 'linear-gradient(135deg, #7aa694, #4f7a69)',
+    sample: true
+  }))
+})
+
+const 展示详情食物 = computed(() => {
+  return 当前详情食物.value.length ? 当前详情食物.value : 示例详情食物.value
 })
 
 const ringStyle = computed(() => {
@@ -579,100 +624,117 @@ onMounted(async () => {
 .nutrition-dashboard {
   min-height: 100vh;
   padding: 16px;
+  position: relative;
+  overflow: hidden;
   background:
-    radial-gradient(circle at 90% 8%, rgba(231, 244, 238, 0.9), transparent 30%),
-    radial-gradient(circle at 12% 70%, rgba(206, 231, 220, 0.7), transparent 32%),
-    #edf4f0;
+    radial-gradient(circle at 88% 10%, rgba(242, 252, 247, 0.95), transparent 34%),
+    radial-gradient(circle at 10% 74%, rgba(226, 242, 234, 0.9), transparent 35%),
+    #edf6f2;
   color: #16382f;
 }
 
+.nutrition-dashboard::before,
+.nutrition-dashboard::after {
+  content: '';
+  position: absolute;
+  width: 360px;
+  height: 360px;
+  border-radius: 46% 54% 63% 37% / 43% 38% 62% 57%;
+  pointer-events: none;
+  z-index: 0;
+  filter: blur(2px);
+}
+
+.nutrition-dashboard::before {
+  right: -120px;
+  top: 180px;
+  background: radial-gradient(circle at 35% 35%, rgba(123, 214, 184, 0.22), rgba(93, 161, 138, 0));
+}
+
+.nutrition-dashboard::after {
+  left: -160px;
+  bottom: 40px;
+  background: radial-gradient(circle at 50% 50%, rgba(158, 213, 191, 0.2), rgba(118, 184, 159, 0));
+}
+
 .glass-card {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(248, 253, 250, 0.92));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(248, 253, 250, 0.96));
   border: 1px solid rgba(22, 56, 47, 0.08);
-  border-radius: 22px;
-  box-shadow: 0 12px 30px rgba(18, 64, 50, 0.09);
+  border-radius: 0;
+  box-shadow: 0 16px 34px rgba(18, 64, 50, 0.1);
+}
+
+.top-header,
+.center-panel,
+.timeline-content,
+.overview-card,
+.details-card,
+.food-table {
+  border-radius: 0;
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
 }
 
 .top-header {
-  height: 72px;
-  padding: 0 20px;
+  min-height: 96px;
+  padding: 16px 20px;
   display: flex;
   align-items: center;
   justify-content: center;
   margin-bottom: 14px;
+  position: relative;
+  z-index: 2;
 }
 
 .brand-wrap {
   width: 100%;
   display: flex;
+  flex-direction: column;
   justify-content: center;
+  align-items: center;
+  gap: 6px;
 }
 
 .brand {
   margin: 0;
-  font-size: 1.7rem;
-  letter-spacing: -0.02em;
-  color: #1b5f4b;
-  text-align: center;
+  font-size: 2rem;
+  letter-spacing: 0.03em;
+  color: #184c3d;
+  font-weight: 800;
 }
 
-.global-nav {
-  display: flex;
-  gap: 30px;
-}
-
-.nav-link {
-  text-decoration: none;
-  color: #4f7f71;
+.brand-date {
+  margin: 0;
+  font-size: 1rem;
+  color: #5f8578;
   font-weight: 600;
-  position: relative;
-}
-
-.nav-link.active,
-.nav-link:hover {
-  color: #1e6f57;
-}
-
-.nav-link.active::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -10px;
-  height: 2px;
-  border-radius: 999px;
-  background: #2f7c63;
 }
 
 .top-actions {
   display: flex;
   align-items: center;
   gap: 10px;
-}
-
-.loading-tip {
-  margin: 0 0 10px;
-  color: #5d8778;
-  font-size: 0.86rem;
-  font-weight: 600;
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 .icon-circle {
-  width: 38px;
-  height: 38px;
-  border: 1px solid rgba(30, 111, 87, 0.18);
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(43, 116, 92, 0.16);
   border-radius: 50%;
-  background: #f6fcf9;
+  background: linear-gradient(145deg, #ffffff, #ebf7f1);
   color: #245f4d;
   display: grid;
   place-items: center;
   cursor: pointer;
-  transition: 0.2s ease;
+  transition: 0.24s ease;
+  box-shadow: 0 8px 18px rgba(44, 113, 90, 0.16);
 }
 
 .icon-circle:hover {
   transform: translateY(-1px);
-  background: #eaf4ef;
 }
 
 .icon-circle:disabled {
@@ -681,197 +743,101 @@ onMounted(async () => {
   transform: none;
 }
 
-.icon-circle.soft {
-  width: 34px;
-  height: 34px;
-  background: #edf5f1;
-}
-
-.icon-circle.xsmall {
-  width: 30px;
-  height: 30px;
-}
-
-.profile-pill {
-  height: 42px;
-  border-radius: 999px;
-  background: #f2faf6;
-  border: 1px solid rgba(30, 111, 87, 0.16);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 4px 6px 4px 14px;
-}
-
-.profile-meta {
-  line-height: 1.05;
-}
-
-.profile-name {
-  margin: 0;
-  font-size: 0.84rem;
-  color: #214f42;
-  font-weight: 700;
-}
-
-.profile-tier {
-  margin: 2px 0 0;
-  font-size: 0.7rem;
-  color: #709486;
-}
-
-.avatar {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  background: linear-gradient(145deg, #1b6b53, #2f7c63);
-  color: white;
-  display: grid;
-  place-items: center;
-  font-weight: 700;
-  text-transform: uppercase;
-}
-
 .dashboard-grid {
   display: grid;
-  grid-template-columns: minmax(460px, 0.92fr) minmax(420px, 1fr);
-  gap: 18px;
-}
-
-.sidebar {
-  min-height: calc(100vh - 118px);
-  padding: 18px 16px;
-  display: flex;
-  flex-direction: column;
-}
-
-.org-card {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 14px;
-}
-
-.org-logo {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  background: #2f7c63;
-  color: white;
-}
-
-.org-title {
-  margin: 0;
-  font-weight: 700;
-  color: #1f5445;
-}
-
-.org-subtitle {
-  margin: 2px 0 0;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-size: 0.64rem;
-  color: #6d9385;
-}
-
-.menu-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-top: 8px;
-}
-
-.menu-item {
-  border: none;
-  border-radius: 14px;
-  background: transparent;
-  color: #467264;
-  height: 45px;
-  padding: 0 12px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 0.96rem;
-  font-weight: 600;
-  cursor: pointer;
-  text-align: left;
-}
-
-.menu-item:hover {
-  background: #e9f3ee;
-}
-
-.menu-item.active {
-  color: #225944;
-  background: #ffffff;
-  box-shadow: inset 0 0 0 1px rgba(37, 101, 80, 0.18), 0 6px 14px rgba(34, 88, 69, 0.08);
-}
-
-.record-btn {
-  margin-top: auto;
-  border: none;
-  height: 48px;
-  border-radius: 999px;
-  background: linear-gradient(140deg, #2f7c63, #3a9a78);
-  color: white;
-  font-weight: 700;
-  font-size: 0.95rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  cursor: pointer;
-  box-shadow: 0 10px 24px rgba(43, 117, 91, 0.3);
+  grid-template-columns: minmax(540px, 1.1fr) minmax(360px, 0.9fr);
+  align-items: start;
+  gap: 24px;
+  position: relative;
+  z-index: 1;
 }
 
 .center-panel {
-  background: rgba(250, 254, 252, 0.56);
-  border: 1px solid rgba(29, 90, 71, 0.08);
-  border-radius: 24px;
-  padding: 20px;
+  background: linear-gradient(165deg, rgba(248, 253, 250, 0.64), rgba(242, 250, 246, 0.3));
+  border: 1px solid rgba(29, 90, 71, 0.07);
+  border-radius: 0;
+  padding: 18px 16px 22px;
+  backdrop-filter: blur(2px);
 }
 
-.section-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 14px;
-}
-
-.kicker {
-  margin: 0;
-  font-size: 0.88rem;
-  color: #6f9587;
+.loading-tip {
+  margin: 0 0 12px;
+  color: #5d8778;
+  font-size: 0.86rem;
   font-weight: 600;
 }
 
-.headline {
-  margin: 4px 0 0;
-  font-size: 1.45rem;
-  color: #214f42;
+.record-ops {
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  border: 1px solid rgba(33, 97, 77, 0.12);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
 }
 
-.date-controls {
+.ops-left {
   display: flex;
+  align-items: center;
   gap: 8px;
 }
 
+.ops-date {
+  margin: 0 0 0 6px;
+  font-size: 0.9rem;
+  color: #3a6e5d;
+  font-weight: 700;
+}
+
+.calendar-picker {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #2a6552;
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.calendar-picker input {
+  border: 1px solid rgba(45, 112, 90, 0.2);
+  background: #f5fbf8;
+  color: #2f6554;
+  height: 34px;
+  padding: 0 8px;
+}
+
 .timeline {
-  padding-left: 18px;
-  border-left: 2px solid rgba(52, 125, 99, 0.2);
+  padding-left: 22px;
+  border-left: 2px solid rgba(76, 151, 124, 0.42);
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
+  position: relative;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: -2px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(180deg, rgba(255, 190, 94, 0.88), rgba(96, 201, 170, 0.9), rgba(84, 174, 143, 0.9));
+  filter: drop-shadow(0 0 8px rgba(86, 175, 145, 0.5));
 }
 
 .timeline-row {
   display: grid;
-  grid-template-columns: 92px 1fr;
-  gap: 10px;
+  grid-template-columns: 98px minmax(280px, 1fr);
+  gap: 12px;
   position: relative;
   cursor: grab;
+  transition: transform 0.28s ease;
+}
+
+.timeline-row:hover {
+  transform: translateX(4px) scale(1.01);
 }
 
 .timeline-row:active {
@@ -884,25 +850,15 @@ onMounted(async () => {
 }
 
 .dot {
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
   background: #2f7c63;
   position: absolute;
-  left: -24px;
+  left: -25px;
   top: 13px;
   border: 2px solid #e8f3ee;
-}
-
-.time {
-  font-size: 0.78rem;
-  color: #709486;
-  font-weight: 600;
-}
-
-.timeline-content {
-  padding: 14px;
-  max-width: 720px;
+  box-shadow: 0 0 0 4px rgba(110, 192, 166, 0.22), 0 0 10px rgba(86, 166, 139, 0.42);
 }
 
 .time-editor {
@@ -914,9 +870,9 @@ onMounted(async () => {
 .time-display-btn {
   border: none;
   background: transparent;
-  color: #709486;
-  font-size: 0.78rem;
-  font-weight: 600;
+  color: #5f8a7b;
+  font-size: 0.84rem;
+  font-weight: 700;
   padding: 0;
   cursor: pointer;
 }
@@ -931,11 +887,54 @@ onMounted(async () => {
   font-size: 0.78rem;
 }
 
+.timeline-content {
+  padding: 16px;
+  border-radius: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.meal-card::before {
+  content: '';
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  right: -26px;
+  top: -34px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 40%, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0));
+}
+
+.meal-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  pointer-events: none;
+}
+
+.meal-breakfast {
+  background: linear-gradient(145deg, rgba(255, 243, 201, 0.95), rgba(255, 214, 153, 0.96));
+}
+
+.meal-lunch {
+  background: linear-gradient(145deg, rgba(220, 247, 229, 0.95), rgba(183, 239, 231, 0.96));
+}
+
+.meal-snack {
+  background: linear-gradient(145deg, rgba(255, 232, 198, 0.95), rgba(255, 214, 171, 0.96));
+}
+
+.meal-dinner {
+  background: linear-gradient(145deg, rgba(218, 237, 255, 0.95), rgba(192, 221, 255, 0.96));
+}
+
 .meal-head {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .meal-title-wrap {
@@ -946,7 +945,7 @@ onMounted(async () => {
 
 .meal-head h3 {
   margin: 0;
-  font-size: 1.26rem;
+  font-size: 1.24rem;
   color: #204c3f;
 }
 
@@ -961,55 +960,109 @@ onMounted(async () => {
   font-weight: 700;
 }
 
-.rename-btn {
+.rename-link {
   border: none;
-  border-radius: 999px;
-  width: 28px;
-  height: 28px;
-  padding: 0;
-  background: rgba(47, 124, 99, 0.12);
-  color: #2a6a56;
-  display: grid;
-  place-items: center;
+  background: transparent;
+  color: #3d7d67;
+  font-size: 0.78rem;
+  font-weight: 700;
   cursor: pointer;
-}
-
-.rename-btn:hover {
-  background: rgba(47, 124, 99, 0.2);
+  padding: 0;
 }
 
 .kcal {
   margin: 0;
-  color: #5f8678;
+  color: #4d7c6d;
   font-weight: 700;
-  font-size: 0.92rem;
+  font-size: 0.86rem;
 }
 
-.meal-inline {
+.meal-hero {
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: space-between;
+  margin-bottom: 10px;
 }
 
-.mini-icon {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: #e4f2eb;
+.hero-badge {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.65);
   display: grid;
   place-items: center;
+  font-size: 1.1rem;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.7);
+}
+
+.hero-illustration {
+  font-size: 2.1rem;
+  filter: drop-shadow(0 4px 8px rgba(49, 74, 66, 0.2));
+}
+
+.food-hints {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.food-chip {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  display: grid;
+  place-items: center;
+  font-size: 1rem;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.72);
+}
+
+.snack-group {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.snack-mini-card {
+  border-radius: 0;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  min-height: 94px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.mini-emoji {
+  font-size: 1.2rem;
+}
+
+.mini-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #4b6f64;
+}
+
+.mini-plus {
+  border: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #2f8e6f, #4ab98d);
+  color: #fff;
+  font-weight: 800;
+  cursor: pointer;
 }
 
 .bar-track {
-  flex: 1;
   height: 10px;
   border-radius: 999px;
-  background: #deebe4;
+  background: rgba(236, 243, 239, 0.82);
   overflow: hidden;
-}
-
-.bar-track.strong {
-  background: rgba(222, 235, 228, 0.35);
+  margin-bottom: 12px;
 }
 
 .bar-fill {
@@ -1018,78 +1071,51 @@ onMounted(async () => {
   background: linear-gradient(90deg, #2f7c63, #52ad8b);
 }
 
-.logged-card {
-  border-radius: 24px;
-  background: linear-gradient(145deg, #21684f, #2f7c63);
-  color: white;
-  padding: 16px;
-}
-
-.status-row {
+.meal-actions {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 10px;
-}
-
-.status-badge {
-  font-size: 0.78rem;
-  opacity: 0.92;
-}
-
-.status-kcal {
-  font-size: 0.85rem;
-  font-weight: 700;
-}
-
-.detail-btn {
-  margin-top: 12px;
-  margin-left: auto;
-  display: block;
-  border: none;
-  border-radius: 999px;
-  height: 34px;
-  min-width: 118px;
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.detail-btn.detail-unified {
-  min-width: 126px;
-}
-
-.ghost-record {
-  width: 100%;
-  height: 54px;
-  border-radius: 999px;
-  border: 1.5px dashed rgba(53, 113, 91, 0.34);
-  background: rgba(255, 255, 255, 0.55);
-  color: #547f70;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.meal-actions {
-  display: grid;
   gap: 10px;
 }
 
-.detail-btn.empty {
-  margin-top: 0;
-  min-width: 100%;
-  height: 42px;
-  background: rgba(66, 120, 99, 0.12);
-  color: #2d6553;
+.record-btn-main {
+  border: none;
+  border-radius: 0;
+  min-height: 42px;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: white;
+  font-weight: 700;
+  background: linear-gradient(135deg, #2f8e6f, #30b487);
+  box-shadow: 0 8px 16px rgba(44, 132, 102, 0.28);
+  cursor: pointer;
+}
+
+.detail-link {
+  border: none;
+  background: transparent;
+  color: #2b6d59;
+  font-weight: 700;
+  font-size: 0.86rem;
+  cursor: pointer;
+}
+
+.footer-tip {
+  margin-top: 8px;
+  font-size: 0.76rem;
+  color: #346b58;
+  font-weight: 700;
+  text-align: right;
 }
 
 .right-panel {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 18px;
   min-height: 0;
+  margin-top: 8px;
 }
 
 .overview-card {
@@ -1158,7 +1184,6 @@ onMounted(async () => {
   font-size: 0.8rem;
   color: #668f80;
   font-weight: 700;
-  letter-spacing: 0.08em;
 }
 
 .goal-text {
@@ -1176,7 +1201,7 @@ onMounted(async () => {
 }
 
 .macro-card {
-  border-radius: 18px;
+  border-radius: 0;
   background: #f8fcfa;
   border: 1px solid rgba(35, 89, 71, 0.08);
   padding: 10px 12px;
@@ -1246,6 +1271,13 @@ onMounted(async () => {
   font-size: 0.86rem;
 }
 
+.sample-note {
+  margin: 0 0 10px;
+  color: #5f8779;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
 .micro-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -1274,7 +1306,7 @@ onMounted(async () => {
 }
 
 .food-table {
-  border-radius: 16px;
+  border-radius: 0;
   background: #f8fcfa;
   border: 1px solid rgba(30, 86, 68, 0.08);
   padding: 10px 12px;
@@ -1315,6 +1347,14 @@ onMounted(async () => {
   font-weight: 600;
 }
 
+.sample-tag {
+  font-size: 0.68rem;
+  padding: 2px 6px;
+  border: 1px solid rgba(74, 131, 112, 0.25);
+  color: #4f7f6f;
+  background: rgba(232, 246, 239, 0.9);
+}
+
 .thumb {
   width: 32px;
   height: 32px;
@@ -1330,7 +1370,7 @@ onMounted(async () => {
 
 .add-more {
   margin-top: 12px;
-  border-radius: 999px;
+  border-radius: 0;
   height: 48px;
   border: 1px solid rgba(40, 97, 78, 0.18);
   background: #eef6f1;
@@ -1348,14 +1388,10 @@ onMounted(async () => {
   flex: 1;
 }
 
-.add-more input::placeholder {
-  color: #7b9e90;
-}
-
 .plus-btn {
   width: 34px;
   height: 34px;
-  border-radius: 50%;
+  border-radius: 0;
   border: none;
   background: #2f7c63;
   color: white;
@@ -1369,29 +1405,49 @@ onMounted(async () => {
   }
 
   .right-panel {
-    grid-column: auto;
+    margin-top: 0;
   }
 }
 
 @media (max-width: 980px) {
-  .global-nav {
-    display: none;
+  .top-header {
+    min-height: 112px;
+  }
+
+  .brand {
+    font-size: 1.65rem;
+  }
+
+  .top-actions {
+    position: static;
+    transform: none;
+    margin-top: 4px;
+  }
+
+  .brand-wrap {
+    gap: 8px;
   }
 
   .dashboard-grid {
     grid-template-columns: 1fr;
   }
 
-  .sidebar {
-    min-height: auto;
+  .timeline-row {
+    grid-template-columns: 72px 1fr;
+    transform: none !important;
   }
 
   .overview-card {
     grid-template-columns: 1fr;
   }
 
-  .timeline-row {
-    grid-template-columns: 72px 1fr;
+  .snack-group {
+    grid-template-columns: 1fr;
+  }
+
+  .record-ops {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
 </style>
