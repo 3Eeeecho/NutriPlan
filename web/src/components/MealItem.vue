@@ -9,14 +9,18 @@
     <div class="meal-content">
       <div class="meal-header">
         <span class="meal-type-badge">{{ title }}</span>
-        <h3 class="recipe-name">{{ recipe?.name || '未安排' }}</h3>
+        <h3 class="recipe-name">{{ mealTitle }}</h3>
       </div>
       
       <!-- Tags / Meta -->
-      <div v-if="recipe" class="meal-meta">
-        <div class="meta-tag">🔥 {{ Math.floor(recipe.energy) }} kcal</div>
-        <div class="meta-tag">⏱️ {{ recipe.cooking_time }}分钟</div>
-        <div class="meta-tag">💪 {{ Math.floor(recipe.protein) }}g 蛋白</div>
+      <div v-if="hasRecipes" class="meal-meta">
+        <div class="meta-tag">🍽️ {{ mealRecipes.length }} 道</div>
+        <div class="meta-tag">🔥 {{ Math.floor(totalEnergy) }} kcal</div>
+        <div class="meta-tag">💪 {{ Math.floor(totalProtein) }}g 蛋白</div>
+      </div>
+
+      <div v-if="mealRecipes.length > 1" class="meal-combo-list">
+        <span v-for="item in mealRecipes" :key="item.id || item.name" class="combo-chip">{{ item.name }}</span>
       </div>
       
       <!-- Fallback text if no recipe -->
@@ -28,7 +32,7 @@
     <!-- Action -->
     <div class="meal-action">
       <n-button 
-        v-if="recipe"
+        v-if="hasRecipes"
         circle 
         secondary 
         :type="isSynced ? 'default' : 'success'" 
@@ -53,6 +57,7 @@
 </template>
 
 <script setup>
+import { computed } from 'vue';
 import { NButton, NIcon } from 'naive-ui';
 import { ChevronForward, CheckmarkCircleOutline, CheckmarkCircle } from '@vicons/ionicons5';
 import { useRouter } from 'vue-router';
@@ -61,6 +66,10 @@ const props = defineProps({
   title: String, // 早餐, 午餐...
   icon: String, // Optional, backward compatibility
   recipe: Object,
+  recipes: {
+    type: Array,
+    default: () => []
+  },
   isSynced: Boolean // New prop
 });
 
@@ -68,17 +77,37 @@ const emit = defineEmits(['sync']);
 
 const router = useRouter();
 
+const mealRecipes = computed(() => {
+  if (Array.isArray(props.recipes) && props.recipes.length > 0) {
+    return props.recipes.filter(item => item && item.name);
+  }
+  return props.recipe ? [props.recipe] : [];
+});
+
+const hasRecipes = computed(() => mealRecipes.value.length > 0);
+
+const mealTitle = computed(() => {
+  if (!hasRecipes.value) return '未安排';
+  if (mealRecipes.value.length === 1) return mealRecipes.value[0]?.name || '未安排';
+  return mealRecipes.value.map(item => item.name).join(' + ');
+});
+
+const totalEnergy = computed(() => mealRecipes.value.reduce((sum, item) => sum + (Number(item.energy) || 0), 0));
+const totalProtein = computed(() => mealRecipes.value.reduce((sum, item) => sum + (Number(item.protein) || 0), 0));
+
 const viewDetail = () => {
-  if (props.recipe?.id) {
-    router.push(`/recipes/${props.recipe.id}`);
+  const target = mealRecipes.value[0];
+  if (target?.id) {
+    router.push(`/recipes/${target.id}`);
   }
 };
 
 const handleSync = () => {
   if (props.isSynced) return;
-  console.log('MealItem handleSync clicked', props.recipe);
-  if (props.recipe) {
-    emit('sync', { recipe: props.recipe, type: props.title });
+  const target = mealRecipes.value[0];
+  console.log('MealItem handleSync clicked', target);
+  if (target) {
+    emit('sync', { recipe: target, type: props.title });
   }
 };
 
@@ -160,6 +189,21 @@ const getIcon = (title) => {
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 4px;
+}
+
+.meal-combo-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.combo-chip {
+  font-size: 12px;
+  color: #374151;
+  background-color: #eef2ff;
+  padding: 3px 8px;
+  border-radius: 999px;
 }
 
 .meta-tag {

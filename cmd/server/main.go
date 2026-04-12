@@ -31,7 +31,7 @@ func main() {
 
 	// 创建 Repository 实例
 	userRepo := dao.NewGormUserRepository(dao.DB)
-	recipeRepo := dao.NewGormRecipeRepository(dao.DB)
+	recipeRepo := dao.NewGormRecipeRepository(dao.DB, config.AppConfig.Database.RecipeTable)
 	intakeRepo := dao.NewIntakeRepository(dao.DB)
 	shoppingListRepo := dao.NewShoppingListRepository(dao.DB)
 

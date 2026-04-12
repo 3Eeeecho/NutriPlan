@@ -152,10 +152,10 @@
             <n-gi span="2">
               <n-card title="每日菜单" :bordered="false">
                 <div class="meal-timeline">
-                  <MealItem title="早餐" icon="🌅" :recipe="currentSelectedPlan.breakfast" :is-synced="isMealSynced('早餐', currentSelectedPlan.breakfast)" @sync="handleSyncMeal" />
-                  <MealItem title="午餐" icon="☀️" :recipe="currentSelectedPlan.lunch" :is-synced="isMealSynced('午餐', currentSelectedPlan.lunch)" @sync="handleSyncMeal" />
-                  <MealItem title="晚餐" icon="🌙" :recipe="currentSelectedPlan.dinner" :is-synced="isMealSynced('晚餐', currentSelectedPlan.dinner)" @sync="handleSyncMeal" />
-                  <MealItem v-if="currentSelectedPlan.snack" title="加餐" icon="🍎" :recipe="currentSelectedPlan.snack" :is-synced="isMealSynced('加餐', currentSelectedPlan.snack)" @sync="handleSyncMeal" />
+                  <MealItem title="早餐" icon="🌅" :recipe="currentSelectedPlan.breakfast" :recipes="getMealItems(currentSelectedPlan, 'breakfast')" :is-synced="isMealSynced('早餐', currentSelectedPlan.breakfast)" @sync="handleSyncMeal" />
+                  <MealItem title="午餐" icon="☀️" :recipe="currentSelectedPlan.lunch" :recipes="getMealItems(currentSelectedPlan, 'lunch')" :is-synced="isMealSynced('午餐', currentSelectedPlan.lunch)" @sync="handleSyncMeal" />
+                  <MealItem title="晚餐" icon="🌙" :recipe="currentSelectedPlan.dinner" :recipes="getMealItems(currentSelectedPlan, 'dinner')" :is-synced="isMealSynced('晚餐', currentSelectedPlan.dinner)" @sync="handleSyncMeal" />
+                  <MealItem v-if="currentSelectedPlan.snack" title="加餐" icon="🍎" :recipe="currentSelectedPlan.snack" :recipes="getMealItems(currentSelectedPlan, 'snack')" :is-synced="isMealSynced('加餐', currentSelectedPlan.snack)" @sync="handleSyncMeal" />
                 </div>
               </n-card>
             </n-gi>
@@ -198,22 +198,22 @@
                     <div class="compact-meal-item">
                       <div class="cmi-icon">🌅</div>
                       <div class="cmi-content">
-                        <span class="cmi-name">{{ plan.breakfast?.name || '未安排' }}</span>
-                        <span class="cmi-cal">{{ Math.floor(plan.breakfast?.energy || 0) }} kcal</span>
+                        <span class="cmi-name">{{ formatMealNames(plan, 'breakfast') }}</span>
+                        <span class="cmi-cal">{{ Math.floor(getMealEnergy(plan, 'breakfast')) }} kcal</span>
                       </div>
                     </div>
                     <div class="compact-meal-item">
                       <div class="cmi-icon">☀️</div>
                       <div class="cmi-content">
-                        <span class="cmi-name">{{ plan.lunch?.name || '未安排' }}</span>
-                        <span class="cmi-cal">{{ Math.floor(plan.lunch?.energy || 0) }} kcal</span>
+                        <span class="cmi-name">{{ formatMealNames(plan, 'lunch') }}</span>
+                        <span class="cmi-cal">{{ Math.floor(getMealEnergy(plan, 'lunch')) }} kcal</span>
                       </div>
                     </div>
                     <div class="compact-meal-item">
                       <div class="cmi-icon">🌙</div>
                       <div class="cmi-content">
-                        <span class="cmi-name">{{ plan.dinner?.name || '未安排' }}</span>
-                        <span class="cmi-cal">{{ Math.floor(plan.dinner?.energy || 0) }} kcal</span>
+                        <span class="cmi-name">{{ formatMealNames(plan, 'dinner') }}</span>
+                        <span class="cmi-cal">{{ Math.floor(getMealEnergy(plan, 'dinner')) }} kcal</span>
                       </div>
                     </div>
                   </div>
@@ -316,6 +316,26 @@ const isMealSynced = (title, recipe) => {
   const mealType = typeMap[title];
   // Simple check: if we have a record with same meal_type and food_name
   return todayRecords.value.some(r => r.mealType === mealType && r.foodName === recipe.name);
+};
+
+const getMealItems = (plan, mealType) => {
+  if (!plan) return [];
+  const key = `${mealType}_items`;
+  if (Array.isArray(plan[key]) && plan[key].length > 0) {
+    return plan[key];
+  }
+  return plan[mealType] ? [plan[mealType]] : [];
+};
+
+const formatMealNames = (plan, mealType) => {
+  const items = getMealItems(plan, mealType);
+  if (items.length === 0) return '未安排';
+  return items.map(item => item?.name).filter(Boolean).join(' + ');
+};
+
+const getMealEnergy = (plan, mealType) => {
+  return getMealItems(plan, mealType)
+    .reduce((sum, item) => sum + (Number(item?.energy) || 0), 0);
 };
 
 const fetchRecommendations = async (forceRefresh = false) => {

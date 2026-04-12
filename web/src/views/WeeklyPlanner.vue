@@ -372,12 +372,26 @@ const buildRecommendationRecordsForDate = (dateKey) => {
   if (!source) return []
   const mealOrder = ['breakfast', 'lunch', 'dinner', 'snack']
 
+  const getMealItems = (mealType) => {
+    const itemsKey = `${mealType}_items`
+    const mealItems = source[itemsKey]
+    if (Array.isArray(mealItems) && mealItems.length > 0) {
+      return mealItems
+    }
+
+    const mealSingle = source[mealType]
+    if (Array.isArray(mealSingle)) {
+      return mealSingle
+    }
+
+    return mealSingle ? [mealSingle] : []
+  }
+
   return mealOrder
-    .filter((type) => !!source[type])
-    .map((type) => {
-      const meal = source[type]
-      return {
-        id: `recommend-${dateKey}-${type}-${meal.id || meal.name || 'unknown'}`,
+    .flatMap((type) => {
+      const meals = getMealItems(type)
+      return meals.map((meal, index) => ({
+        id: `recommend-${dateKey}-${type}-${meal.id || meal.name || 'unknown'}-${index}`,
         mealType: type,
         foodName: meal.name || '推荐食谱',
         intakeAmount: 1,
@@ -388,7 +402,7 @@ const buildRecommendationRecordsForDate = (dateKey) => {
         calculatedFat: Number(meal.fat || meal.total_fat || 0),
         imageUrl: meal.image_url || meal.imageUrl || '',
         isRecommendationRecipe: true
-      }
+      }))
     })
 }
 

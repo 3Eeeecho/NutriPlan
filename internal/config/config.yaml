@@ -18,6 +18,8 @@ database:
   host: "127.0.0.1:3306"
   # 数据库名
   name: "nutri_plan"
+  # 食谱查询表: recipes | test_recipes
+  recipe_table: "recipes"
 
 # 营养计算配置
 nutrients:

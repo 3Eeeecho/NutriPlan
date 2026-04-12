@@ -244,6 +244,19 @@ const loadSourceRecipes = async () => {
     const appendPlanRecipes = (planLike) => {
       if (!planLike || typeof planLike !== 'object') return
       ;['breakfast', 'lunch', 'dinner', 'snack'].forEach((type) => {
+        const itemsKey = `${type}_items`
+        const itemList = Array.isArray(planLike[itemsKey]) && planLike[itemsKey].length > 0
+          ? planLike[itemsKey]
+          : []
+
+        if (itemList.length > 0) {
+          itemList.forEach((recipe) => {
+            if (!recipe?.id) return
+            recipes.push({ ...recipe, source: 'plan' })
+          })
+          return
+        }
+
         const recipe = planLike[`${type}Recipe`] || planLike[type]
         if (!recipe?.id) return
         recipes.push({ ...recipe, source: 'plan' })
