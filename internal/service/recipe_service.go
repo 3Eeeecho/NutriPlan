@@ -1,8 +1,10 @@
 package service
 
 import (
+	"NutriPlan/internal/config"
 	"NutriPlan/internal/repository/dao"
 	"NutriPlan/internal/repository/models"
+	"encoding/json"
 	"fmt"
 	"log"
 	"math"
@@ -52,6 +54,45 @@ type RecipeServiceImpl struct {
 	rng          *rand.Rand
 }
 
+type dietModeProfile struct {
+	calorieFactor      float64
+	proteinFactor      float64
+	carbohydrateFactor float64
+	fatFactor          float64
+	strictFiltering    bool
+	forbiddenKeywords  []string
+}
+
+type recipeTextConfig struct {
+	StapleKeywords            []string            `json:"staple_keywords"`
+	BreakfastPriorityKeywords map[string][]string `json:"breakfast_priority_keywords"`
+	DietModeForbiddenKeywords map[string][]string `json:"diet_mode_forbidden_keywords"`
+}
+
+var (
+	recipeTextConfigOnce sync.Once
+	recipeTextConfigData recipeTextConfig
+)
+
+func getRecipeTextConfig() recipeTextConfig {
+	recipeTextConfigOnce.Do(func() {
+		raw := config.GetRecipeTextConfigRaw()
+		if err := json.Unmarshal(raw, &recipeTextConfigData); err != nil {
+			log.Printf("[recipe] parse recipe_text_config.json failed: %v", err)
+			recipeTextConfigData = recipeTextConfig{}
+		}
+
+		if recipeTextConfigData.BreakfastPriorityKeywords == nil {
+			recipeTextConfigData.BreakfastPriorityKeywords = map[string][]string{}
+		}
+		if recipeTextConfigData.DietModeForbiddenKeywords == nil {
+			recipeTextConfigData.DietModeForbiddenKeywords = map[string][]string{}
+		}
+	})
+
+	return recipeTextConfigData
+}
+
 // NewRecipeService 创建食谱推荐服务实例
 func NewRecipeService(recipeRepo dao.RecipeRepository, nutriService NutriService) RecipeService {
 	return &RecipeServiceImpl{
@@ -78,6 +119,193 @@ func scaleRecipeNutritionByPortion(recipe models.Recipe) models.Recipe {
 	scaled.Carbohydrate = recipe.Carbohydrate * factor
 	scaled.Fat = recipe.Fat * factor
 	return scaled
+}
+
+func getDietModeProfile(mode models.DietMode) dietModeProfile {
+	cfg := getRecipeTextConfig()
+	getForbidden := func(key string) []string {
+		return cfg.DietModeForbiddenKeywords[key]
+	}
+
+	switch mode {
+	case models.DietModeLightAdjust:
+		return dietModeProfile{
+			calorieFactor:      0.94,
+			proteinFactor:      1.0,
+			carbohydrateFactor: 0.96,
+			fatFactor:          0.88,
+			strictFiltering:    false,
+			forbiddenKeywords:  getForbidden(string(models.DietModeLightAdjust)),
+		}
+	case models.DietModeBland:
+		return dietModeProfile{
+			calorieFactor:      0.92,
+			proteinFactor:      1.02,
+			carbohydrateFactor: 0.95,
+			fatFactor:          0.82,
+			strictFiltering:    true,
+			forbiddenKeywords:  getForbidden(string(models.DietModeBland)),
+		}
+	case models.DietModeHeavyAdjust:
+		return dietModeProfile{
+			calorieFactor:      0.88,
+			proteinFactor:      1.05,
+			carbohydrateFactor: 0.92,
+			fatFactor:          0.75,
+			strictFiltering:    true,
+			forbiddenKeywords:  getForbidden(string(models.DietModeHeavyAdjust)),
+		}
+	default:
+		return dietModeProfile{
+			calorieFactor:      1,
+			proteinFactor:      1,
+			carbohydrateFactor: 1,
+			fatFactor:          1,
+			strictFiltering:    false,
+			forbiddenKeywords:  nil,
+		}
+	}
+}
+
+func (s *RecipeServiceImpl) isManualModeActive(user *models.User, now time.Time) bool {
+	if user == nil {
+		return false
+	}
+	if user.DietModeSource != "manual" {
+		return false
+	}
+	if user.DietMode == "" || user.DietMode == models.DietModeNormal {
+		return false
+	}
+	if user.DietModeUntil == nil {
+		return true
+	}
+	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	until := time.Date(user.DietModeUntil.Year(), user.DietModeUntil.Month(), user.DietModeUntil.Day(), 0, 0, 0, 0, user.DietModeUntil.Location())
+	return !until.Before(today)
+}
+
+func (s *RecipeServiceImpl) resolveDietMode(user *models.User, targetCalorie, targetFat float64) models.DietMode {
+	if user == nil {
+		return models.DietModeNormal
+	}
+
+	now := time.Now()
+	if s.isManualModeActive(user, now) {
+		return user.DietMode
+	}
+
+	// 手动模式已过期，回落 normal。
+	if user.DietModeSource == "manual" && user.DietModeUntil != nil {
+		today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+		until := time.Date(user.DietModeUntil.Year(), user.DietModeUntil.Month(), user.DietModeUntil.Day(), 0, 0, 0, 0, user.DietModeUntil.Location())
+		if until.Before(today) {
+			_ = dao.DB.Model(&models.User{}).Where("id = ?", user.ID).Updates(map[string]any{
+				"diet_mode":        models.DietModeNormal,
+				"diet_mode_source": "auto",
+				"diet_mode_reason": "",
+				"diet_mode_until":  nil,
+			}).Error
+			user.DietMode = models.DietModeNormal
+			user.DietModeSource = "auto"
+			user.DietModeReason = ""
+			user.DietModeUntil = nil
+		}
+	}
+
+	if dao.DB == nil || targetCalorie <= 0 || targetFat <= 0 {
+		return user.DietMode
+	}
+
+	yesterday := time.Now().AddDate(0, 0, -1)
+	start := time.Date(yesterday.Year(), yesterday.Month(), yesterday.Day(), 0, 0, 0, 0, yesterday.Location())
+	end := start.Add(24 * time.Hour)
+
+	type intakeSummary struct {
+		TotalEnergy float64
+		TotalFat    float64
+		Count       int64
+	}
+	var summary intakeSummary
+	err := dao.DB.Model(&models.DailyIntakeRecord{}).
+		Select("COALESCE(SUM(calculated_energy),0) as total_energy, COALESCE(SUM(calculated_fat),0) as total_fat, COUNT(*) as count").
+		Where("user_id = ? AND record_date >= ? AND record_date < ?", user.ID, start, end).
+		Scan(&summary).Error
+	if err != nil || summary.Count == 0 {
+		return models.DietModeNormal
+	}
+
+	energyRate := summary.TotalEnergy / targetCalorie
+	fatRate := summary.TotalFat / targetFat
+
+	resolved := models.DietModeNormal
+	modeReason := ""
+	modeUntil := (*time.Time)(nil)
+
+	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	if energyRate >= 1.25 || fatRate >= 1.35 {
+		resolved = models.DietModeHeavyAdjust
+		modeReason = "昨日重度偏离，自动重调"
+		until := today.AddDate(0, 0, 2)
+		modeUntil = &until
+	} else if energyRate >= 1.10 || fatRate >= 1.15 {
+		resolved = models.DietModeLightAdjust
+		modeReason = "昨日轻度偏离，自动轻调"
+		until := today.AddDate(0, 0, 1)
+		modeUntil = &until
+	}
+
+	if user.DietMode != resolved || user.DietModeSource != "auto" {
+		_ = dao.DB.Model(&models.User{}).Where("id = ?", user.ID).Updates(map[string]any{
+			"diet_mode":        resolved,
+			"diet_mode_source": "auto",
+			"diet_mode_reason": modeReason,
+			"diet_mode_until":  modeUntil,
+		}).Error
+	}
+
+	user.DietMode = resolved
+	user.DietModeSource = "auto"
+	user.DietModeReason = modeReason
+	user.DietModeUntil = modeUntil
+
+	return resolved
+}
+
+func (s *RecipeServiceImpl) filterRecipesByDietMode(recipes []models.Recipe, profile dietModeProfile) []models.Recipe {
+	if len(recipes) == 0 || len(profile.forbiddenKeywords) == 0 {
+		return recipes
+	}
+
+	containsForbidden := func(recipe models.Recipe) bool {
+		content := strings.ToLower(recipe.Name + " " + strings.Join(recipe.Ingredients, " "))
+		for _, keyword := range profile.forbiddenKeywords {
+			if keyword == "" {
+				continue
+			}
+			if strings.Contains(content, strings.ToLower(keyword)) {
+				return true
+			}
+		}
+		return false
+	}
+
+	filtered := make([]models.Recipe, 0, len(recipes))
+	for _, recipe := range recipes {
+		if containsForbidden(recipe) {
+			continue
+		}
+		if profile.strictFiltering && recipe.Fat > 25 {
+			continue
+		}
+		filtered = append(filtered, recipe)
+	}
+
+	if len(filtered) < 3 {
+		return recipes
+	}
+
+	return filtered
 }
 
 // 目前的推荐算法逻辑如下：
@@ -187,6 +415,12 @@ func (s *RecipeServiceImpl) RecommendRecipes(user *models.User, count int) ([]*m
 	// 计算用户目标营养需求
 	targetCalorie := s.nutriService.DetermineTargetCalorie(user.TDEE, user.HealthGoal)
 	targetProtein, targetCarb, targetFat := s.nutriService.AllocateMacros(targetCalorie, user.HealthGoal)
+	dietMode := s.resolveDietMode(user, targetCalorie, targetFat)
+	modeProfile := getDietModeProfile(dietMode)
+	targetCalorie *= modeProfile.calorieFactor
+	targetProtein *= modeProfile.proteinFactor
+	targetCarb *= modeProfile.carbohydrateFactor
+	targetFat *= modeProfile.fatFactor
 
 	// 解析用户偏好与禁忌（过敏 / 健康状况）
 	userTags, forbiddenIngredients := s.parseUserPreferences(user)
@@ -237,6 +471,11 @@ func (s *RecipeServiceImpl) RecommendRecipes(user *models.User, count int) ([]*m
 		dinnerRecipes = s.filterRecentRecipes(dinnerRecipes, recentRecipeIDs)
 		snackRecipes = s.filterRecentRecipes(snackRecipes, recentRecipeIDs)
 	}
+
+	breakfastRecipes = s.filterRecipesByDietMode(breakfastRecipes, modeProfile)
+	lunchRecipes = s.filterRecipesByDietMode(lunchRecipes, modeProfile)
+	dinnerRecipes = s.filterRecipesByDietMode(dinnerRecipes, modeProfile)
+	snackRecipes = s.filterRecipesByDietMode(snackRecipes, modeProfile)
 
 	// ---- 第二阶段：预估排序与 全局组合阶段 ----
 
@@ -360,6 +599,26 @@ func buildComboKey(items []models.Recipe) (string, bool) {
 	return builder.String(), true
 }
 
+func isStapleRecipe(recipe models.Recipe) bool {
+	cfg := getRecipeTextConfig()
+	content := strings.ToLower(recipe.Name + " " + strings.Join(recipe.Ingredients, " "))
+	for _, keyword := range cfg.StapleKeywords {
+		if strings.Contains(content, strings.ToLower(keyword)) {
+			return true
+		}
+	}
+	return false
+}
+
+func mealHasStaple(items []models.Recipe) bool {
+	for _, item := range items {
+		if isStapleRecipe(item) {
+			return true
+		}
+	}
+	return false
+}
+
 func buildMealCombo(items []models.Recipe, boost float64) (mealCombo, string, bool) {
 	if len(items) == 0 {
 		return mealCombo{}, "", false
@@ -432,7 +691,7 @@ func (s *RecipeServiceImpl) rankMealCombos(combos []mealCombo, targetE, targetP,
 // comboLimit: 最终返回的组合数量上限。
 // minItems: 单个组合最少包含的菜品数（例如午/晚餐=2）。
 // maxItems: 单个组合最多包含的菜品数（例如午/晚餐=3，加餐=2）。
-func (s *RecipeServiceImpl) buildMealCombos(recipes []models.Recipe, targetE, targetP, targetC, targetF float64, goal models.HealthGoal, candidateK, comboLimit, minItems, maxItems int) []mealCombo {
+func (s *RecipeServiceImpl) buildMealCombos(recipes []models.Recipe, targetE, targetP, targetC, targetF float64, goal models.HealthGoal, candidateK, comboLimit, minItems, maxItems int, requireStaple bool) []mealCombo {
 	if len(recipes) == 0 {
 		return nil
 	}
@@ -442,12 +701,64 @@ func (s *RecipeServiceImpl) buildMealCombos(recipes []models.Recipe, targetE, ta
 		return nil
 	}
 
+	if requireStaple {
+		hasStapleCandidate := false
+		for _, item := range candidates {
+			if isStapleRecipe(item) {
+				hasStapleCandidate = true
+				break
+			}
+		}
+
+		if !hasStapleCandidate {
+			staplePool := make([]models.Recipe, 0)
+			for _, recipe := range recipes {
+				if isStapleRecipe(recipe) {
+					staplePool = append(staplePool, recipe)
+				}
+			}
+
+			sort.Slice(staplePool, func(i, j int) bool {
+				left := s.scoreSingleRecipe(staplePool[i], targetE, targetP, targetC, targetF, goal)
+				right := s.scoreSingleRecipe(staplePool[j], targetE, targetP, targetC, targetF, goal)
+				return left > right
+			})
+
+			existing := make(map[uint]struct{}, len(candidates))
+			for _, item := range candidates {
+				existing[item.ID] = struct{}{}
+			}
+
+			for i := 0; i < len(staplePool) && i < 4; i++ {
+				item := staplePool[i]
+				if _, ok := existing[item.ID]; ok {
+					continue
+				}
+				candidates = append(candidates, item)
+			}
+		}
+	}
+
+	stapleAvailable := false
+	if requireStaple {
+		for _, item := range candidates {
+			if isStapleRecipe(item) {
+				stapleAvailable = true
+				break
+			}
+		}
+	}
+
 	used := make(map[string]bool)
 	combos := make([]mealCombo, 0, comboLimit*2)
 
 	// pushCombo 负责：
 	// 1) 汇总组合营养；2) 以菜品 ID 排序后的 key 去重；3) 构建 mealCombo。
 	pushCombo := func(items []models.Recipe, boost float64) {
+		if requireStaple && stapleAvailable && !mealHasStaple(items) {
+			return
+		}
+
 		combo, key, ok := buildMealCombo(items, boost)
 		if !ok {
 			return
@@ -540,8 +851,11 @@ func (s *RecipeServiceImpl) buildBreakfastCombos(recipes []models.Recipe, target
 	}
 
 	// 优先注入“酸奶+鸡蛋”组合，提高在测试数据下的稳定产出概率。
-	if yogurt, okY := findByKeyword("酸奶", "yogurt"); okY {
-		if egg, okE := findByKeyword("鸡蛋", "蛋"); okE && yogurt.ID != egg.ID {
+	cfg := getRecipeTextConfig()
+	yogurtKeys := cfg.BreakfastPriorityKeywords["yogurt"]
+	eggKeys := cfg.BreakfastPriorityKeywords["egg"]
+	if yogurt, okY := findByKeyword(yogurtKeys...); okY {
+		if egg, okE := findByKeyword(eggKeys...); okE && yogurt.ID != egg.ID {
 			pushCombo([]models.Recipe{yogurt, egg}, 12)
 		}
 	}
@@ -630,15 +944,15 @@ func (s *RecipeServiceImpl) generateRankedPlans(
 
 	te, tp, tc, tf = getTarget(ratios[1])
 	// 午餐使用通用组合生成：最多 3 道菜。
-	lunchCombos := s.buildMealCombos(lunchRecipes, te, tp, tc, tf, userGoal, 16, 8, 2, 3)
+	lunchCombos := s.buildMealCombos(lunchRecipes, te, tp, tc, tf, userGoal, 16, 8, 2, 3, true)
 
 	te, tp, tc, tf = getTarget(ratios[2])
 	// 晚餐使用通用组合生成：最多 3 道菜。
-	dinnerCombos := s.buildMealCombos(dinnerRecipes, te, tp, tc, tf, userGoal, 16, 8, 2, 3)
+	dinnerCombos := s.buildMealCombos(dinnerRecipes, te, tp, tc, tf, userGoal, 16, 8, 2, 3, true)
 
 	te, tp, tc, tf = getTarget(ratios[3])
 	// 加餐允许小组合：最多 2 道菜。
-	snackCombos := s.buildMealCombos(snackRecipes, te, tp, tc, tf, userGoal, 10, 6, 1, 2)
+	snackCombos := s.buildMealCombos(snackRecipes, te, tp, tc, tf, userGoal, 10, 6, 1, 2, false)
 	if len(snackCombos) == 0 {
 		// 兜底空加餐，保持旧流程兼容。
 		snackCombos = append(snackCombos, mealCombo{Items: []models.Recipe{{Name: ""}}, Primary: models.Recipe{Name: ""}})

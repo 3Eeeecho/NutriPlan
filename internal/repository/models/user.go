@@ -29,6 +29,12 @@ type User struct {
 	TDEE         float64    `gorm:"type:decimal(6,2);comment:每日总能量消耗" json:"tdee"`
 	BMR          float64    `gorm:"type:decimal(6,2);comment:基础代谢率" json:"bmr"`
 
+	// 饮食调节模式
+	DietMode       DietMode   `gorm:"type:varchar(20);default:'normal';comment:饮食调节模式" json:"dietMode"`
+	DietModeSource string     `gorm:"type:varchar(20);default:'auto';comment:模式来源(auto/manual)" json:"dietModeSource"`
+	DietModeReason string     `gorm:"type:varchar(255);comment:模式原因" json:"dietModeReason"`
+	DietModeUntil  *time.Time `gorm:"type:date;comment:模式截止日期" json:"dietModeUntil"`
+
 	// 标签类数据 (存储为字符串/JSON)
 	Allergies        string `gorm:"type:text;comment:过敏源" json:"allergies"`
 	DietaryPrefs     string `gorm:"type:text;comment:饮食偏好" json:"dietaryPrefs"`

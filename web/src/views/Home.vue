@@ -1,8 +1,17 @@
 ﻿<template>
   <div class="nutrition-dashboard">
     <header class="top-header glass-card">
-      <div class="brand-wrap">
-        <h1 class="brand">基于用户健康数据与营养模型的饮食推荐系统</h1>
+      <div class="header-main">
+        <p class="header-greet">{{ 今日问候语 }}</p>
+        <h1 class="header-title">{{ 今日看板标题 }}</h1>
+        <p class="header-sub">NutriPlan · 基于健康数据的智能饮食推荐</p>
+      </div>
+      <div class="header-meta">
+        <span class="meta-icon">📅</span>
+        <div class="meta-text">
+          <strong>{{ 今日日期文案 }}</strong>
+          <span>{{ 今日星期文案 }}</span>
+        </div>
       </div>
     </header>
 
@@ -26,6 +35,11 @@
           <div class="action-info">
             <h3 class="plan-status">{{ 今日方案 ? '今日食谱已生成' : '开始规划健康饮食' }}</h3>
             <p class="plan-desc">{{ 今日方案 ? '按计划饮食，保持活力每一天' : '为您量身定制的营养均衡食谱方案' }}</p>
+            <div class="diet-mode-chip" :class="`mode-${当前饮食模式.mode || 'normal'}`" @click="去模式设置" title="点击选择模式">
+              <span class="mode-title">当前模式：{{ 当前饮食模式文案 }}</span>
+              <span class="mode-meta" v-if="当前饮食模式.until">至 {{ 格式化模式日期(当前饮食模式.until) }}</span>
+              <span class="mode-meta" v-else>{{ 当前饮食模式说明 }}</span>
+            </div>
           </div>
           <button class="commercial-btn" @click="去生成食谱">
             <n-icon><SparklesOutline /></n-icon>
@@ -33,12 +47,15 @@
           </button>
         </div>
 
-        <div class="timeline">
+        <div class="timeline" :style="时间线样式">
           <article
             v-for="meal in 时间线餐次"
             :key="meal.type"
             class="timeline-row"
-            :class="{ 'is-drag-over': 拖拽目标餐次 === meal.type, 'is-active-detail': 详情餐次类型 === meal.type }"
+            :class="[
+              `timeline-${meal.phase}`,
+              { 'is-drag-over': 拖拽目标餐次 === meal.type, 'is-active-detail': 详情餐次类型 === meal.type }
+            ]"
             :draggable="可拖拽餐次 === meal.type"
             @dragstart="开始拖拽餐次(meal.type)"
             @dragover.prevent="进入拖拽目标(meal.type)"
@@ -164,9 +181,28 @@
                 <span>{{ line.label }}</span>
                 <span>{{ line.value }}</span>
               </div>
+              <div class="micro-mini-bars" aria-hidden="true">
+                <span
+                  v-for="(height, index) in line.spark"
+                  :key="`${line.label}-${index}`"
+                  class="mini-bar"
+                  :style="{ height: `${height}%`, background: line.color }"
+                />
+              </div>
               <div class="micro-track">
                 <div class="micro-fill" :style="{ width: line.progress + '%', background: line.color }" />
               </div>
+            </div>
+          </div>
+
+          <div v-if="!当前详情食物.length" class="meal-empty-guide" @click="打开记录悬浮栏(当前详情餐次?.type || 'breakfast')">
+            <div class="plate-illustration" aria-hidden="true">
+              <span class="plate-ring"></span>
+              <span class="plate-dot"></span>
+            </div>
+            <div>
+              <h4>当前餐段还未记录</h4>
+              <p>点击添加今日{{ 当前详情餐次?.name || '餐次' }}，让营养数据更完整</p>
             </div>
           </div>
 
@@ -174,7 +210,7 @@
             <div class="table-head">
               <span class="check-col"></span>
               <span>食物项</span>
-              <span>份量</span>
+              <span>重量(g)</span>
               <span>热量</span>
               <span>蛋白质</span>
               <span>碳水</span>
@@ -199,8 +235,8 @@
                 </span>
                 <span>{{ food.name }}</span>
               </div>
-              <span>{{ food.portion }}</span>
-              <span class="strong-text">{{ food.kcal }}</span>
+              <span class="sub-text">{{ food.weight }}</span>
+              <span class="sub-text">{{ food.kcal }}</span>
               <span class="sub-text">{{ food.protein }}</span>
               <span class="sub-text">{{ food.carbs }}</span>
               <span class="sub-text">{{ food.fat }}</span>
@@ -229,6 +265,52 @@
         </div>
       </section>
     </main>
+
+    <n-modal
+      v-model:show="显示模式选择弹窗"
+      preset="card"
+      class="mode-select-modal"
+      style="width: 560px"
+      title="选择饮食调节模式"
+      :mask-closable="!模式保存中"
+    >
+      <p class="mode-modal-desc">根据当前状态选择模式，系统会按模式含义调节后续推荐。</p>
+      <div class="mode-option-list">
+        <button
+          v-for="item in 饮食模式选项"
+          :key="item.mode"
+          class="mode-option"
+          :class="[`mode-${item.mode}`, { active: item.mode === 待选饮食模式 }]"
+          :disabled="模式保存中"
+          @click="选择待选模式(item.mode)"
+        >
+          <div class="mode-option-head">
+            <strong>{{ item.label }}</strong>
+            <span class="mode-option-days">建议 {{ item.days }} 天</span>
+          </div>
+          <p>{{ item.summary }}</p>
+        </button>
+      </div>
+      <div class="mode-days-row">
+        <span>生效天数</span>
+        <n-input-number
+          v-model:value="模式生效天数"
+          :min="1"
+          :max="7"
+          :disabled="模式保存中"
+          size="small"
+        />
+      </div>
+      <template #footer>
+        <div class="mode-modal-footer">
+          <span>当前：{{ 当前饮食模式文案 }}</span>
+          <div class="mode-modal-actions">
+            <n-button secondary :disabled="模式保存中" @click="显示模式选择弹窗 = false">取消</n-button>
+            <n-button type="primary" color="#8ec662" :loading="模式保存中" @click="确认保存饮食模式">确认切换</n-button>
+          </div>
+        </div>
+      </template>
+    </n-modal>
 
     <!-- 右侧悬浮栏：快速添加饮食记录 -->
     <n-drawer v-model:show="显示添加记录面板" :width="500" placement="right">
@@ -329,7 +411,7 @@ import {
   ref, computed, h, onMounted, onUnmounted, watch, nextTick
 } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { NIcon, useMessage, NDrawer, NDrawerContent, NForm, NFormItem, NInput, NInputGroup, NButton, NInputNumber, NSelect, NDivider, NGrid, NGi, NSpin, NPopconfirm } from 'naive-ui'
+import { NIcon, useMessage, NDrawer, NDrawerContent, NForm, NFormItem, NInput, NInputGroup, NButton, NInputNumber, NSelect, NDivider, NGrid, NGi, NSpin, NPopconfirm, NModal } from 'naive-ui'
 import {
   AddCircleOutline,
   CalendarOutline,
@@ -342,7 +424,7 @@ import {
   TrashOutline
 } from '@vicons/ionicons5'
 import { getTodayStatus, addIntakeRecord, deleteIntakeRecord } from '@/api/intakeApi'
-import { getNutritionRequirements } from '@/api/user'
+import { getNutritionRequirements, getDietMode, setDietMode } from '@/api/user'
 import { getSelectedRecipePlan, getRecipeRecommendations, selectRecipePlan } from '@/api/recipeApi'
 import { recognizeFood, analyzeFoodText } from '@/api/foodRecognitionApi'
 import { useAuthStore } from '@/store/auth'
@@ -517,6 +599,17 @@ watch(() => 记录表单.value.intake_amount, (newVal) => {
 
 const 加载中 = ref(false)
 const 今日方案 = ref(null)
+const 当前饮食模式 = ref({ mode: 'normal', source: 'auto', reason: '', until: null })
+const 显示模式选择弹窗 = ref(false)
+const 模式保存中 = ref(false)
+const 待选饮食模式 = ref('normal')
+const 模式生效天数 = ref(1)
+const 饮食模式选项 = [
+  { mode: 'normal', label: '标准模式', summary: '按常规目标推荐，营养结构保持平衡。', days: 1, reason: '手动恢复标准' },
+  { mode: 'light_adjust', label: '轻调模式', summary: '适度降低油脂与热量，平稳回到目标轨道。', days: 2, reason: '手动轻调' },
+  { mode: 'bland', label: '清淡模式', summary: '更清淡、易消化，减少刺激性与高负担食物。', days: 3, reason: '生病/肠胃不适' },
+  { mode: 'heavy_adjust', label: '重调模式', summary: '短期强化控制，快速修正昨日明显偏离。', days: 2, reason: '昨日重度偏离' }
+]
 const 已选日期 = ref(new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()))
 const 编辑时间餐次 = ref('')
 const 编辑名称餐次 = ref('')
@@ -766,6 +859,62 @@ const 日期标题 = computed(() => {
 
 const 是否今天 = computed(() => new Date().toDateString() === 已选日期.value.toDateString())
 
+const 今日问候语 = computed(() => {
+  const hour = new Date().getHours()
+  if (hour < 6) return '🌙 夜深了'
+  if (hour < 11) return '👋 早上好'
+  if (hour < 14) return '☀️ 中午好'
+  if (hour < 18) return '🌤 下午好'
+  return '🌆 晚上好'
+})
+
+const 今日看板标题 = computed(() => {
+  const status = 已摄入热量.value > 0 ? '今日营养计划进行中' : '今日营养计划已就绪'
+  return status
+})
+
+const 今日日期文案 = computed(() => {
+  const date = 已选日期.value
+  return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`
+})
+
+const 今日星期文案 = computed(() => {
+  const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六']
+  return weekdays[已选日期.value.getDay()] || ''
+})
+
+const 时间转分钟 = (timeValue) => {
+  if (!timeValue || !timeValue.includes(':')) return 0
+  const [hour, minute] = timeValue.split(':').map((item) => Number(item))
+  return (hour || 0) * 60 + (minute || 0)
+}
+
+const 当前饮食模式文案 = computed(() => {
+  const mode = 当前饮食模式.value?.mode || 'normal'
+  const map = {
+    normal: '标准模式',
+    light_adjust: '轻调模式',
+    bland: '清淡模式',
+    heavy_adjust: '重调模式'
+  }
+  return map[mode] || '标准模式'
+})
+
+const 当前饮食模式说明 = computed(() => {
+  const mode = 当前饮食模式.value?.mode || 'normal'
+  return 饮食模式选项.find((item) => item.mode === mode)?.summary || '按常规目标推荐，营养结构保持平衡。'
+})
+
+const 格式化模式日期 = (value) => {
+  if (!value) return '--'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return '--'
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 const 本地勾选食物 = ref([])
 const 切换食物状态 = (food) => {
   if (!food.sample) return
@@ -836,7 +985,11 @@ const 剩余热量 = computed(() => Math.round(动画剩余热量.value).toLocal
 
 const 时间线餐次 = computed(() => {
   const 配置映射 = Object.fromEntries(餐次配置.map((item) => [item.type, item]))
-  return 餐次顺序.value.map((type) => {
+  const now = new Date()
+  const nowMinutes = now.getHours() * 60 + now.getMinutes()
+  const selectedIsToday = 是否今天.value
+
+  const mapped = 餐次顺序.value.map((type, index, orderedTypes) => {
     const 基础配置 = 配置映射[type]
     if (!基础配置) return null
 
@@ -871,6 +1024,21 @@ const 时间线餐次 = computed(() => {
       hints = defaultHints
     }
 
+    const currentTime = 餐次时间映射.value[config.type] || config.time
+    const currentMinutes = 时间转分钟(currentTime)
+    const nextType = orderedTypes[index + 1]
+    const nextTime = nextType ? (餐次时间映射.value[nextType] || 配置映射[nextType]?.time) : ''
+    const nextMinutes = nextType ? 时间转分钟(nextTime) : 24 * 60
+
+    let phase = 'future'
+    if (!selectedIsToday) {
+      phase = now > 已选日期.value ? 'past' : 'future'
+    } else if (nowMinutes >= currentMinutes && nowMinutes < nextMinutes) {
+      phase = 'current'
+    } else if (nowMinutes >= nextMinutes) {
+      phase = 'past'
+    }
+
     return {
       ...config,
       time: 餐次时间映射.value[config.type] || config.time,
@@ -880,9 +1048,24 @@ const 时间线餐次 = computed(() => {
       hints,
       kcal: consumed > 0 ? `${consumed} / ${target} 千卡` : '',
       progress,
-      variant: consumed > 0 ? (config.type === 'lunch' ? 'logged' : 'filled') : 'empty'
+      variant: consumed > 0 ? (config.type === 'lunch' ? 'logged' : 'filled') : 'empty',
+      phase
     }
   }).filter(Boolean)
+
+  return mapped
+})
+
+const 时间线样式 = computed(() => {
+  const meals = 时间线餐次.value || []
+  if (!meals.length) {
+    return { '--timeline-progress': '0%' }
+  }
+  const currentIndex = meals.findIndex((item) => item.phase === 'current')
+  const pastCount = meals.filter((item) => item.phase === 'past').length
+  const done = currentIndex >= 0 ? currentIndex + 0.5 : pastCount
+  const progress = Math.min(100, Math.max(0, Math.round((done / meals.length) * 100)))
+  return { '--timeline-progress': `${progress}%` }
 })
 
 const 宏量卡片 = computed(() => {
@@ -933,9 +1116,27 @@ const 详情营养条 = computed(() => {
   const targetFat = Math.max(1, 安全数值(每日状态.value.targetFat) * ratio)
 
   return [
-    { label: '蛋白质', value: `${Math.round(protein)}g`, progress: Math.min(100, Math.round((protein / targetProtein) * 100)), color: '#4e8fff' },
-    { label: '碳水', value: `${Math.round(carbs)}g`, progress: Math.min(100, Math.round((carbs / targetCarbs) * 100)), color: '#ff8d2f' },
-    { label: '脂肪', value: `${Math.round(fat)}g`, progress: Math.min(100, Math.round((fat / targetFat) * 100)), color: '#f5c84b' }
+    {
+      label: '蛋白质',
+      value: `${Math.round(protein)}g`,
+      progress: Math.min(100, Math.round((protein / targetProtein) * 100)),
+      color: '#4e8fff',
+      spark: [22, 38, 44, 60, Math.min(100, Math.round((protein / targetProtein) * 100))]
+    },
+    {
+      label: '碳水',
+      value: `${Math.round(carbs)}g`,
+      progress: Math.min(100, Math.round((carbs / targetCarbs) * 100)),
+      color: '#ff8d2f',
+      spark: [18, 28, 46, 54, Math.min(100, Math.round((carbs / targetCarbs) * 100))]
+    },
+    {
+      label: '脂肪',
+      value: `${Math.round(fat)}g`,
+      progress: Math.min(100, Math.round((fat / targetFat) * 100)),
+      color: '#f5c84b',
+      spark: [24, 30, 36, 48, Math.min(100, Math.round((fat / targetFat) * 100))]
+    }
   ]
 })
 
@@ -948,7 +1149,7 @@ const 当前详情食物 = computed(() => {
       id: item.id || item.ID || `${meal.type}-${index}`,
       realId: item.id || item.ID, // 提取真实 ID
       name: foodName,
-      portion: `${Math.round(安全数值(item.intakeAmount || item.intake_amount))}g`,
+      weight: `${Math.round(安全数值(item.intakeAmount || item.intake_amount))}g`,
       kcal: `${Math.round(安全数值(item.calculatedEnergy || item.calculated_energy))} 千卡`,
       protein: `${Math.round(安全数值(item.calculatedProtein || item.calculated_protein))}g`,
       carbs: `${Math.round(安全数值(item.calculatedCarb || item.calculated_carb))}g`,
@@ -975,20 +1176,20 @@ const defaultFoodThumb = 'https://images.unsplash.com/photo-1490645935967-10de6b
 
 const 示例食谱映射 = {
   breakfast: [
-    { name: '牛油果全麦吐司', portion: '130g', kcal: '285 千卡', protein: '8g', carbs: '32g', fat: '15g', emoji: '🥑' },
-    { name: '蓝莓酸奶碗', portion: '180g', kcal: '210 千卡', protein: '12g', carbs: '24g', fat: '7g', emoji: '🫐' }
+    { name: '牛油果全麦吐司', weight: '130g', kcal: '285 千卡', protein: '8g', carbs: '32g', fat: '15g', emoji: '🥑' },
+    { name: '蓝莓酸奶碗', weight: '180g', kcal: '210 千卡', protein: '12g', carbs: '24g', fat: '7g', emoji: '🫐' }
   ],
   lunch: [
-    { name: '鸡胸肉藜麦沙拉', portion: '260g', kcal: '420 千卡', protein: '42g', carbs: '38g', fat: '12g', emoji: '🥗' },
-    { name: '南瓜浓汤', portion: '220g', kcal: '165 千卡', protein: '4g', carbs: '28g', fat: '5g', emoji: '🎃' }
+    { name: '鸡胸肉藜麦沙拉', weight: '260g', kcal: '420 千卡', protein: '42g', carbs: '38g', fat: '12g', emoji: '🥗' },
+    { name: '南瓜浓汤', weight: '220g', kcal: '165 千卡', protein: '4g', carbs: '28g', fat: '5g', emoji: '🎃' }
   ],
   snack: [
-    { name: '混合坚果', portion: '35g', kcal: '195 千卡', protein: '7g', carbs: '9g', fat: '16g', emoji: '🥜' },
-    { name: '苹果切片', portion: '120g', kcal: '62 千卡', protein: '0g', carbs: '14g', fat: '0g', emoji: '🍎' }
+    { name: '混合坚果', weight: '35g', kcal: '195 千卡', protein: '7g', carbs: '9g', fat: '16g', emoji: '🥜' },
+    { name: '苹果切片', weight: '120g', kcal: '62 千卡', protein: '0g', carbs: '14g', fat: '0g', emoji: '🍎' }
   ],
   dinner: [
-    { name: '香煎三文鱼配芦笋', portion: '240g', kcal: '468 千卡', protein: '38g', carbs: '8g', fat: '28g', emoji: '🐟' },
-    { name: '黑椒菌菇意面', portion: '210g', kcal: '338 千卡', protein: '14g', carbs: '52g', fat: '8g', emoji: '🍝' }
+    { name: '香煎三文鱼配芦笋', weight: '240g', kcal: '468 千卡', protein: '38g', carbs: '8g', fat: '28g', emoji: '🐟' },
+    { name: '黑椒菌菇意面', weight: '210g', kcal: '338 千卡', protein: '14g', carbs: '52g', fat: '8g', emoji: '🍝' }
   ]
 }
 
@@ -1001,7 +1202,7 @@ const 示例详情食物 = computed(() => {
     if (planItems.length > 0) {
       list = planItems.map((recipe) => ({
         name: recipe.name,
-        portion: '1份',
+        weight: `${Math.round(Number(recipe.portion_weight_g || recipe.portionWeightG || 100))}g`,
         kcal: `${Math.round(recipe.energy || 0)} 千卡`,
         protein: `${Math.round(recipe.protein || 0)}g`,
         carbs: `${Math.round(recipe.carbohydrate || 0)}g`,
@@ -1019,7 +1220,7 @@ const 示例详情食物 = computed(() => {
   return list.map((item, index) => ({
     id: `sample-${meal?.type || 'meal'}-${index}`,
     name: item.name,
-    portion: item.portion,
+    weight: item.weight || item.portion || '100g',
     kcal: item.kcal,
     protein: item.protein,
     carbs: item.carbs,
@@ -1058,7 +1259,8 @@ const 同步看板数据 = async () => {
 
     const promises = [
       getTodayStatus(转日期参数(已选日期.value)),
-      getNutritionRequirements().catch(() => null)
+      getNutritionRequirements().catch(() => null),
+      getDietMode().catch(() => null)
     ]
     if (是否今天.value) {
       promises.push(getSelectedRecipePlan().catch(() => null))
@@ -1067,7 +1269,15 @@ const 同步看板数据 = async () => {
     const res = await Promise.all(promises)
     const status = res[0]
     const nutrition = res[1]
-    const plan = res[2]
+    const modeResp = res[2]
+    const plan = res[3]
+
+    当前饮食模式.value = {
+      mode: modeResp?.mode || 'normal',
+      source: modeResp?.source || 'auto',
+      reason: modeResp?.reason || '',
+      until: modeResp?.until || null
+    }
 
     if (是否今天.value && plan && plan.id) {
       今日方案.value = plan
@@ -1121,6 +1331,46 @@ const 切换详情餐次 = (mealType) => {
   setTimeout(() => { 闪烁详情动画.value = false }, 350)
 }
 
+const 去模式设置 = () => {
+  待选饮食模式.value = 当前饮食模式.value?.mode || 'normal'
+  const defaultDays = 饮食模式选项.find((item) => item.mode === 待选饮食模式.value)?.days || 1
+  模式生效天数.value = Math.max(1, Math.min(7, Number(defaultDays) || 1))
+  显示模式选择弹窗.value = true
+}
+
+const 选择待选模式 = (mode) => {
+  const target = 饮食模式选项.find((item) => item.mode === mode)
+  if (!target) return
+  待选饮食模式.value = target.mode
+  if (!模式生效天数.value || 模式生效天数.value < 1) {
+    模式生效天数.value = target.days
+  }
+}
+
+const 确认保存饮食模式 = async () => {
+  const mode = 待选饮食模式.value || 'normal'
+  const target = 饮食模式选项.find((item) => item.mode === mode)
+  if (!target) return
+
+  const days = Math.max(1, Math.min(7, Number(模式生效天数.value) || target.days || 1))
+  模式保存中.value = true
+  try {
+    const resp = await setDietMode({ mode: target.mode, days, reason: target.reason })
+    当前饮食模式.value = {
+      mode: resp?.mode || target.mode,
+      source: resp?.source || 'manual',
+      reason: resp?.reason || target.reason,
+      until: resp?.until || null
+    }
+    message.success(`已切换为${当前饮食模式文案.value}`)
+    显示模式选择弹窗.value = false
+  } catch (error) {
+    message.error(error?.response?.data?.error || '饮食模式更新失败')
+  } finally {
+    模式保存中.value = false
+  }
+}
+
 const 去生成食谱 = async () => {
   if (!是否今天.value) return
   加载中.value = true
@@ -1151,6 +1401,7 @@ onMounted(async () => {
 <style scoped>
 :global(body) {
   font-family: 'Inter', 'Segoe UI', Roboto, Arial, sans-serif;
+  background: #EFF4F1;
 }
 
 .nutrition-dashboard {
@@ -1158,26 +1409,24 @@ onMounted(async () => {
   padding: 24px;
   position: relative;
   overflow: hidden;
-  /* 亲自然：淡色背景加微光感，模拟阳光洒落 */
-  background-color: #f4f6f3;
+  background-color: #EFF4F1;
   background-image: 
-    radial-gradient(circle at 15% 10%, rgba(255, 255, 255, 0.9) 0%, transparent 40%),
-    radial-gradient(circle at 85% 90%, rgba(240, 246, 237, 0.7) 0%, transparent 45%);
-  color: #1a2f24; /* 高对比深绿植色 */
+    radial-gradient(circle at 12% 8%, rgba(255, 255, 255, 0.8) 0%, transparent 40%),
+    radial-gradient(circle at 82% 88%, rgba(236, 245, 239, 0.75) 0%, transparent 42%);
+  color: #1a2f24;
 }
 
 .glass-card {
-  background: #ffffff;
-  border: none; /* 移除生硬边框，改用自然光影 */
-  border-radius: 20px; /* 有机柔和的圆角 */
-  box-shadow: 0 10px 40px -10px rgba(32, 59, 45, 0.06); /* 柔和植物阴影 */
-  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1); /* 150-220ms的自然节奏 */
+  background: #FAFCFB;
+  border: 1px solid rgba(231, 238, 234, 0.9);
+  border-radius: 18px;
+  box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .glass-card:hover {
-  /* Hover时如光线移动，亮度微升，轻微上浮 */
-  transform: translateY(-2px);
-  box-shadow: 0 16px 48px -12px rgba(32, 59, 45, 0.1);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(35, 73, 57, 0.07);
 }
 
 .top-header,
@@ -1190,38 +1439,76 @@ onMounted(async () => {
 }
 
 .top-header {
-  min-height: 96px;
-  padding: 16px 20px;
+  min-height: 78px;
+  padding: 14px 18px;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   margin-bottom: 14px;
   position: relative;
   z-index: 2;
 }
 
-.brand-wrap {
-  width: 100%;
+.header-main {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: 6px;
+  gap: 3px;
 }
 
-.brand {
+.header-greet {
   margin: 0;
-  font-size: 2.2rem;
-  letter-spacing: 0.03em;
+  font-size: 0.92rem;
+  color: #6a8a7a;
+  font-weight: 700;
+}
+
+.header-title {
+  margin: 0;
+  font-size: 1.35rem;
   color: #184c3d;
   font-weight: 800;
 }
 
-.brand-date {
+.header-sub {
   margin: 0;
-  font-size: 1.15rem;
-  color: #5f8578;
-  font-weight: 600;
+  font-size: 0.82rem;
+  color: #84a195;
+  font-weight: 700;
+}
+
+.header-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: #f4faf6;
+  border: 1px solid #e1ece6;
+  border-radius: 14px;
+  padding: 8px 12px;
+}
+
+.meta-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: #ffffff;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+}
+
+.meta-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.meta-text strong {
+  color: #2b5d4c;
+  font-size: 0.86rem;
+}
+
+.meta-text span {
+  color: #7b988c;
+  font-size: 0.78rem;
 }
 
 .top-actions {
@@ -1356,6 +1643,160 @@ onMounted(async () => {
   color: #6c8a7b;
 }
 
+.diet-mode-chip {
+  margin-top: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 999px;
+  padding: 6px 12px;
+  border: 1px solid #d5e7db;
+  background: #f6fbf7;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.diet-mode-chip:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+.diet-mode-chip .mode-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #111111;
+}
+
+.diet-mode-chip .mode-meta {
+  font-size: 0.8rem;
+  color: #111111;
+  opacity: 0.82;
+}
+
+.diet-mode-chip.mode-normal {
+  background: #eef7ff;
+  border-color: #cfe4ff;
+}
+
+.diet-mode-chip.mode-light_adjust {
+  background: #fff8ea;
+  border-color: #ffe1a6;
+}
+
+.diet-mode-chip.mode-bland {
+  background: #edf9ef;
+  border-color: #bfe5c4;
+}
+
+.diet-mode-chip.mode-heavy_adjust {
+  background: #fff1f1;
+  border-color: #ffc8c8;
+}
+
+.mode-select-modal :deep(.n-card-header__main) {
+  color: #184c3d;
+  font-weight: 700;
+}
+
+.mode-modal-desc {
+  margin: 0 0 12px;
+  font-size: 14px;
+  color: #2f5d4f;
+}
+
+.mode-option-list {
+  display: grid;
+  gap: 10px;
+}
+
+.mode-option {
+  text-align: left;
+  border-radius: 14px;
+  border: 1px solid #d8e8dd;
+  background: #f8fbf9;
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.mode-option:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(32, 59, 45, 0.08);
+}
+
+.mode-option:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.mode-option.active {
+  border-color: #86bd5a;
+  box-shadow: 0 0 0 2px rgba(141, 199, 93, 0.2);
+}
+
+.mode-option-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.mode-option-head strong {
+  color: #184c3d;
+  font-size: 15px;
+}
+
+.mode-option-days {
+  color: #2f5d4f;
+  font-size: 12px;
+}
+
+.mode-option p {
+  margin: 0;
+  color: #111111;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.mode-option.mode-normal {
+  background: #eef7ff;
+}
+
+.mode-option.mode-light_adjust {
+  background: #fff8ea;
+}
+
+.mode-option.mode-bland {
+  background: #edf9ef;
+}
+
+.mode-option.mode-heavy_adjust {
+  background: #fff1f1;
+}
+
+.mode-modal-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  color: #2f5d4f;
+}
+
+.mode-modal-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.mode-days-row {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #184c3d;
+  font-size: 14px;
+}
+
 .commercial-btn {
   border: none;
   /* 亲自然：叶绿自然渐变 */
@@ -1399,8 +1840,21 @@ onMounted(async () => {
   left: 3px;
   top: 0;
   bottom: 0;
-  width: 2px;
-  background: #ddead1; /* 亲自然：植物茎秆色 */
+  width: 4px;
+  border-radius: 999px;
+  background: #d6dfd8;
+}
+
+.timeline::after {
+  content: '';
+  position: absolute;
+  left: 3px;
+  top: 0;
+  width: 4px;
+  height: var(--timeline-progress, 0%);
+  border-radius: 999px;
+  background: linear-gradient(180deg, #8ec662, #78b456);
+  transition: height 0.35s ease;
 }
 
 .timeline-row {
@@ -1432,15 +1886,30 @@ onMounted(async () => {
 }
 
 .dot {
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
   background: #ffffff;
   position: absolute;
-  left: -23px;
-  top: 15px;
+  left: -24px;
+  top: 14px;
   border: 2px solid #8ec662;
-  box-shadow: 0 0 0 4px #f8faf9;
+  box-shadow: 0 0 0 5px #EFF4F1;
+}
+
+.timeline-row.timeline-past .dot {
+  border-color: #a9b7b0;
+  background: #e9efec;
+}
+
+.timeline-row.timeline-current .dot {
+  border-color: #74b848;
+  box-shadow: 0 0 0 5px #ecf6e7;
+}
+
+.timeline-row.timeline-future .dot {
+  border-color: #d0dbd5;
+  background: #ffffff;
 }
 
 .time-editor {
@@ -1471,10 +1940,18 @@ onMounted(async () => {
 
 .timeline-content {
   padding: 16px;
-  border-radius: 0;
+  border-radius: 14px;
   position: relative;
   overflow: hidden;
   cursor: pointer;
+}
+
+.timeline-row.timeline-past .timeline-content {
+  border-left-color: #bac8c0;
+}
+
+.timeline-row.timeline-current .timeline-content {
+  box-shadow: 0 0 0 2px rgba(134, 193, 89, 0.25), 0 10px 24px rgba(73, 117, 80, 0.08);
 }
 
 .meal-card::before,
@@ -1483,22 +1960,22 @@ onMounted(async () => {
 }
 
 .meal-breakfast {
-  background: #ffffff;
+  background: #FAFCFB;
   border-left: 6px solid #f5e094;
 }
 
 .meal-lunch {
-  background: #ffffff;
+  background: #FAFCFB;
   border-left: 6px solid #8ec662;
 }
 
 .meal-snack {
-  background: #ffffff;
+  background: #FAFCFB;
   border-left: 6px solid #f5e094;
 }
 
 .meal-dinner {
-  background: #ffffff;
+  background: #FAFCFB;
   border-left: 6px solid #8ec662;
 }
 
@@ -1597,13 +2074,13 @@ onMounted(async () => {
 .food-chip {
   padding: 6px 12px;
   border-radius: 16px;
-  background: #f4faf0;
+  background: #e8f5e9;
   display: inline-flex;
   align-items: center;
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: 600;
-  color: #3d6a4e;
-  border: 1px solid #ddecce;
+  color: #2e7d32;
+  border: 1px solid rgba(46, 125, 50, 0.18);
   white-space: nowrap;
 }
 
@@ -1748,7 +2225,7 @@ onMounted(async () => {
 
 .macro-card {
   border-radius: 12px;
-  background: #ffffff;
+  background: #FAFCFB;
   border: 1px solid #e9f0eb;
   padding: 12px 14px;
   display: flex;
@@ -1824,7 +2301,7 @@ onMounted(async () => {
 
 .details-head p {
   margin: 0;
-  color: #6b9283;
+  color: #111111;
   font-size: 1rem;
 }
 
@@ -1833,13 +2310,13 @@ onMounted(async () => {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 12px;
-  color: #6b9283;
+  color: #111111;
   font-size: 0.95rem;
 }
 
 .sample-note {
   margin: 0;
-  color: #5f8779;
+  color: #111111;
   font-size: 0.82rem;
   font-weight: 700;
 }
@@ -1873,10 +2350,17 @@ onMounted(async () => {
   margin-bottom: 16px;
 }
 
+.micro-item {
+  padding: 10px 10px 8px;
+  border-radius: 12px;
+  background: #f8fbf9;
+  border: 1px solid #e8efea;
+}
+
 .micro-top {
   display: flex;
   justify-content: space-between;
-  color: #507c6d;
+  color: #111111;
   font-size: 0.95rem;
   font-weight: 700;
   margin-bottom: 6px;
@@ -1893,9 +2377,72 @@ onMounted(async () => {
   height: 100%;
 }
 
+.micro-mini-bars {
+  height: 22px;
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.mini-bar {
+  flex: 1;
+  border-radius: 8px 8px 2px 2px;
+  opacity: 0.75;
+  min-height: 6px;
+}
+
+.meal-empty-guide {
+  margin: 4px 0 12px;
+  padding: 12px;
+  border: 1px dashed #bad8c0;
+  border-radius: 12px;
+  background: #f3faf5;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.meal-empty-guide h4 {
+  margin: 0 0 2px;
+  color: #2f694c;
+  font-size: 0.95rem;
+}
+
+.meal-empty-guide p {
+  margin: 0;
+  color: #5d8970;
+  font-size: 0.82rem;
+}
+
+.plate-illustration {
+  width: 56px;
+  height: 56px;
+  position: relative;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+}
+
+.plate-ring {
+  width: 46px;
+  height: 46px;
+  border: 2px solid #8ec662;
+  border-radius: 50%;
+}
+
+.plate-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #8ec662;
+  position: absolute;
+}
+
 .food-table {
   border-radius: 12px;
-  background: #ffffff;
+  background: #FAFCFB;
   border: 1px solid #e9f0eb;
   padding: 10px 12px;
   flex: 1;
@@ -1923,7 +2470,7 @@ onMounted(async () => {
 }
 
 .table-head {
-  color: #709384;
+  color: #111111;
   font-size: 0.9rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -1951,7 +2498,7 @@ onMounted(async () => {
 .row-delete-btn {
   background: transparent;
   border: none;
-  color: #a0bcae;
+  color: #111111;
   font-size: 1.3rem;
   cursor: pointer;
   padding: 4px;
@@ -1968,7 +2515,7 @@ onMounted(async () => {
 }
 
 .food-empty {
-  color: #7d9f92;
+  color: #111111;
 }
 
 .food-name {
@@ -1997,19 +2544,62 @@ onMounted(async () => {
   object-fit: cover;
 }
 
-.strong-text {
-  font-weight: 800;
-}
-
 .sub-text {
   font-size: 0.9rem;
-  color: #7b9f8f;
+  color: #111111;
 }
 
 .unit-text {
   font-size: 0.85rem;
-  color: #9cbcae;
+  color: #111111;
   margin-left: 2px;
+}
+
+.add-more {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.add-more input {
+  flex: 1;
+  width: 100%;
+  height: 40px;
+  border: 1px solid #dce8e1;
+  border-radius: 10px;
+  background: #FAFCFB;
+  padding: 0 12px;
+  color: #2e5346;
+  font-size: 0.95rem;
+  outline: none;
+}
+
+.add-more input::placeholder {
+  color: #7f9a8f;
+}
+
+.plus-btn {
+  width: 40px;
+  height: 40px;
+  border: 1px solid #cfe1d7;
+  border-radius: 10px;
+  background: #eef7f1;
+  color: #2f694c;
+  font-size: 1.25rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.plus-btn:hover {
+  background: #e5f3ea;
+  transform: translateY(-1px);
 }
 
 /* AI 识别 Loading 遮罩 */
@@ -2029,7 +2619,7 @@ onMounted(async () => {
 
 .ai-loading-inner {
   text-align: center;
-  background: white;
+  background: #FAFCFB;
   padding: 32px 48px;
   border-radius: 20px;
   box-shadow: 0 16px 48px rgba(32, 59, 45, 0.1);

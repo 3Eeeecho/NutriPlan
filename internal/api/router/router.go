@@ -55,6 +55,12 @@ func NewRouter(deps RouterDeps) *gin.Engine {
 
 			// 获取营养需求 (GET /api/v1/user/nutrition)
 			auth.GET("/nutrition", userHandler.GetNutritionRequirements)
+
+			// 获取当前饮食模式 (GET /api/v1/user/diet-mode)
+			auth.GET("/diet-mode", userHandler.GetDietMode)
+
+			// 设置饮食模式 (PUT /api/v1/user/diet-mode)
+			auth.PUT("/diet-mode", userHandler.SetDietMode)
 		}
 
 		// --- 食谱推荐路由 ---
