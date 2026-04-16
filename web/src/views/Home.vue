@@ -41,10 +41,16 @@
               <span class="mode-meta" v-else>{{ 当前饮食模式说明 }}</span>
             </div>
           </div>
-          <button class="commercial-btn" @click="去生成食谱">
-            <n-icon><SparklesOutline /></n-icon>
-            {{ 今日方案 ? '重新生成食谱' : '智能生成今日食谱' }}
-          </button>
+          <div class="recipe-action-buttons">
+            <button v-if="false" class="commercial-btn secondary-btn" @click="去受限单餐重构">
+              <n-icon><SparklesOutline /></n-icon>
+              受限单餐重构
+            </button>
+            <button class="commercial-btn" @click="去生成食谱">
+              <n-icon><SparklesOutline /></n-icon>
+              {{ 今日方案 ? '重新生成食谱' : '智能生成今日食谱' }}
+            </button>
+          </div>
         </div>
 
         <div class="timeline" :style="时间线样式">
@@ -80,51 +86,58 @@
             </div>
 
             <div class="timeline-content glass-card meal-card" :class="`meal-${meal.type}`" @click="切换详情餐次(meal.type)">
-              <div class="meal-head">
-                <div class="meal-title-wrap">
-                  <input
-                    v-if="编辑名称餐次 === meal.type"
-                    v-model="编辑名称内容"
-                    class="meal-name-input"
-                    maxlength="16"
-                    @blur="保存名称编辑(meal.type)"
-                    @keyup.enter="保存名称编辑(meal.type)"
-                    @click.stop
-                  />
-                  <h3
-                    v-else
-                    class="editable-meal-name"
-                    title="点击修改名称"
-                    @click.stop="开始编辑名称(meal.type, meal.name)"
-                  >
-                    {{ meal.name }}
-                  </h3>
-                </div>
-                <div class="head-right">
-                  <p class="kcal">{{ meal.kcal || '--' }}</p>
-                  <div class="drag-handle" title="按住拖拽排序" @mousedown.stop="允许拖拽(meal.type)" @mouseup.stop="禁止拖拽" @mouseleave="禁止拖拽" @click.stop>
-                    <n-icon><MenuOutline /></n-icon>
+              <div class="meal-shell">
+                <div class="meal-main">
+                  <div class="meal-head">
+                    <div class="meal-title-wrap">
+                      <input
+                        v-if="编辑名称餐次 === meal.type"
+                        v-model="编辑名称内容"
+                        class="meal-name-input"
+                        maxlength="16"
+                        @blur="保存名称编辑(meal.type)"
+                        @keyup.enter="保存名称编辑(meal.type)"
+                        @click.stop
+                      />
+                      <h3
+                        v-else
+                        class="editable-meal-name"
+                        title="点击修改名称"
+                        @click.stop="开始编辑名称(meal.type, meal.name)"
+                      >
+                        {{ meal.name }}
+                      </h3>
+                      <span class="meal-time-inline">{{ meal.time }}</span>
+                    </div>
+                    <div class="drag-handle" title="按住拖拽排序" @mousedown.stop="允许拖拽(meal.type)" @mouseup.stop="禁止拖拽" @mouseleave="禁止拖拽" @click.stop>
+                      <n-icon><MenuOutline /></n-icon>
+                    </div>
+                  </div>
+
+                  <div class="meal-food-row">
+                    <div class="meal-thumb">
+                      <img v-if="meal.thumb" :src="meal.thumb" alt="餐次缩略图" />
+                      <span v-else>{{ meal.icon }}</span>
+                    </div>
+                    <div class="meal-food-content">
+                      <div class="food-hints compact">
+                        <span v-for="hint in meal.hints" :key="hint" class="food-chip">{{ hint }}</span>
+                      </div>
+                      <p v-if="!meal.records.length" class="meal-empty-copy">还没想好{{ meal.name }}吃什么？点击查看推荐</p>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div class="meal-hero">
-                <div class="hero-badge">{{ meal.icon }}</div>
-              </div>
-
-              <div class="food-hints">
-                <span v-for="hint in meal.hints" :key="hint" class="food-chip">{{ hint }}</span>
-              </div>
-
-              <div class="bar-track">
-                <div class="bar-fill" :style="{ width: meal.progress + '%' }" />
-              </div>
-
-              <div class="meal-actions">
-                <button class="record-btn-main" @click.stop="打开记录悬浮栏(meal.type)">
-                  <n-icon><AddCircleOutline /></n-icon>
-                  <span>{{ meal.type === 'snack' ? '记录餐次' : '记录今日餐次' }}</span>
-                </button>
+                <div class="meal-side" @click.stop="打开记录悬浮栏(meal.type)">
+                  <div class="mini-ring" :style="{ background: `conic-gradient(#8ec662 0 ${meal.progress}%, #e8f1e5 ${meal.progress}% 100%)` }">
+                    <div class="mini-ring-inner">{{ meal.progress }}%</div>
+                  </div>
+                  <p class="meal-summary">{{ meal.display_energy }} kcal</p>
+                  <p class="meal-summary-sub">蛋白质 {{ meal.display_protein }}g</p>
+                  <div class="quick-add-icon" aria-label="记录餐次">
+                    <n-icon><AddCircleOutline /></n-icon>
+                  </div>
+                </div>
               </div>
 
               <div v-if="meal.variant === 'logged'" class="footer-tip">状态：已记录</div>
@@ -160,108 +173,112 @@
           </div>
         </div>
 
-        <div class="details-card glass-card" :class="{ 'pulse-anim': 闪烁详情动画 }">
-          <div class="details-head">
-            <h3>{{ 当前详情标题 }}</h3>
-            <p>{{ 当前详情时间 }}</p>
-          </div>
-
-          <div v-if="!当前详情食物.length" class="sample-note-wrapper">
-            <p class="sample-note">
-              {{ 今日方案 ? '今日暂无记录，以下为今日推荐食谱' : '今日暂无记录，以下为推荐食谱' }}
-            </p>
-            <button v-if="是否今天 && !今日方案" class="generate-btn" @click="去生成食谱">
-              <n-icon><SparklesOutline /></n-icon> 智能生成今日食谱
-            </button>
-          </div>
-
-          <div class="micro-grid">
-            <div v-for="line in 详情营养条" :key="line.label" class="micro-item">
-              <div class="micro-top">
-                <span>{{ line.label }}</span>
-                <span>{{ line.value }}</span>
+        <div class="details-card details-stage glass-card">
+          <Transition name="detail-panel" mode="out-in">
+            <div :key="当前详情餐次?.type || 详情餐次类型" class="details-body">
+              <div class="details-head">
+                <h3>{{ 当前详情标题 }}</h3>
+                <p>{{ 当前详情时间 }}</p>
               </div>
-              <div class="micro-mini-bars" aria-hidden="true">
-                <span
-                  v-for="(height, index) in line.spark"
-                  :key="`${line.label}-${index}`"
-                  class="mini-bar"
-                  :style="{ height: `${height}%`, background: line.color }"
-                />
+
+              <div v-if="!当前详情食物.length" class="sample-note-wrapper">
+                <p class="sample-note">
+                  {{ 今日方案 ? '今日暂无记录，以下为今日推荐食谱' : '今日暂无记录，以下为推荐食谱' }}
+                </p>
+                <button v-if="是否今天 && !今日方案" class="generate-btn" @click="去生成食谱">
+                  <n-icon><SparklesOutline /></n-icon> 智能生成今日食谱
+                </button>
               </div>
-              <div class="micro-track">
-                <div class="micro-fill" :style="{ width: line.progress + '%', background: line.color }" />
+
+              <div class="micro-grid">
+                <div v-for="line in 详情营养条" :key="line.label" class="micro-item">
+                  <div class="micro-top">
+                    <span>{{ line.label }}</span>
+                    <span>{{ line.value }}</span>
+                  </div>
+                  <div class="micro-mini-bars" aria-hidden="true">
+                    <span
+                      v-for="(height, index) in line.spark"
+                      :key="`${line.label}-${index}`"
+                      class="mini-bar"
+                      :style="{ height: `${height}%`, background: line.color }"
+                    />
+                  </div>
+                  <div class="micro-track">
+                    <div class="micro-fill" :style="{ width: line.progress + '%', background: line.color }" />
+                  </div>
+                </div>
+              </div>
+
+              <div v-if="!当前详情食物.length" class="meal-empty-guide" @click="打开记录悬浮栏(当前详情餐次?.type || 'breakfast')">
+                <div class="plate-illustration" aria-hidden="true">
+                  <span class="plate-ring"></span>
+                  <span class="plate-dot"></span>
+                </div>
+                <div>
+                  <h4>当前餐段还未记录</h4>
+                  <p>点击添加今日{{ 当前详情餐次?.name || '餐次' }}，让营养数据更完整</p>
+                </div>
+              </div>
+
+              <div class="food-table">
+                <div class="table-head">
+                  <span class="check-col"></span>
+                  <span>食物项</span>
+                  <span>重量(g)</span>
+                  <span>热量</span>
+                  <span>蛋白质</span>
+                  <span>碳水</span>
+                  <span>脂肪</span>
+                  <span class="action-col"></span>
+                </div>
+
+                <div v-for="food in 展示详情食物" :key="food.id" class="food-row">
+                  <label class="check-wrap">
+                    <input
+                      type="checkbox"
+                      class="food-check-input"
+                      :checked="!food.sample || 本地勾选食物.some(f => f.id === food.id)"
+                      :disabled="!food.sample"
+                      @change="切换食物状态(food)"
+                    />
+                  </label>
+                  <div class="food-name">
+                    <span class="thumb" :style="{ background: food.image ? 'transparent' : food.bg }">
+                      <img v-if="food.image" :src="food.image" alt="食物图" />
+                      <span v-else>{{ food.emoji }}</span>
+                    </span>
+                    <span>{{ food.name }}</span>
+                  </div>
+                  <span class="sub-text">{{ food.weight }}</span>
+                  <span class="sub-text">{{ food.kcal }}</span>
+                  <span class="sub-text">{{ food.protein }}</span>
+                  <span class="sub-text">{{ food.carbs }}</span>
+                  <span class="sub-text">{{ food.fat }}</span>
+                  <div class="action-wrap">
+                    <n-popconfirm
+                      v-if="!food.sample && food.realId"
+                      @positive-click="删除真实饮食记录(food.realId)"
+                      positive-text="删除"
+                      negative-text="取消"
+                    >
+                      <template #trigger>
+                        <button class="row-delete-btn" aria-label="删除食物">
+                          <n-icon><TrashOutline /></n-icon>
+                        </button>
+                      </template>
+                      确定要删除这道食物记录吗？
+                    </n-popconfirm>
+                  </div>
+                </div>
+              </div>
+
+              <div class="add-more">
+                <input type="text" placeholder="为这餐添加更多食物..." @click="打开记录悬浮栏(当前详情餐次.type)" readonly />
+                <button class="plus-btn" aria-label="添加食物" @click="打开记录悬浮栏(当前详情餐次.type)">+</button>
               </div>
             </div>
-          </div>
-
-          <div v-if="!当前详情食物.length" class="meal-empty-guide" @click="打开记录悬浮栏(当前详情餐次?.type || 'breakfast')">
-            <div class="plate-illustration" aria-hidden="true">
-              <span class="plate-ring"></span>
-              <span class="plate-dot"></span>
-            </div>
-            <div>
-              <h4>当前餐段还未记录</h4>
-              <p>点击添加今日{{ 当前详情餐次?.name || '餐次' }}，让营养数据更完整</p>
-            </div>
-          </div>
-
-          <div class="food-table">
-            <div class="table-head">
-              <span class="check-col"></span>
-              <span>食物项</span>
-              <span>重量(g)</span>
-              <span>热量</span>
-              <span>蛋白质</span>
-              <span>碳水</span>
-              <span>脂肪</span>
-              <span class="action-col"></span>
-            </div>
-
-            <div v-for="food in 展示详情食物" :key="food.id" class="food-row">
-              <label class="check-wrap">
-                <input
-                  type="checkbox"
-                  class="food-check-input"
-                  :checked="!food.sample || 本地勾选食物.some(f => f.id === food.id)"
-                  :disabled="!food.sample"
-                  @change="切换食物状态(food)"
-                />
-              </label>
-              <div class="food-name">
-                <span class="thumb" :style="{ background: food.image ? 'transparent' : food.bg }">
-                  <img v-if="food.image" :src="food.image" alt="食物图" />
-                  <span v-else>{{ food.emoji }}</span>
-                </span>
-                <span>{{ food.name }}</span>
-              </div>
-              <span class="sub-text">{{ food.weight }}</span>
-              <span class="sub-text">{{ food.kcal }}</span>
-              <span class="sub-text">{{ food.protein }}</span>
-              <span class="sub-text">{{ food.carbs }}</span>
-              <span class="sub-text">{{ food.fat }}</span>
-              <div class="action-wrap">
-                <n-popconfirm
-                  v-if="!food.sample && food.realId"
-                  @positive-click="删除真实饮食记录(food.realId)"
-                  positive-text="删除"
-                  negative-text="取消"
-                >
-                  <template #trigger>
-                    <button class="row-delete-btn" aria-label="删除食物">
-                      <n-icon><TrashOutline /></n-icon>
-                    </button>
-                  </template>
-                  确定要删除这道食物记录吗？
-                </n-popconfirm>
-              </div>
-            </div>
-          </div>
-
-          <div class="add-more">
-            <input type="text" placeholder="为这餐添加更多食物..." @click="打开记录悬浮栏(当前详情餐次.type)" readonly />
-            <button class="plus-btn" aria-label="添加食物" @click="打开记录悬浮栏(当前详情餐次.type)">+</button>
-          </div>
+          </Transition>
         </div>
       </section>
     </main>
@@ -307,6 +324,76 @@
           <div class="mode-modal-actions">
             <n-button secondary :disabled="模式保存中" @click="显示模式选择弹窗 = false">取消</n-button>
             <n-button type="primary" color="#8ec662" :loading="模式保存中" @click="确认保存饮食模式">确认切换</n-button>
+          </div>
+        </div>
+      </template>
+    </n-modal>
+
+    <n-modal
+      v-model:show="显示单餐重构弹窗"
+      preset="card"
+      class="mode-select-modal"
+      style="width: 680px"
+      title="受限单餐重构"
+      :mask-closable="!单餐重构中 && !单餐采纳中"
+    >
+      <div class="regen-grid">
+        <label class="regen-label">餐次</label>
+        <n-select
+          v-model:value="单餐重构表单.meal_type"
+          :options="餐次选项"
+          placeholder="选择目标餐次"
+        />
+
+        <label class="regen-label">食材输入</label>
+        <n-input
+          v-model:value="单餐重构表单.ingredients_text"
+          type="textarea"
+          :rows="3"
+          placeholder="输入食材，使用逗号分隔，例如：三文鱼, 菠菜, 糙米"
+        />
+
+        <div class="regen-upload-row">
+          <input type="file" accept="image/png,image/jpeg" @change="选择单餐重构图片" />
+          <n-button secondary :loading="食材识别中" @click="识别重构食材">图片识别食材</n-button>
+          <n-button secondary @click="解析重构食材文本">加入文本食材</n-button>
+        </div>
+
+        <div class="regen-ingredients-list">
+          <span
+            v-for="item in 单餐重构表单.ingredients"
+            :key="item"
+            class="regen-chip"
+            @click="删除重构食材(item)"
+            title="点击移除"
+          >
+            {{ item }} ×
+          </span>
+          <span v-if="!单餐重构表单.ingredients.length" class="regen-empty">暂无食材，先输入或识别</span>
+        </div>
+
+        <div class="regen-actions">
+          <n-button type="primary" color="#8ec662" :loading="单餐重构中" @click="开始单餐重构">开始重构</n-button>
+          <n-button type="success" :disabled="!单餐重构结果" :loading="单餐采纳中" @click="采纳单餐重构">采纳该餐次</n-button>
+        </div>
+
+        <div v-if="单餐重构中" class="regen-loading-tip">
+          <n-spin size="small" />
+          <span>正在根据营养缺口和食材重构单餐...</span>
+        </div>
+
+        <div v-if="单餐重构结果?.meal" class="regen-result-panel">
+          <h4>{{ 单餐重构结果.meal.meal_name }}</h4>
+          <p>{{ 单餐重构结果.meal.dietitian_tip }}</p>
+          <p v-if="单餐重构结果.supplementary_tip" class="regen-supplementary-tip">{{ 单餐重构结果.supplementary_tip }}</p>
+        </div>
+      </div>
+
+      <template #footer>
+        <div class="mode-modal-footer">
+          <span>提示：先锁定今日食谱后再采纳，效果最佳</span>
+          <div class="mode-modal-actions">
+            <n-button secondary :disabled="单餐重构中 || 单餐采纳中" @click="显示单餐重构弹窗 = false">关闭</n-button>
           </div>
         </div>
       </template>
@@ -425,7 +512,14 @@ import {
 } from '@vicons/ionicons5'
 import { getTodayStatus, addIntakeRecord, deleteIntakeRecord } from '@/api/intakeApi'
 import { getNutritionRequirements, getDietMode, setDietMode } from '@/api/user'
-import { getSelectedRecipePlan, getRecipeRecommendations, selectRecipePlan } from '@/api/recipeApi'
+import {
+  getSelectedRecipePlan,
+  getRecipeRecommendations,
+  selectRecipePlan,
+  recognizeMealIngredients,
+  regenerateConstrainedMeal,
+  adoptRegeneratedMeal
+} from '@/api/recipeApi'
 import { recognizeFood, analyzeFoodText } from '@/api/foodRecognitionApi'
 import { useAuthStore } from '@/store/auth'
 
@@ -602,6 +696,17 @@ const 今日方案 = ref(null)
 const 当前饮食模式 = ref({ mode: 'normal', source: 'auto', reason: '', until: null })
 const 显示模式选择弹窗 = ref(false)
 const 模式保存中 = ref(false)
+const 显示单餐重构弹窗 = ref(false)
+const 单餐重构中 = ref(false)
+const 单餐采纳中 = ref(false)
+const 食材识别中 = ref(false)
+const 单餐重构图片文件 = ref(null)
+const 单餐重构结果 = ref(null)
+const 单餐重构表单 = ref({
+  meal_type: 'lunch',
+  ingredients: [],
+  ingredients_text: ''
+})
 const 待选饮食模式 = ref('normal')
 const 模式生效天数 = ref(1)
 const 饮食模式选项 = [
@@ -617,7 +722,6 @@ const 编辑名称内容 = ref('')
 const 拖拽源餐次 = ref('')
 const 拖拽目标餐次 = ref('')
 const 可拖拽餐次 = ref('')
-const 闪烁详情动画 = ref(false)
 const 每日状态 = ref({
   records: [],
   totalEnergy: 0,
@@ -922,11 +1026,19 @@ const 切换食物状态 = (food) => {
   const parsedProtein = parseFloat(food.protein) || 0
   const parsedCarbs = parseFloat(food.carbs) || 0
   const parsedFat = parseFloat(food.fat) || 0
+  const mealType = 当前详情餐次.value?.type || 'breakfast'
   const idx = 本地勾选食物.value.findIndex(f => f.id === food.id)
   if (idx !== -1) {
     本地勾选食物.value.splice(idx, 1)
   } else {
-    本地勾选食物.value.push({ id: food.id, kcal: parsedKcal, protein: parsedProtein, carbs: parsedCarbs, fat: parsedFat })
+    本地勾选食物.value.push({
+      id: food.id,
+      mealType,
+      kcal: parsedKcal,
+      protein: parsedProtein,
+      carbs: parsedCarbs,
+      fat: parsedFat
+    })
   }
 }
 
@@ -999,12 +1111,26 @@ const 时间线餐次 = computed(() => {
     }
     const records = 获取餐次记录(config.type)
     const consumed = Math.round(records.reduce((sum, item) => sum + 安全数值(item.calculatedEnergy || item.calculated_energy), 0))
+    const consumedProtein = Math.round(records.reduce((sum, item) => sum + 安全数值(item.calculatedProtein || item.calculated_protein), 0))
+    const checkedMealItems = 本地勾选食物.value.filter((item) => item.mealType === config.type)
+    const checkedEnergy = Math.round(checkedMealItems.reduce((sum, item) => sum + 安全数值(item.kcal), 0))
+    const checkedProtein = Math.round(checkedMealItems.reduce((sum, item) => sum + 安全数值(item.protein), 0))
+    const previewEnergy = consumed + checkedEnergy
+    const previewProtein = consumedProtein + checkedProtein
+    const planItems = (是否今天.value && 今日方案.value)
+      ? 获取计划餐次食谱列表(今日方案.value, config.type)
+      : []
+    const recommendedEnergy = Math.round(planItems.reduce((sum, item) => sum + 安全数值(item.energy), 0))
+    const recommendedProtein = Math.round(planItems.reduce((sum, item) => sum + 安全数值(item.protein), 0))
+    const displayEnergy = previewEnergy > 0 ? previewEnergy : recommendedEnergy
+    const displayProtein = previewProtein > 0 ? previewProtein : recommendedProtein
     const target = Math.max(1, Math.round(每日目标热量.value * config.ratio))
-    const progress = Math.min(100, Math.round((consumed / target) * 100))
+    const progress = previewEnergy > 0
+      ? Math.min(100, Math.round((previewEnergy / target) * 100))
+      : 0
 
     let defaultHints = []
     if (是否今天.value && 今日方案.value) {
-      const planItems = 获取计划餐次食谱列表(今日方案.value, config.type)
       if (planItems.length > 0) {
         defaultHints = planItems.map((item) => item.name).filter(Boolean)
       }
@@ -1044,10 +1170,14 @@ const 时间线餐次 = computed(() => {
       time: 餐次时间映射.value[config.type] || config.time,
       records,
       consumed,
+      protein: consumedProtein,
       target,
       hints,
       kcal: consumed > 0 ? `${consumed} / ${target} 千卡` : '',
       progress,
+      display_energy: Math.max(0, displayEnergy),
+      display_protein: Math.max(0, displayProtein),
+      thumb: records[0]?.imageUrl || records[0]?.image_url || planItems[0]?.imageUrl || planItems[0]?.image_url || 食物图片映射[hints[0]] || '',
       variant: consumed > 0 ? (config.type === 'lunch' ? 'logged' : 'filled') : 'empty',
       phase
     }
@@ -1327,8 +1457,6 @@ const 下一天 = async () => {
 const 切换详情餐次 = (mealType) => {
   if (详情餐次类型.value === mealType) return
   详情餐次类型.value = mealType
-  闪烁详情动画.value = true
-  setTimeout(() => { 闪烁详情动画.value = false }, 350)
 }
 
 const 去模式设置 = () => {
@@ -1388,6 +1516,108 @@ const 去生成食谱 = async () => {
     message.error('生成食谱失败，请稍后重试')
   } finally {
     加载中.value = false
+  }
+}
+
+const 去受限单餐重构 = () => {
+  单餐重构结果.value = null
+  单餐重构图片文件.value = null
+  单餐重构表单.value = {
+    meal_type: 'lunch',
+    ingredients: [],
+    ingredients_text: ''
+  }
+  显示单餐重构弹窗.value = true
+}
+
+const 解析重构食材文本 = () => {
+  const parsed = (单餐重构表单.value.ingredients_text || '')
+    .split(/[，,\n]/)
+    .map((item) => item.trim())
+    .filter(Boolean)
+
+  单餐重构表单.value.ingredients = Array.from(new Set([
+    ...单餐重构表单.value.ingredients,
+    ...parsed
+  ]))
+}
+
+const 删除重构食材 = (item) => {
+  单餐重构表单.value.ingredients = 单餐重构表单.value.ingredients.filter((value) => value !== item)
+}
+
+const 选择单餐重构图片 = (event) => {
+  单餐重构图片文件.value = event.target.files?.[0] || null
+}
+
+const 识别重构食材 = async () => {
+  if (!单餐重构图片文件.value) {
+    message.warning('请先选择食材图片')
+    return
+  }
+
+  食材识别中.value = true
+  try {
+    const resp = await recognizeMealIngredients(单餐重构图片文件.value)
+    const recognized = Array.isArray(resp?.ingredients) ? resp.ingredients : []
+    单餐重构表单.value.ingredients = Array.from(new Set([
+      ...单餐重构表单.value.ingredients,
+      ...recognized
+    ]))
+    message.success('识别完成，请确认食材列表')
+  } catch (error) {
+    message.error(error?.response?.data?.error || '食材识别失败，请稍后重试')
+  } finally {
+    食材识别中.value = false
+  }
+}
+
+const 开始单餐重构 = async () => {
+  解析重构食材文本()
+  if (!单餐重构表单.value.meal_type) {
+    message.warning('请选择餐次')
+    return
+  }
+  if (!单餐重构表单.value.ingredients.length) {
+    message.warning('请至少提供一种食材')
+    return
+  }
+
+  单餐重构中.value = true
+  try {
+    const payload = {
+      meal_type: 单餐重构表单.value.meal_type,
+      ingredients: 单餐重构表单.value.ingredients
+    }
+    单餐重构结果.value = await regenerateConstrainedMeal(payload)
+    message.success('单餐重构完成，可直接采纳')
+  } catch (error) {
+    message.error(error?.response?.data?.error || '单餐重构失败，请稍后再试')
+  } finally {
+    单餐重构中.value = false
+  }
+}
+
+const 采纳单餐重构 = async () => {
+  if (!单餐重构结果.value?.meal) return
+
+  单餐采纳中.value = true
+  try {
+    const resp = await adoptRegeneratedMeal({
+      meal_type: 单餐重构表单.value.meal_type,
+      meal: 单餐重构结果.value.meal
+    })
+
+    if (resp?.plan) {
+      今日方案.value = resp.plan
+    }
+    await 同步看板数据()
+    显示单餐重构弹窗.value = false
+    message.success('已采纳重构结果，当前页数据已刷新')
+  } catch (error) {
+    message.error(error?.response?.data?.error || '采纳失败，请先锁定今日食谱')
+  } finally {
+    单餐采纳中.value = false
   }
 }
 
@@ -1797,6 +2027,85 @@ onMounted(async () => {
   font-size: 14px;
 }
 
+.regen-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.regen-label {
+  font-size: 13px;
+  color: #2f5d4f;
+  font-weight: 600;
+}
+
+.regen-upload-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.regen-ingredients-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 32px;
+}
+
+.regen-chip {
+  background: #edf7e8;
+  color: #2c5b3f;
+  border: 1px solid #cfe6c4;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.regen-empty {
+  color: #8aa497;
+  font-size: 12px;
+}
+
+.regen-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.regen-loading-tip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #2f5d4f;
+  font-size: 13px;
+}
+
+.regen-result-panel {
+  margin-top: 4px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #f6fbf5;
+  border: 1px solid #dcead7;
+}
+
+.regen-result-panel h4 {
+  margin: 0 0 6px;
+  color: #184c3d;
+}
+
+.regen-result-panel p {
+  margin: 0;
+  color: #2f5d4f;
+  font-size: 13px;
+}
+
+.regen-supplementary-tip {
+  margin-top: 6px !important;
+  color: #2b8a3e !important;
+  font-weight: 600;
+}
+
 .commercial-btn {
   border: none;
   /* 亲自然：叶绿自然渐变 */
@@ -1812,6 +2121,18 @@ onMounted(async () => {
   cursor: pointer;
   box-shadow: 0 6px 16px rgba(122, 180, 77, 0.25);
   transition: all 0.18s cubic-bezier(0.2, 0.8, 0.2, 1); /* 在 150-220ms 范围内 */
+}
+
+.recipe-action-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.secondary-btn {
+  background: #ffffff;
+  color: #5a7f3b;
+  border: 1px solid #9fc07f;
+  box-shadow: none;
 }
 
 .commercial-btn:hover {
@@ -1922,7 +2243,7 @@ onMounted(async () => {
   border: none;
   background: transparent;
   color: #5f8a7b;
-  font-size: 0.84rem;
+  font-size: 0.92rem;
   font-weight: 700;
   padding: 0;
   cursor: pointer;
@@ -1939,11 +2260,20 @@ onMounted(async () => {
 }
 
 .timeline-content {
-  padding: 16px;
+  padding: 12px 14px;
   border-radius: 14px;
   position: relative;
   overflow: hidden;
   cursor: pointer;
+}
+
+.timeline-content::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle at 16% 16%, rgba(142, 198, 98, 0.08), transparent 32%),
+    radial-gradient(circle at 88% 86%, rgba(114, 170, 70, 0.06), transparent 30%);
+  pointer-events: none;
 }
 
 .timeline-row.timeline-past .timeline-content {
@@ -1979,23 +2309,44 @@ onMounted(async () => {
   border-left: 6px solid #8ec662;
 }
 
+.meal-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(120px, 3fr);
+  gap: 10px;
+  align-items: stretch;
+  position: relative;
+  z-index: 1;
+}
+
+.meal-main {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .meal-head {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
-  margin-bottom: 10px;
+  align-items: center;
 }
 
 .meal-title-wrap {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .meal-head h3 {
   margin: 0;
-  font-size: 1.35rem;
+  font-size: 1.24rem;
   color: #204c3f;
+}
+
+.meal-time-inline {
+  font-size: 0.9rem;
+  color: #6b8d7e;
+  font-weight: 700;
 }
 
 .editable-meal-name {
@@ -2014,18 +2365,12 @@ onMounted(async () => {
   font-weight: 700;
 }
 
-.head-right {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
 .drag-handle {
   cursor: grab;
-  font-size: 1.25rem;
+  font-size: 1rem;
   color: #a0bcae;
   display: flex;
-  padding: 4px;
+  padding: 2px;
   border-radius: 4px;
   transition: background 0.2s, color 0.2s;
 }
@@ -2039,90 +2384,126 @@ onMounted(async () => {
   cursor: grabbing;
 }
 
-.kcal {
-  margin: 0;
-  color: #4d7c6d;
-  font-weight: 700;
-  font-size: 1rem;
-}
-
-.meal-hero {
+.meal-food-row {
   display: flex;
+  gap: 10px;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 10px;
 }
 
-.hero-badge {
-  width: 46px;
-  height: 46px;
+.meal-thumb {
+  width: 44px;
+  height: 44px;
   border-radius: 12px;
-  background: white;
+  border: 1px solid #dce9df;
+  background: #ffffff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
   display: grid;
   place-items: center;
-  font-size: 1.6rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  flex-shrink: 0;
+  color: #446f5f;
+}
+
+.meal-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.meal-food-content {
+  min-width: 0;
+  flex: 1;
 }
 
 .food-hints {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-bottom: 12px;
+}
+
+.food-hints.compact {
+  margin: 0;
 }
 
 .food-chip {
-  padding: 6px 12px;
+  padding: 4px 10px;
   border-radius: 16px;
   background: #e8f5e9;
   display: inline-flex;
   align-items: center;
-  font-size: 0.9rem;
+  font-size: 0.92rem;
   font-weight: 600;
   color: #2e7d32;
   border: 1px solid rgba(46, 125, 50, 0.18);
   white-space: nowrap;
 }
 
-.bar-track {
-  height: 8px;
-  border-radius: 999px;
-  background: #f0f5f2;
-  overflow: hidden;
-  margin-bottom: 12px;
-}
-
-.bar-fill {
-  height: 100%;
-  border-radius: inherit;
-  background: #8ec662;
-}
-
-.meal-actions {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.record-btn-main {
-  border: 1px solid #ddecce;
-  border-radius: 8px;
-  min-height: 38px;
-  padding: 0 16px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: #4a7c59;
+.meal-empty-copy {
+  margin: 6px 0 0;
+  color: #8aa093;
+  font-size: 0.92rem;
   font-weight: 600;
-  background: #f4faf0;
-  box-shadow: none;
-  cursor: pointer;
+}
+
+.meal-side {
+  border-left: 1px dashed #d8e5da;
+  padding-left: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.mini-ring {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+}
+
+.mini-ring-inner {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #f7fbf6;
+  color: #2c5f4c;
+  font-size: 0.82rem;
+  font-weight: 800;
+  display: grid;
+  place-items: center;
+}
+
+.meal-summary {
+  margin: 0;
+  color: #2a5d4b;
+  font-size: 0.96rem;
+  font-weight: 800;
+}
+
+.meal-summary-sub {
+  margin: 0;
+  color: #5f8474;
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.quick-add-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid #d3e5c6;
+  background: #f2faee;
+  color: #6ea744;
+  display: grid;
+  place-items: center;
   transition: all 0.2s ease;
 }
 
-.record-btn-main:hover {
-  background: #e7f2da;
+.meal-side:hover .quick-add-icon {
+  transform: translateY(-1px);
+  background: #eaf7df;
 }
 
 .footer-tip {
@@ -2276,14 +2657,32 @@ onMounted(async () => {
   min-height: 520px;
 }
 
-@keyframes detail-pulse {
-  0% { opacity: 0.8; transform: scale(0.995); }
-  50% { opacity: 1; transform: scale(1.008); box-shadow: 0 12px 32px rgba(142, 198, 98, 0.15); border-color: #8ec662; }
-  100% { opacity: 1; transform: scale(1); }
+.details-stage {
+  background: linear-gradient(180deg, #f4f8f6 0%, #f1f6f3 100%);
+  box-shadow: inset 0 0 0 1px rgba(138, 168, 151, 0.16), inset 0 8px 20px rgba(108, 141, 123, 0.05), 0 8px 24px rgba(0, 0, 0, 0.04);
 }
 
-.pulse-anim {
-  animation: detail-pulse 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+.details-body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.detail-panel-enter-active,
+.detail-panel-leave-active {
+  transition: opacity 0.24s ease, transform 0.24s ease;
+}
+
+.detail-panel-enter-from,
+.detail-panel-leave-to {
+  opacity: 0;
+  transform: translateY(10px) scale(0.992);
+}
+
+.detail-panel-enter-to,
+.detail-panel-leave-from {
+  opacity: 1;
+  transform: translateY(0) scale(1);
 }
 
 .details-head {

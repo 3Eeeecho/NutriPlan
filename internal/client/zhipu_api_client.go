@@ -36,6 +36,12 @@ type ZhipuAIClient interface {
 	// ctx: 请求的上下文。
 	// text: 用户输入的食物描述。
 	AnalyzeFoodText(ctx context.Context, text string) (*ZhipuAIResponse, error)
+
+	// RecognizeIngredients 从图片中识别可用食材列表。
+	RecognizeIngredients(ctx context.Context, imageReader io.Reader) ([]string, error)
+
+	// GenerateConstrainedMeal 根据约束条件生成单餐方案（返回 JSON 字符串）。
+	GenerateConstrainedMeal(ctx context.Context, prompt string) (string, error)
 }
 
 const (
@@ -79,6 +85,15 @@ const (
 		}
 		
 		注意：直接返回 JSON 对象，不要输出 "好的"、"分析如下" 等任何多余字符。`
+
+	promptIngredientsFromImage = `你是厨房食材识别助手。请识别图片里可用食材。
+只返回 JSON：
+{
+  "ingredients": ["食材1", "食材2"]
+}
+要求：
+1) 仅返回可食用食材名，不要数量、做法、品牌。
+2) 不要 markdown，不要额外文字。`
 )
 
 // zhipuAIClientImpl 是 ZhipuAIClient 接口的具体实现。
@@ -111,7 +126,7 @@ func (c *zhipuAIClientImpl) RecognizeFood(ctx context.Context, imageReader io.Re
 
 	// 构建发送给智谱API的请求体。
 	requestPayload := zhipuRequest{
-		Model: "glm-4.6v",
+		Model: "glm-4.6v-flash",
 		Messages: []zhipuMessage{
 			{
 				Role: "user",
@@ -261,6 +276,180 @@ func (c *zhipuAIClientImpl) AnalyzeFoodText(ctx context.Context, text string) (*
 	}
 
 	return &nutritionInfo, nil
+}
+
+func (c *zhipuAIClientImpl) RecognizeIngredients(ctx context.Context, imageReader io.Reader) ([]string, error) {
+	imgBytes, err := io.ReadAll(imageReader)
+	if err != nil {
+		return nil, fmt.Errorf("读取图片数据失败: %w", err)
+	}
+	imageBase64 := base64.StdEncoding.EncodeToString(imgBytes)
+
+	requestPayload := zhipuRequest{
+		Model: "glm-4.6v-flash",
+		Messages: []zhipuMessage{
+			{
+				Role: "user",
+				Content: []zhipuContent{
+					{
+						Type: "text",
+						Text: promptIngredientsFromImage,
+					},
+					{
+						Type: "image_url",
+						ImageURL: &zhipuImageURL{
+							URL: fmt.Sprintf("data:image/jpeg;base64,%s", imageBase64),
+						},
+					},
+				},
+			},
+		},
+		Thinking: &zhipuThinking{Type: "disabled"},
+	}
+
+	content, err := c.requestCompletionContent(ctx, requestPayload)
+	if err != nil {
+		return nil, err
+	}
+
+	var parsed struct {
+		Ingredients []string `json:"ingredients"`
+	}
+	if err := json.Unmarshal([]byte(cleanJSONString(content)), &parsed); err != nil {
+		return nil, fmt.Errorf("AI返回食材格式错误")
+	}
+
+	result := make([]string, 0, len(parsed.Ingredients))
+	for _, item := range parsed.Ingredients {
+		trimmed := strings.TrimSpace(item)
+		if trimmed == "" {
+			continue
+		}
+		result = append(result, trimmed)
+	}
+	if len(result) == 0 {
+		return nil, errors.New("未识别到可用食材")
+	}
+	return result, nil
+}
+
+func (c *zhipuAIClientImpl) GenerateConstrainedMeal(ctx context.Context, prompt string) (string, error) {
+	requestPayload := zhipuRequest{
+		Model: "glm-4-flash",
+		Messages: []zhipuMessage{
+			{Role: "system", Content: "你是严谨的营养师，必须返回合法 JSON。"},
+			{Role: "user", Content: prompt},
+		},
+		Thinking: &zhipuThinking{Type: "disabled"},
+	}
+
+	content, err := c.requestCompletionContent(ctx, requestPayload)
+	if err != nil {
+		return "", err
+	}
+	return cleanJSONString(content), nil
+}
+
+func (c *zhipuAIClientImpl) requestCompletionContent(ctx context.Context, requestPayload zhipuRequest) (string, error) {
+	body, err := json.Marshal(requestPayload)
+	if err != nil {
+		return "", fmt.Errorf("序列化请求体失败: %w", err)
+	}
+
+	const maxBusyRetries = 3
+	for attempt := 0; attempt <= maxBusyRetries; attempt++ {
+		req, err := http.NewRequestWithContext(ctx, http.MethodPost, zhipuAPIURL, bytes.NewBuffer(body))
+		if err != nil {
+			return "", fmt.Errorf("创建HTTP请求失败: %w", err)
+		}
+
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization", "Bearer "+c.apiKey)
+
+		resp, err := c.httpClient.Do(req)
+		if err != nil {
+			return "", fmt.Errorf("发送请求到智谱API失败: %w", err)
+		}
+
+		respBody, err := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		if err != nil {
+			return "", fmt.Errorf("读取响应体失败: %w", err)
+		}
+
+		if resp.StatusCode == http.StatusOK {
+			var zhipuResp zhipuAPICompletionResponse
+			if err := json.Unmarshal(respBody, &zhipuResp); err != nil {
+				return "", fmt.Errorf("反序列化智谱API响应失败: %w", err)
+			}
+
+			if len(zhipuResp.Choices) == 0 || zhipuResp.Choices[0].Message.Content == "" {
+				return "", errors.New("从智谱API接收到空内容")
+			}
+
+			return zhipuResp.Choices[0].Message.Content, nil
+		}
+
+		apiErr := parseZhipuAPIError(respBody)
+		if resp.StatusCode == http.StatusTooManyRequests {
+			if strings.Contains(apiErr.Message, "余额不足") || strings.Contains(apiErr.Message, "无可用资源包") || apiErr.Code == "1113" {
+				return "", fmt.Errorf("智谱资源不足（免费额度/资源包不可用），请切换可用模型或稍后重试: %s", apiErr.String())
+			}
+
+			if apiErr.Code == "1305" && attempt < maxBusyRetries {
+				backoff := time.Duration(600*(1<<attempt)) * time.Millisecond
+				select {
+				case <-ctx.Done():
+					return "", fmt.Errorf("请求已取消或超时: %w", ctx.Err())
+				case <-time.After(backoff):
+					continue
+				}
+			}
+
+			return "", fmt.Errorf("智谱请求频率受限，请稍后重试: %s", apiErr.String())
+		}
+
+		if apiErr.Message != "" {
+			return "", fmt.Errorf("智谱API调用失败(%d): %s", resp.StatusCode, apiErr.String())
+		}
+
+		return "", fmt.Errorf("智谱API返回非200状态码: %d, 响应体: %s", resp.StatusCode, string(respBody))
+	}
+
+	return "", errors.New("智谱请求重试后仍失败")
+}
+
+type zhipuAPIError struct {
+	Code    string
+	Message string
+}
+
+func (e zhipuAPIError) String() string {
+	if e.Message == "" {
+		return ""
+	}
+	if e.Code == "" {
+		return e.Message
+	}
+	return fmt.Sprintf("code=%s, message=%s", e.Code, e.Message)
+}
+
+func parseZhipuAPIError(respBody []byte) zhipuAPIError {
+	var parsed struct {
+		Error struct {
+			Code    string `json:"code"`
+			Message string `json:"message"`
+		} `json:"error"`
+	}
+
+	if err := json.Unmarshal(respBody, &parsed); err != nil {
+		return zhipuAPIError{}
+	}
+
+	return zhipuAPIError{
+		Code:    strings.TrimSpace(parsed.Error.Code),
+		Message: strings.TrimSpace(parsed.Error.Message),
+	}
 }
 
 // cleanJSONString 移除JSON字符串前后可能存在的Markdown代码块标记或无关文本。

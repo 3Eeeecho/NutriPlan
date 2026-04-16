@@ -70,6 +70,15 @@ func NewRouter(deps RouterDeps) *gin.Engine {
 			// 获取食谱推荐 (GET /api/v1/recipes/recommend)
 			recipes.GET("/recommend", recipeHandler.GetRecommendations)
 
+			// 识别可用食材 (POST /api/v1/recipes/ingredients/recognize)
+			recipes.POST("/ingredients/recognize", recipeHandler.RecognizeMealIngredients)
+
+			// 受限单餐重构 (POST /api/v1/recipes/meal/regenerate)
+			recipes.POST("/meal/regenerate", recipeHandler.RegenerateSingleMeal)
+
+			// 采纳重构单餐 (POST /api/v1/recipes/meal/adopt)
+			recipes.POST("/meal/adopt", recipeHandler.AdoptRegeneratedMeal)
+
 			// 选择食谱计划 (POST /api/v1/recipes/plan/select)
 			recipes.POST("/plan/select", recipeHandler.SelectPlan)
 

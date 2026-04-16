@@ -16,6 +16,15 @@
         </div>
         
         <div class="header-right">
+          <n-button
+            secondary
+            type="primary"
+            class="action-btn"
+            @click="openRegenerateModal"
+          >
+            受限单餐重构
+          </n-button>
+
           <n-button 
             v-if="currentSelectedPlan" 
             type="error" 
@@ -258,6 +267,37 @@
         </div>
       </div>
     </div>
+
+    <n-modal v-model:show="showRegenerateModal" preset="card" title="受限食材单餐重构" style="width: 720px" :mask-closable="false">
+      <div class="regen-form">
+        <n-select v-model:value="regenForm.meal_type" :options="mealTypeOptions" placeholder="选择餐次" />
+        <n-input v-model:value="ingredientText" type="textarea" :rows="3" placeholder="输入食材，使用逗号分隔，如：番茄, 鸡蛋, 牛肉" />
+
+        <div class="regen-upload-row">
+          <input type="file" accept="image/png,image/jpeg" @change="onIngredientImageChange" />
+          <n-button :loading="recognizingIngredients" @click="recognizeIngredientsFromImage">图片识别食材</n-button>
+        </div>
+
+        <div class="ingredient-tags">
+          <n-tag v-for="item in regenForm.ingredients" :key="item" closable @close="removeIngredient(item)">{{ item }}</n-tag>
+        </div>
+
+        <n-button type="primary" :loading="regeneratingMeal" @click="startRegenerateMeal">开始重构</n-button>
+
+        <div v-if="regeneratingMeal" class="regen-skeleton">
+          <n-skeleton text :repeat="4" />
+          <n-skeleton text style="width: 70%" />
+        </div>
+
+        <div v-if="regenResult && !regeneratingMeal" class="regen-result">
+          <h4>{{ regenResult.meal?.meal_name }}</h4>
+          <p>{{ regenResult.meal?.dietitian_tip }}</p>
+          <p v-if="regenResult.supplementary_tip" class="supplement-tip">{{ regenResult.supplementary_tip }}</p>
+          <n-divider />
+          <n-button type="success" :loading="adoptingMeal" @click="adoptMealResult">采纳该餐次</n-button>
+        </div>
+      </div>
+    </n-modal>
   </div>
 </template>
 
@@ -265,13 +305,21 @@
 import { ref, onMounted, onActivated } from 'vue';
 import { useRouter } from 'vue-router';
 import { 
-  NButton, NIcon, NSpin, NResult, NGrid, NGi, NCard, NTag, NProgress, NAlert, useMessage, NImage 
+  NButton, NIcon, NSpin, NResult, NGrid, NGi, NCard, NTag, NProgress, NAlert, useMessage, NImage,
+  NModal, NSelect, NInput, NDivider, NSkeleton
 } from 'naive-ui';
 import { 
   ArrowBack, Refresh, FitnessOutline, LeafOutline, WaterOutline, CheckmarkCircle 
 } from '@vicons/ionicons5';
 import MealItem from '@/components/MealItem.vue';
-import { getRecipeRecommendations, selectRecipePlan, getSelectedRecipePlan } from '@/api/recipeApi';
+import {
+  getRecipeRecommendations,
+  selectRecipePlan,
+  getSelectedRecipePlan,
+  recognizeMealIngredients,
+  regenerateConstrainedMeal,
+  adoptRegeneratedMeal
+} from '@/api/recipeApi';
 import { addIntakeRecord, getTodayStatus } from '@/api/intakeApi';
 import { getNutritionRequirements } from '@/api/user';
 import { useAuthStore } from '@/store/auth';
@@ -287,6 +335,24 @@ const selectedPlanIndex = ref(null);
 const currentSelectedPlan = ref(null);
 const targetNutrition = ref({});
 const todayRecords = ref([]); // Store today's intake records
+
+const showRegenerateModal = ref(false);
+const ingredientText = ref('');
+const ingredientImageFile = ref(null);
+const recognizingIngredients = ref(false);
+const regeneratingMeal = ref(false);
+const adoptingMeal = ref(false);
+const regenResult = ref(null);
+const regenForm = ref({
+  meal_type: 'lunch',
+  ingredients: []
+});
+const mealTypeOptions = [
+  { label: '早餐', value: 'breakfast' },
+  { label: '午餐', value: 'lunch' },
+  { label: '晚餐', value: 'dinner' },
+  { label: '加餐', value: 'snack' }
+];
 
 // 初始化
 onMounted(async () => {
@@ -443,6 +509,99 @@ const handleSyncMeal = async ({ recipe, type }) => {
 const getPercentage = (val, target) => {
   if (!target) return 0;
   return Math.min(100, Math.round((val / target) * 100));
+};
+
+const parseIngredientText = () => {
+  const parsed = ingredientText.value
+    .split(/[，,\n]/)
+    .map(item => item.trim())
+    .filter(Boolean);
+  const merged = [...regenForm.value.ingredients, ...parsed];
+  regenForm.value.ingredients = Array.from(new Set(merged));
+};
+
+const removeIngredient = (value) => {
+  regenForm.value.ingredients = regenForm.value.ingredients.filter(item => item !== value);
+};
+
+const onIngredientImageChange = (event) => {
+  ingredientImageFile.value = event.target.files?.[0] || null;
+};
+
+const openRegenerateModal = () => {
+  regenResult.value = null;
+  ingredientText.value = '';
+  ingredientImageFile.value = null;
+  regenForm.value = {
+    meal_type: 'lunch',
+    ingredients: []
+  };
+  showRegenerateModal.value = true;
+};
+
+const recognizeIngredientsFromImage = async () => {
+  if (!ingredientImageFile.value) {
+    message.warning('请先选择一张食材图片');
+    return;
+  }
+  try {
+    recognizingIngredients.value = true;
+    const resp = await recognizeMealIngredients(ingredientImageFile.value);
+    const list = Array.isArray(resp?.ingredients) ? resp.ingredients : [];
+    regenForm.value.ingredients = Array.from(new Set([...regenForm.value.ingredients, ...list]));
+    message.success('图片识别完成，请确认食材列表');
+  } catch (err) {
+    message.error(err.response?.data?.error || '食材识别失败');
+  } finally {
+    recognizingIngredients.value = false;
+  }
+};
+
+const startRegenerateMeal = async () => {
+  parseIngredientText();
+  if (!regenForm.value.meal_type) {
+    message.warning('请选择餐次');
+    return;
+  }
+  if (!regenForm.value.ingredients.length) {
+    message.warning('请至少填写一种食材');
+    return;
+  }
+
+  try {
+    regeneratingMeal.value = true;
+    regenResult.value = await regenerateConstrainedMeal({
+      meal_type: regenForm.value.meal_type,
+      ingredients: regenForm.value.ingredients
+    });
+  } catch (err) {
+    message.error(err.response?.data?.error || '重构失败，请稍后再试');
+  } finally {
+    regeneratingMeal.value = false;
+  }
+};
+
+const adoptMealResult = async () => {
+  if (!regenResult.value?.meal) return;
+
+  try {
+    adoptingMeal.value = true;
+    const resp = await adoptRegeneratedMeal({
+      meal_type: regenForm.value.meal_type,
+      meal: regenResult.value.meal
+    });
+
+    if (resp?.plan) {
+      currentSelectedPlan.value = resp.plan;
+    }
+    await loadTodayRecords();
+    message.success('已采纳重构餐次，主页统计将自动刷新');
+    showRegenerateModal.value = false;
+  } catch (err) {
+    message.error(err.response?.data?.error || '采纳失败，请重试');
+  } finally {
+    adoptingMeal.value = false;
+  }
 };
 </script>
 
@@ -765,5 +924,36 @@ const getPercentage = (val, target) => {
 
 .action-btn {
   font-weight: 500;
+}
+
+.regen-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.regen-upload-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ingredient-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.regen-skeleton {
+  padding: 8px 0;
+}
+
+.regen-result h4 {
+  margin: 0 0 8px 0;
+}
+
+.supplement-tip {
+  color: #059669;
+  font-weight: 600;
 }
 </style>

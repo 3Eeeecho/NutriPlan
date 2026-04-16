@@ -38,7 +38,7 @@ func main() {
 	// 创建 Service 实例
 	nutriService := service.NewNutriService()
 	userService := service.NewUserService(userRepo, nutriService)
-	recipeService := service.NewRecipeService(recipeRepo, nutriService)
+	recipeService := service.NewRecipeService(recipeRepo, nutriService, zhipuClient)
 	intakeService := service.NewIntakeService(intakeRepo, userRepo, nutriService)
 	shoppingListService := service.NewShoppingListService(shoppingListRepo, recipeRepo)
 	foodRecognitionService := service.NewFoodRecognitionService(zhipuClient)

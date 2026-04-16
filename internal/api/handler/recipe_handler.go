@@ -3,8 +3,10 @@ package handler
 import (
 	"NutriPlan/internal/repository/models"
 	"NutriPlan/internal/service"
+	"context"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -31,6 +33,10 @@ type RecommendRequest struct {
 // RecommendResponse 推荐响应
 type RecommendResponse struct {
 	Plans []DailyPlanDTO `json:"plans"`
+}
+
+type RecognizedIngredientsResponse struct {
+	Ingredients []string `json:"ingredients"`
 }
 
 // DailyPlanDTO 每日食谱计划DTO
@@ -132,6 +138,100 @@ func (h *RecipeHandler) GetRecommendations(c *gin.Context) {
 
 	c.JSON(http.StatusOK, RecommendResponse{
 		Plans: planDTOs,
+	})
+}
+
+func (h *RecipeHandler) RecognizeMealIngredients(c *gin.Context) {
+	file, err := c.FormFile("image")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "请上传食材图片，字段名为 image"})
+		return
+	}
+
+	contentType := file.Header.Get("Content-Type")
+	if contentType != "image/jpeg" && contentType != "image/png" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "仅支持 JPEG/PNG 图片"})
+		return
+	}
+
+	f, err := file.Open()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "图片读取失败"})
+		return
+	}
+	defer f.Close()
+
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 18*time.Second)
+	defer cancel()
+
+	ingredients, err := h.recipeService.RecognizeIngredientsFromImage(ctx, f)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "食材识别失败: " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, RecognizedIngredientsResponse{Ingredients: ingredients})
+}
+
+func (h *RecipeHandler) RegenerateSingleMeal(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "未授权"})
+		return
+	}
+
+	user, err := h.userService.GetUserByID(userID.(uint))
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "用户不存在"})
+		return
+	}
+
+	var req service.ConstrainedMealRegenerateRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "请求参数错误: " + err.Error()})
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 20*time.Second)
+	defer cancel()
+
+	result, err := h.recipeService.RegenerateConstrainedMeal(ctx, user, req)
+	if err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
+}
+
+func (h *RecipeHandler) AdoptRegeneratedMeal(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "未授权"})
+		return
+	}
+
+	var req service.ConstrainedMealAdoptRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "请求参数错误: " + err.Error()})
+		return
+	}
+
+	plan, err := h.recipeService.AdoptRegeneratedMeal(userID.(uint), req)
+	if err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+		return
+	}
+
+	planDTO, err := h.convertPlanToDTO(plan, userID.(uint))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "数据转换失败"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "单餐采纳成功",
+		"plan":    planDTO,
 	})
 }
 

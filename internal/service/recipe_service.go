@@ -1,11 +1,14 @@
 package service
 
 import (
+	"NutriPlan/internal/client"
 	"NutriPlan/internal/config"
 	"NutriPlan/internal/repository/dao"
 	"NutriPlan/internal/repository/models"
+	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"math"
 	"math/rand"
@@ -45,12 +48,22 @@ type RecipeService interface {
 
 	// IsFavorite 检查收藏状态
 	IsFavorite(userID, recipeID uint) (bool, error)
+
+	// RecognizeIngredientsFromImage 从图片识别可用食材列表
+	RecognizeIngredientsFromImage(ctx context.Context, imageReader io.Reader) ([]string, error)
+
+	// RegenerateConstrainedMeal 基于食材约束重构单餐方案
+	RegenerateConstrainedMeal(ctx context.Context, user *models.User, req ConstrainedMealRegenerateRequest) (*ConstrainedMealRegenerateResponse, error)
+
+	// AdoptRegeneratedMeal 采纳重构结果并仅更新目标餐次
+	AdoptRegeneratedMeal(userID uint, req ConstrainedMealAdoptRequest) (*models.DailyRecipePlan, error)
 }
 
 // RecipeServiceImpl 食谱推荐服务实现
 type RecipeServiceImpl struct {
 	recipeRepo   dao.RecipeRepository
 	nutriService NutriService
+	zhipuClient  client.ZhipuAIClient
 	rng          *rand.Rand
 }
 
@@ -94,10 +107,11 @@ func getRecipeTextConfig() recipeTextConfig {
 }
 
 // NewRecipeService 创建食谱推荐服务实例
-func NewRecipeService(recipeRepo dao.RecipeRepository, nutriService NutriService) RecipeService {
+func NewRecipeService(recipeRepo dao.RecipeRepository, nutriService NutriService, zhipuClient client.ZhipuAIClient) RecipeService {
 	return &RecipeServiceImpl{
 		recipeRepo:   recipeRepo,
 		nutriService: nutriService,
+		zhipuClient:  zhipuClient,
 		rng:          rand.New(rand.NewSource(time.Now().UnixNano())),
 	}
 }
