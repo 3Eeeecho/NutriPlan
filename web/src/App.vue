@@ -6,7 +6,7 @@
           <router-view v-slot="{ Component, route }">
             <transition name="fade" mode="out-in">
               <keep-alive include="RecipeRecommend">
-                <component :is="Component" :key="route.path" />
+                <component :is="Component" :key="route.matched[0]?.path || route.path" />
               </keep-alive>
             </transition>
           </router-view>

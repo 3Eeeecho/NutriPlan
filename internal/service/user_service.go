@@ -5,6 +5,7 @@ import (
 	"NutriPlan/internal/repository/models"
 	"NutriPlan/pkg/xerr"
 	"fmt"
+	"time"
 )
 
 // UserService 定义了用户业务流程的接口
@@ -23,6 +24,12 @@ type UserService interface {
 
 	// GetNutritionRequirements 获取用户营养需求
 	GetNutritionRequirements(user *models.User) (targetCalorie, proteinGram, carbGram, fatGram, proteinRatio, carbRatio, fatRatio float64, err error)
+
+	// GetDietMode 获取当前饮食模式
+	GetDietMode(userID uint) (*models.User, error)
+
+	// SetDietMode 设置饮食模式（手动）
+	SetDietMode(userID uint, mode models.DietMode, days int, reason string) (*models.User, error)
 }
 
 // UserServiceImpl 是 UserService 接口的具体实现
@@ -110,4 +117,47 @@ func (s *UserServiceImpl) GetNutritionRequirements(user *models.User) (targetCal
 	fatRatio = (fatGram * 9.0 / targetCalorie) * 100
 
 	return targetCalorie, proteinGram, carbGram, fatGram, proteinRatio, carbRatio, fatRatio, nil
+}
+
+// GetDietMode 获取当前饮食模式
+func (s *UserServiceImpl) GetDietMode(userID uint) (*models.User, error) {
+	return s.userRepo.GetUserByID(userID)
+}
+
+// SetDietMode 设置饮食模式（手动）
+func (s *UserServiceImpl) SetDietMode(userID uint, mode models.DietMode, days int, reason string) (*models.User, error) {
+	user, err := s.userRepo.GetUserByID(userID)
+	if err != nil {
+		return nil, fmt.Errorf("获取用户失败: %w", err)
+	}
+	if user == nil {
+		return nil, xerr.ErrUserNotFound
+	}
+
+	if days <= 0 {
+		days = 1
+	}
+	if days > 30 {
+		days = 30
+	}
+
+	user.DietMode = mode
+	user.DietModeSource = "manual"
+	user.DietModeReason = reason
+
+	now := time.Now()
+	if mode == models.DietModeNormal {
+		user.DietModeSource = "auto"
+		user.DietModeReason = ""
+		user.DietModeUntil = nil
+	} else {
+		until := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location()).AddDate(0, 0, days)
+		user.DietModeUntil = &until
+	}
+
+	if err := s.userRepo.UpdateUser(user); err != nil {
+		return nil, fmt.Errorf("保存饮食模式失败: %w", err)
+	}
+
+	return user, nil
 }

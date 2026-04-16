@@ -21,6 +21,16 @@ const (
 	MealTypeSnack     MealType = "加餐"
 )
 
+// DietMode 饮食调节模式
+type DietMode string
+
+const (
+	DietModeNormal      DietMode = "normal"
+	DietModeLightAdjust DietMode = "light_adjust"
+	DietModeBland       DietMode = "bland"
+	DietModeHeavyAdjust DietMode = "heavy_adjust"
+)
+
 // --- 2. 禁忌/过敏标签 (对应 Recipe.ForbiddenUsers) ---
 const (
 	// 常见过敏源

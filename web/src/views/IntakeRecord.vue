@@ -1,916 +1,1103 @@
 <template>
-  <div class="intake-container">
-    <!-- 顶部导航栏 -->
-    <div class="top-nav">
-      <el-button @click="goBack" class="back-button" circle>
-        <el-icon><ArrowLeft /></el-icon>
-      </el-button>
-      <div class="user-info-nav">
-        <el-dropdown @command="handleCommand">
-          <span class="user-info-display">
-            <el-avatar :size="32" :icon="UserFilled" />
-            <span class="username">{{ authStore.user?.username || '用户' }}</span>
-            <el-icon><ArrowDown /></el-icon>
-          </span>
-          <template #dropdown>
-            <el-dropdown-menu>
-              <el-dropdown-item command="home">
-                <el-icon><HomeFilled /></el-icon>
-                返回首页
-              </el-dropdown-item>
-              <el-dropdown-item command="profile">
-                <el-icon><User /></el-icon>
-                个人档案
-              </el-dropdown-item>
-              <el-dropdown-item command="weekly">
-                <el-icon><TrendCharts /></el-icon>
-                周报告
-              </el-dropdown-item>
-            </el-dropdown-menu>
-          </template>
-        </el-dropdown>
-      </div>
-    </div>
-
-    <div class="page-header">
-      <h2>饮食记录</h2>
-      <p class="date-info">{{ currentDate }}</p>
-    </div>
-
-    <!-- 营养达标率图表 -->
-    <el-card class="chart-card" shadow="hover">
-      <template #header>
-        <div class="card-header">
-          <span>今日营养达标率</span>
-        </div>
-      </template>
-      <div ref="chartRef" class="chart-container"></div>
-      <div class="nutrition-summary">
-        <div class="summary-item">
-          <span class="label">热量:</span>
-          <span class="value">{{ nutritionStatus.total_energy?.toFixed(0) || 0 }} / {{ nutritionStatus.target_energy?.toFixed(0) || 0 }} kcal</span>
-        </div>
-        <div class="summary-item">
-          <span class="label">蛋白质:</span>
-          <span class="value">{{ nutritionStatus.total_protein?.toFixed(1) || 0 }} / {{ nutritionStatus.target_protein?.toFixed(1) || 0 }} g</span>
-        </div>
-        <div class="summary-item">
-          <span class="label">碳水:</span>
-          <span class="value">{{ nutritionStatus.total_carbohydrate?.toFixed(1) || 0 }} / {{ nutritionStatus.target_carbohydrate?.toFixed(1) || 0 }} g</span>
-        </div>
-        <div class="summary-item">
-          <span class="label">脂肪:</span>
-          <span class="value">{{ nutritionStatus.total_fat?.toFixed(1) || 0 }} / {{ nutritionStatus.target_fat?.toFixed(1) || 0 }} g</span>
-        </div>
-      </div>
-    </el-card>
-
-    <!-- 添加记录表单 -->
-    <el-card class="form-card" shadow="hover">
-      <template #header>
-        <div class="card-header">
-          <span>添加饮食记录</span>
-        </div>
-      </template>
-      <el-form :model="recordForm" label-width="100px">
-        <!-- AI识别区域 -->
-        <el-form-item label="智能识别">
-          <div class="ai-recognition-zone">
-            <input 
-              ref="fileInputRef" 
-              type="file" 
-              accept="image/*" 
-              :capture="isMobile ? 'environment' : undefined"
-              style="display: none;" 
-              @change="handleImageSelect"
-            />
-            <el-button 
-              type="success" 
-              @click="triggerFileInput"
-              :loading="recognizing"
-              size="large"
-            >
-              <el-icon style="margin-right: 5px;">
-                <component :is="isMobile ? Camera : Picture" />
-              </el-icon>
-              {{ isMobile ? '拍照识别' : '上传图片识别' }}
-            </el-button>
-            <span class="ai-hint">📸 AI自动识别食物营养信息</span>
+  <div class="page-container">
+    <div class="content-wrapper">
+      <!-- 页面头部: 标题与操作 -->
+      <div class="page-header">
+        <div class="header-left">
+          <n-button quaternary circle size="large" @click="router.push('/home')">
+            <template #icon>
+              <n-icon><ArrowBack /></n-icon>
+            </template>
+          </n-button>
+          <div>
+            <h1 class="page-title">饮食记录</h1>
+            <p class="page-subtitle">{{ currentDate }}</p>
           </div>
+        </div>
+        <div class="header-right">
+          <n-button-group>
+            <n-button :type="viewMode === 'day' ? 'primary' : 'default'" @click="viewMode = 'day'">日</n-button>
+            <n-button :type="viewMode === 'week' ? 'primary' : 'default'" @click="viewMode = 'week'">周</n-button>
+          </n-button-group>
+          <n-button quaternary circle @click="refreshView">
+            <template #icon><n-icon><Refresh /></n-icon></template>
+          </n-button>
+        </div>
+      </div>
+
+      <n-grid v-if="viewMode === 'day'" :x-gap="24" :y-gap="24" cols="1 l:3" responsive="screen">
+        
+        <!-- 左侧栏：今日概览 & 营养仪表盘 -->
+        <n-gi span="1">
+          <div class="left-column">
+            <!-- 1. 核心仪表盘 (热量环) -->
+            <n-card :bordered="false" class="dashboard-card">
+              <div class="calorie-ring-wrapper">
+                <n-progress
+                  type="circle"
+                  :percentage="energyPercentage"
+                  :color="energyColor"
+                  :stroke-width="12"
+                  class="calorie-ring"
+                >
+                  <div class="ring-content">
+                    <span class="ring-val">{{ Math.floor(nutritionStatus.total_energy || 0) }}</span>
+                    <span class="ring-label">/ {{ Math.floor(nutritionStatus.target_energy || 2000) }} kcal</span>
+                  </div>
+                </n-progress>
+                <div class="dashboard-title">今日热量摄入</div>
+              </div>
+
+              <!-- 宏量营养素条 -->
+              <div class="macro-bars">
+                <div class="macro-item">
+                  <div class="macro-header">
+                    <span class="macro-label text-red">蛋白质</span>
+                    <span class="macro-val">{{ nutritionStatus.total_protein?.toFixed(1) || 0 }} / {{ nutritionStatus.target_protein?.toFixed(1) || 0 }}g</span>
+                  </div>
+                  <n-progress 
+                    type="line" 
+                    :percentage="getPercentage(nutritionStatus.total_protein, nutritionStatus.target_protein)" 
+                    color="#ef4444" 
+                    :height="8" 
+                    :show-indicator="false" 
+                    class="rounded-progress"
+                  />
+                </div>
+                <div class="macro-item">
+                  <div class="macro-header">
+                    <span class="macro-label text-amber">碳水</span>
+                    <span class="macro-val">{{ nutritionStatus.total_carbohydrate?.toFixed(1) || 0 }} / {{ nutritionStatus.target_carbohydrate?.toFixed(1) || 0 }}g</span>
+                  </div>
+                  <n-progress 
+                    type="line" 
+                    :percentage="getPercentage(nutritionStatus.total_carbohydrate, nutritionStatus.target_carbohydrate)" 
+                    color="#f59e0b" 
+                    :height="8" 
+                    :show-indicator="false" 
+                    class="rounded-progress"
+                  />
+                </div>
+                <div class="macro-item">
+                  <div class="macro-header">
+                    <span class="macro-label text-purple">脂肪</span>
+                    <span class="macro-val">{{ nutritionStatus.total_fat?.toFixed(1) || 0 }} / {{ nutritionStatus.target_fat?.toFixed(1) || 0 }}g</span>
+                  </div>
+                  <n-progress 
+                    type="line" 
+                    :percentage="getPercentage(nutritionStatus.total_fat, nutritionStatus.target_fat)" 
+                    color="#8b5cf6" 
+                    :height="8" 
+                    :show-indicator="false" 
+                    class="rounded-progress"
+                  />
+                </div>
+              </div>
+            </n-card>
+
+            <!-- 2. 快捷操作入口 -->
+            <n-card :bordered="false" title="快捷操作" class="actions-card">
+              <div class="quick-actions">
+                <n-button 
+                  block 
+                  type="primary" 
+                  size="large" 
+                  class="camera-btn"
+                  @click="triggerAIUpload"
+                >
+                  <template #icon><n-icon><Camera /></n-icon></template>
+                  拍照识别
+                </n-button>
+                <n-button 
+                  block 
+                  ghost 
+                  type="primary" 
+                  size="large" 
+                  @click="showAddModal = true"
+                >
+                  <template #icon><n-icon><Add /></n-icon></template>
+                  手动记一笔
+                </n-button>
+                <input 
+                  type="file" 
+                  ref="fileInputRef" 
+                  accept="image/*" 
+                  style="display:none" 
+                  @change="handleImageSelect"
+                />
+              </div>
+            </n-card>
+          </div>
+        </n-gi>
+
+        <!-- 右侧栏：饮食时间轴 -->
+        <n-gi span="2">
+          <n-card :bordered="false" title="今日饮食记录" class="timeline-card">
+            <template #header-extra>
+              <n-tag :bordered="false" type="default">
+                共 {{ nutritionStatus.records?.length || 0 }} 条记录
+              </n-tag>
+            </template>
+
+            <div v-if="loading" class="loading-placeholder">
+              <n-spin size="medium" />
+            </div>
+
+            <div v-else-if="!nutritionStatus.records || nutritionStatus.records.length === 0" class="empty-state">
+              <n-empty description="今天还没有记录哦，快去吃点什么吧~">
+                <template #extra>
+                  <n-button type="primary" @click="triggerAIUpload">
+                    <template #icon><n-icon><Camera /></n-icon></template>
+                    拍照识别
+                  </n-button>
+                </template>
+              </n-empty>
+            </div>
+
+            <n-timeline v-else class="meal-timeline">
+              <!-- 按时间倒序或特定逻辑排序 -->
+              <n-timeline-item
+                v-for="record in sortedRecords"
+                :key="record.ID"
+                :type="getMealTypeColor(record.mealType)"
+                :title="getMealTypeLabel(record.mealType)"
+                :content="record.foodName"
+                :time="formatTime(record.CreatedAt)"
+              >
+                <template #default>
+                  <div class="record-card">
+                    <div class="record-main">
+                      <div class="food-name">{{ record.foodName }}</div>
+                      <div class="food-meta">
+                        <n-tag size="small" :bordered="false" class="meta-tag">{{ record.intakeAmount }}g</n-tag>
+                        <span class="meta-divider">|</span>
+                        <span class="meta-val">{{ Math.floor(record.calculatedEnergy) }} kcal</span>
+                      </div>
+                    </div>
+                    <div class="record-macros">
+                      <div class="mini-macro">
+                        <span class="mm-label">蛋</span>
+                        <span class="mm-val">{{ record.calculatedProtein }}</span>
+                      </div>
+                      <div class="mini-macro">
+                        <span class="mm-label">碳</span>
+                        <span class="mm-val">{{ record.calculatedCarb }}</span>
+                      </div>
+                      <div class="mini-macro">
+                        <span class="mm-label">脂</span>
+                        <span class="mm-val">{{ record.calculatedFat }}</span>
+                      </div>
+                    </div>
+                    <div class="record-actions">
+                      <n-popconfirm @positive-click="handleDelete(record.ID)" positive-text="确定" negative-text="取消">
+                        <template #trigger>
+                          <n-button size="small" quaternary circle type="error">
+                            <template #icon><n-icon><Trash /></n-icon></template>
+                          </n-button>
+                        </template>
+                        确定删除这条记录吗？
+                      </n-popconfirm>
+                    </div>
+                  </div>
+                </template>
+              </n-timeline-item>
+            </n-timeline>
+          </n-card>
+        </n-gi>
+      </n-grid>
+
+      <div v-else class="week-board">
+        <div class="week-toolbar">
+          <h2 class="week-title">本周计划</h2>
+          <n-tag size="small" :bordered="false">{{ weekRangeText }}</n-tag>
+        </div>
+
+        <div v-if="weeklyLoading" class="loading-placeholder">
+          <n-spin size="medium" />
+        </div>
+
+        <div v-else class="week-columns">
+          <div
+            v-for="day in weekColumns"
+            :key="day.date"
+            class="day-column"
+            :class="{ 'is-today': day.isToday }"
+          >
+            <div class="day-header">
+              <div class="day-date">{{ day.displayDate }}</div>
+              <div class="day-week-label">{{ day.weekLabel }}</div>
+              <div class="day-kcal">{{ day.totalEnergy }} kcal</div>
+            </div>
+
+            <div class="day-macro-row">
+              <span>蛋白 {{ day.totalProtein }}g</span>
+              <span>碳水 {{ day.totalCarbohydrate }}g</span>
+              <span>脂肪 {{ day.totalFat }}g</span>
+            </div>
+
+            <div v-if="day.records.length === 0" class="day-empty">
+              暂无记录
+            </div>
+
+            <div v-else class="meal-section-list">
+              <div v-for="meal in getMealSections(day.records)" :key="`${day.date}-${meal.type}`" class="meal-section">
+                <div class="meal-title-row">
+                  <span class="meal-title">{{ getMealTypeLabel(meal.type) }}</span>
+                  <span class="meal-total">{{ meal.energy }} kcal</span>
+                </div>
+
+                <div v-for="item in meal.items" :key="item.ID || item.id" class="meal-item-card">
+                  <div class="meal-item-name">{{ item.foodName || item.food_name }}</div>
+                  <div class="meal-item-meta">
+                    <span>{{ Math.round(item.intakeAmount || item.intake_amount || 0) }}{{ item.intakeUnit || 'g' }}</span>
+                    <span>{{ Math.round(item.calculatedEnergy || item.calculated_energy || 0) }} kcal</span>
+                    <span>蛋 {{ (item.calculatedProtein || item.calculated_protein || 0).toFixed(1) }}</span>
+                    <span>碳 {{ (item.calculatedCarb || item.calculated_carb || 0).toFixed(1) }}</span>
+                    <span>脂 {{ (item.calculatedFat || item.calculated_fat || 0).toFixed(1) }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 添加记录弹窗 -->
+    <n-modal v-model:show="showAddModal" preset="card" title="添加饮食记录" style="width: 600px; max-width: 90vw;">
+      <n-form :model="recordForm" label-placement="left" label-width="80" require-mark-placement="right-hanging">
+        <n-grid :cols="2" :x-gap="12">
+          <n-gi :span="2">
+            <n-form-item label="餐点类型" path="meal_type">
+              <n-select v-model:value="recordForm.meal_type" :options="mealOptions" placeholder="选择餐点" />
+            </n-form-item>
+          </n-gi>
+          <n-gi :span="2">
+            <n-form-item label="食物描述/名称" path="food_name">
+              <n-input-group>
+                <n-input v-model:value="recordForm.food_name" placeholder="例如：一碗牛肉面，少辣" />
+                <n-button type="primary" ghost @click="handleAIAnalyze" :loading="analyzingText" :disabled="!recordForm.food_name">
+                  <template #icon><n-icon><Sparkles /></n-icon></template>
+                  AI 估算
+                </n-button>
+              </n-input-group>
+            </n-form-item>
+          </n-gi>
+          <n-gi :span="2">
+            <n-form-item label="分量 (g)" path="intake_amount">
+              <n-input-number v-model:value="recordForm.intake_amount" :step="10" placeholder="估算重量" style="width: 100%" />
+            </n-form-item>
+          </n-gi>
           
-          <!-- 图片预览 -->
-          <div v-if="previewImage" class="image-preview">
-            <img :src="previewImage" alt="预览" />
-            <el-button 
-              type="danger" 
-              :icon="Delete" 
-              circle 
-              size="small" 
-              class="delete-preview"
-              @click="clearImage"
-            />
-          </div>
-        </el-form-item>
-        
-        <el-form-item label="餐点类型" required>
-          <el-select v-model="recordForm.meal_type" placeholder="请选择餐点类型" style="width: 100%">
-            <el-option label="🌅 早餐" value="breakfast"></el-option>
-            <el-option label="🌞 午餐" value="lunch"></el-option>
-            <el-option label="🌙 晚餐" value="dinner"></el-option>
-            <el-option label="🍎 加餐" value="snack"></el-option>
-          </el-select>
-        </el-form-item>
-        <el-form-item label="食物名称" required>
-          <el-input v-model="recordForm.food_name" placeholder="例如：米饭、鸡胸肉、苹果等"></el-input>
-        </el-form-item>
-        <el-form-item label="摄入量(克)" required>
-          <el-input-number 
-            v-model="recordForm.intake_amount" 
-            :min="1" 
-            :max="9999"
-            :step="10" 
-            :precision="0"
-            controls-position="right"
-            class="full-width-number"
-          ></el-input-number>
-          <span style="margin-left: 10px; color: #909399; font-size: 12px;">大约的重量即可</span>
-        </el-form-item>
-        
-        <el-divider content-position="left">营养信息（选填）</el-divider>
-        
-        <el-form-item label="热量(千卡)">
-          <el-input-number 
-            v-model="recordForm.calculated_energy" 
-            :min="0"
-            :max="9999"
-            :step="10" 
-            :precision="0" 
-            controls-position="right"
-            class="full-width-number"
-          ></el-input-number>
-        </el-form-item>
-        <el-row :gutter="20">
-          <el-col :span="8">
-            <el-form-item label="蛋白质(克)" label-width="90px">
-              <el-input-number 
-                v-model="recordForm.calculated_protein" 
-                :min="0"
-                :max="999"
-                :step="0.1" 
-                :precision="1"
-                controls-position="right"
-                class="full-width-number"
-              ></el-input-number>
-            </el-form-item>
-          </el-col>
-          <el-col :span="8">
-            <el-form-item label="碳水(克)" label-width="80px">
-              <el-input-number 
-                v-model="recordForm.calculated_carb" 
-                :min="0"
-                :max="999"
-                :step="0.1" 
-                :precision="1"
-                controls-position="right"
-                class="full-width-number"
-              ></el-input-number>
-            </el-form-item>
-          </el-col>
-          <el-col :span="8">
-            <el-form-item label="脂肪(克)" label-width="80px">
-              <el-input-number 
-                v-model="recordForm.calculated_fat" 
-                :min="0"
-                :max="999"
-                :step="0.1" 
-                :precision="1"
-                controls-position="right"
-                class="full-width-number"
-              ></el-input-number>
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-alert
-          type="info"
-          :closable="false"
-          show-icon
-          style="margin-bottom: 20px"
-        >
-          <template #title>
-            <span style="font-size: 12px;">提示：如果不清楚营养信息，可以使用AI拍照识别功能，或者只填写食物名称和重量，其他留空即可</span>
-          </template>
-        </el-alert>
-        <el-form-item>
-          <el-button type="primary" @click="handleAddRecord" :loading="adding" size="large">
-            <el-icon style="margin-right: 5px"><Plus /></el-icon>
-            添加记录
-          </el-button>
-          <el-button @click="resetForm" size="large">重置</el-button>
-        </el-form-item>
-      </el-form>
-    </el-card>
+          <n-gi :span="2">
+            <n-divider dashed>营养成分 (可选/AI自动填)</n-divider>
+          </n-gi>
 
-    <!-- 今日记录列表 -->
-    <el-card class="list-card" shadow="hover">
-      <template #header>
-        <div class="card-header">
-          <span>今日记录</span>
-          <el-tag>共 {{ nutritionStatus.records?.length || 0 }} 条</el-tag>
+          <n-gi>
+            <n-form-item label="热量" path="calculated_energy">
+              <n-input-number v-model:value="recordForm.calculated_energy" placeholder="kcal" :show-button="false">
+                <template #suffix>kcal</template>
+              </n-input-number>
+            </n-form-item>
+          </n-gi>
+          <n-gi>
+            <n-form-item label="蛋白质" path="calculated_protein">
+              <n-input-number v-model:value="recordForm.calculated_protein" placeholder="g" :show-button="false">
+                <template #suffix>g</template>
+              </n-input-number>
+            </n-form-item>
+          </n-gi>
+          <n-gi>
+            <n-form-item label="碳水" path="calculated_carb">
+              <n-input-number v-model:value="recordForm.calculated_carb" placeholder="g" :show-button="false">
+                <template #suffix>g</template>
+              </n-input-number>
+            </n-form-item>
+          </n-gi>
+          <n-gi>
+            <n-form-item label="脂肪" path="calculated_fat">
+              <n-input-number v-model:value="recordForm.calculated_fat" placeholder="g" :show-button="false">
+                <template #suffix>g</template>
+              </n-input-number>
+            </n-form-item>
+          </n-gi>
+        </n-grid>
+      </n-form>
+      <template #footer>
+        <div class="modal-actions">
+          <n-button @click="showAddModal = false">取消</n-button>
+          <n-button type="primary" :loading="adding" @click="handleAddRecord">确认添加</n-button>
         </div>
       </template>
-      <el-table :data="nutritionStatus.records" stripe v-loading="loading">
-        <el-table-column prop="meal_type" label="餐点" width="100">
-          <template #default="{ row }">
-            {{ getMealTypeLabel(row.mealType) }}
-          </template>
-        </el-table-column>
-        <el-table-column prop="food_name" label="食物名称" min-width="150">
-          <template #default="{ row }">
-            {{ row.foodName }}
-          </template>
-        </el-table-column>
-        <el-table-column prop="intake_amount" label="摄入量(g)" width="100">
-          <template #default="{ row }">
-            {{ row.intakeAmount?.toFixed(0) }}
-          </template>
-        </el-table-column>
-        <el-table-column prop="calculated_energy" label="热量(kcal)" width="110">
-          <template #default="{ row }">
-            {{ row.calculatedEnergy?.toFixed(0) }}
-          </template>
-        </el-table-column>
-        <el-table-column prop="calculated_protein" label="蛋白质(g)" width="100">
-          <template #default="{ row }">
-            {{ row.calculatedProtein?.toFixed(1) }}
-          </template>
-        </el-table-column>
-        <el-table-column prop="calculated_carb" label="碳水(g)" width="100">
-          <template #default="{ row }">
-            {{ row.calculatedCarb?.toFixed(1) }}
-          </template>
-        </el-table-column>
-        <el-table-column prop="calculated_fat" label="脂肪(g)" width="100">
-          <template #default="{ row }">
-            {{ row.calculatedFat?.toFixed(1) }}
-          </template>
-        </el-table-column>
-        <el-table-column label="操作" width="100" fixed="right">
-          <template #default="{ row }">
-            <el-button type="danger" size="small" @click="handleDelete(row.ID)">删除</el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-    </el-card>
+    </n-modal>
+
+    <!-- AI 识别 Loading 遮罩 -->
+    <div v-if="recognizing" class="ai-loading-mask">
+      <div class="ai-loading-content">
+        <n-spin size="large" />
+        <p>AI 正在分析食物营养...</p>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick, computed, watch } from 'vue'
-import { useRouter } from 'vue-router'
-import { ElMessage, ElLoading } from 'element-plus'
-import { Plus, ArrowLeft, UserFilled, User, ArrowDown, HomeFilled, TrendCharts, Camera, Picture, Delete } from '@element-plus/icons-vue'
-import * as echarts from 'echarts'
-import { useAuthStore } from '@/store/auth'
-import { getTodayStatus, addIntakeRecord, deleteIntakeRecord } from '@/api/intakeApi'
-import { recognizeFood } from '@/api/foodRecognitionApi'
+import { ref, onMounted, computed, watch } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
+import { 
+  NButton, NIcon, NGrid, NGi, NCard, NProgress, NTimeline, NTimelineItem, 
+  NTag, NEmpty, NSpin, NModal, NForm, NFormItem, NInput, NInputNumber, 
+  NSelect, NDivider, useMessage, NPopconfirm, NInputGroup, NButtonGroup
+} from 'naive-ui';
+import { 
+  ArrowBack, Refresh, Add, Camera, Trash, Sparkles
+} from '@vicons/ionicons5';
+import { useAuthStore } from '@/store/auth';
+import { getTodayStatus, getWeeklyReport, addIntakeRecord, deleteIntakeRecord } from '@/api/intakeApi';
+import { recognizeFood, analyzeFoodText } from '@/api/foodRecognitionApi';
 
-const router = useRouter()
-const authStore = useAuthStore()
+const router = useRouter();
+const route = useRoute();
+const authStore = useAuthStore();
+const message = useMessage();
 
-const chartRef = ref(null)
-let chartInstance = null
+// State
+const loading = ref(false);
+const adding = ref(false);
+const recognizing = ref(false);
+const analyzingText = ref(false);
+const showAddModal = ref(false);
+const viewMode = ref('day');
+const nutritionStatus = ref({});
+const weeklyReport = ref({ daily_data: [] });
+const weeklyLoading = ref(false);
+const currentDate = ref('');
+const fileInputRef = ref(null);
 
-const loading = ref(false)
-const adding = ref(false)
-const recognizing = ref(false)
-const currentDate = ref('')
-const nutritionStatus = ref({})
-const fileInputRef = ref(null)
-const previewImage = ref('')
-const selectedFile = ref(null)
-
-// 存储AI识别的原始数据（每100克的营养值）
-const aiRecognizedData = ref({
-  per100g_calories: 0,
-  per100g_protein: 0,
-  per100g_carbs: 0,
-  per100g_fat: 0,
-  original_weight: 100
-})
-
-// 检测是否为移动端
-const isMobile = computed(() => {
-  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
-})
-
+// Form
 const recordForm = ref({
-  meal_type: '',
+  meal_type: 'breakfast',
   food_name: '',
   intake_amount: 100,
   calculated_energy: 0,
   calculated_protein: 0,
   calculated_carb: 0,
   calculated_fat: 0
-})
+});
 
-// 监听摄入量变化，自动重新计算营养信息
-watch(() => recordForm.value.intake_amount, (newWeight) => {
-  if (aiRecognizedData.value.per100g_calories > 0) {
-    // 根据新的重量重新计算营养信息
-    const weightFactor = newWeight / 100.0
-    recordForm.value.calculated_energy = Math.round(aiRecognizedData.value.per100g_calories * weightFactor)
-    recordForm.value.calculated_protein = parseFloat((aiRecognizedData.value.per100g_protein * weightFactor).toFixed(1))
-    recordForm.value.calculated_carb = parseFloat((aiRecognizedData.value.per100g_carbs * weightFactor).toFixed(1))
-    recordForm.value.calculated_fat = parseFloat((aiRecognizedData.value.per100g_fat * weightFactor).toFixed(1))
-  }
-})
+// AI Data Cache for recalculation
+const aiData = ref(null);
 
-onMounted(() => {
-  currentDate.value = new Date().toLocaleDateString('zh-CN', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    weekday: 'long'
-  })
-  loadTodayStatus()
-})
+const mealOptions = [
+  { label: '🌅 早餐', value: 'breakfast' },
+  { label: '☀️ 午餐', value: 'lunch' },
+  { label: '🌙 晚餐', value: 'dinner' },
+  { label: '🍎 加餐', value: 'snack' }
+];
 
-// 加载今日营养状态
-async function loadTodayStatus() {
-  loading.value = true
-  try {
-    const data = await getTodayStatus()
-    nutritionStatus.value = data
-    await nextTick()
-    initChart()
-  } catch (error) {
-    ElMessage.error('加载数据失败')
-  } finally {
-    loading.value = false
-  }
-}
+const openAddFoodFromRoute = async () => {
+  if (route.query?.action !== 'add-food') return;
 
-// 初始化图表
-function initChart() {
-  if (!chartRef.value) return
-
-  if (chartInstance) {
-    chartInstance.dispose()
-  }
-
-  chartInstance = echarts.init(chartRef.value)
-
-  const option = {
-    tooltip: {
-      trigger: 'axis',
-      axisPointer: {
-        type: 'shadow'
-      },
-      backgroundColor: 'rgba(50, 50, 50, 0.9)',
-      borderColor: '#333',
-      borderWidth: 1,
-      textStyle: {
-        color: '#fff',
-        fontSize: 14
-      },
-      formatter: function(params) {
-        const value = Math.round(params[0].value)
-        let status = '🔴 未达标'
-        if (value >= 90 && value <= 110) status = '✅ 已达标'
-        else if (value >= 80 && value <= 120) status = '🟡 接近'
-        return params[0].name + '<br/>' +
-          params[0].marker + params[0].seriesName + ': ' + value + '%<br/>' +
-          '<span style="font-size: 12px;">' + status + '</span>'
-      }
-    },
-    grid: {
-      left: '5%',
-      right: '5%',
-      bottom: '5%',
-      top: '15%',
-      containLabel: true
-    },
-    xAxis: {
-      type: 'category',
-      data: ['热量', '蛋白质', '碳水化合物', '脂肪'],
-      axisLabel: {
-        fontSize: 14,
-        fontWeight: 500,
-        color: '#606266'
-      },
-      axisLine: {
-        lineStyle: {
-          color: '#dcdfe6'
-        }
-      }
-    },
-    yAxis: {
-      type: 'value',
-      name: '达标率(%)',
-      max: 150,
-      axisLabel: {
-        formatter: '{value}%',
-        color: '#909399'
-      },
-      splitLine: {
-        lineStyle: {
-          color: '#ebeef5',
-          type: 'dashed'
-        }
-      },
-      axisLine: {
-        show: false
-      }
-    },
-    series: [
-      {
-        name: '达标率',
-        type: 'bar',
-        data: [
-          Math.round(nutritionStatus.value.energy_rate || 0),
-          Math.round(nutritionStatus.value.protein_rate || 0),
-          Math.round(nutritionStatus.value.carbohydrate_rate || 0),
-          Math.round(nutritionStatus.value.fat_rate || 0)
-        ],
-        itemStyle: {
-          borderRadius: [8, 8, 0, 0],
-          color: function(params) {
-            const value = params.value
-            if (value >= 90 && value <= 110) {
-              return new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                { offset: 0, color: '#95de64' },
-                { offset: 1, color: '#52c41a' }
-              ])
-            }
-            if (value >= 80 && value <= 120) {
-              return new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                { offset: 0, color: '#ffd666' },
-                { offset: 1, color: '#faad14' }
-              ])
-            }
-            return new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-              { offset: 0, color: '#ff7875' },
-              { offset: 1, color: '#f5222d' }
-            ])
-          }
-        },
-        label: {
-          show: true,
-          position: 'top',
-          formatter: '{c}%',
-          fontSize: 14,
-          fontWeight: 'bold',
-          color: '#303133'
-        },
-        barWidth: '55%',
-        markLine: {
-          silent: true,
-          symbol: 'none',
-          label: {
-            position: 'end',
-            formatter: '目标线',
-            color: '#67C23A'
-          },
-          lineStyle: {
-            color: '#67C23A',
-            type: 'solid',
-            width: 2
-          },
-          data: [{ yAxis: 100 }]
-        }
-      }
-    ]
-  }
-
-  chartInstance.setOption(option)
-}
-
-// 触发文件选择
-function triggerFileInput() {
-  fileInputRef.value?.click()
-}
-
-// 处理图片选择
-function handleImageSelect(event) {
-  const file = event.target.files?.[0]
-  if (!file) return
-
-  // 验证文件类型
-  if (!file.type.startsWith('image/')) {
-    ElMessage.error('请选择图片文件')
-    return
-  }
-
-  // 验证文件大小（限制为10MB）
-  if (file.size > 10 * 1024 * 1024) {
-    ElMessage.error('图片大小不能超过10MB')
-    return
-  }
-
-  selectedFile.value = file
-
-  // 创建预览
-  const reader = new FileReader()
-  reader.onload = (e) => {
-    previewImage.value = e.target.result
-  }
-  reader.readAsDataURL(file)
-
-  // 立即开始识别
-  recognizeFoodImage(file)
-}
-
-// 清除图片
-function clearImage() {
-  selectedFile.value = null
-  previewImage.value = ''
-  if (fileInputRef.value) {
-    fileInputRef.value.value = ''
-  }
-}
-
-// 识别食物图片
-async function recognizeFoodImage(file) {
-  recognizing.value = true
-  
-  // 创建全屏加载提示
-  const loadingInstance = ElLoading.service({
-    lock: true,
-    text: '🤖 AI正在识别食物中...\n请稍候，这可能需要一些时间',
-    background: 'rgba(0, 0, 0, 0.7)',
-    customClass: 'ai-loading'
-  })
-
-  try {
-    const response = await recognizeFood(file)
-    
-    // 保存AI识别的原始数据（每100克的营养值）
-    aiRecognizedData.value = {
-      per100g_calories: response.calories_per_100g || 0,
-      per100g_protein: response.protein_per_100g || 0,
-      per100g_carbs: response.carbs_per_100g || 0,
-      per100g_fat: response.fat_per_100g || 0,
-      original_weight: response.estimated_weight || 100
-    }
-    
-    // 成功识别后自动填充表单
-    recordForm.value.food_name = response.dish_name || ''
-    recordForm.value.intake_amount = response.estimated_weight || 100
-    
-    // 填充营养信息（使用总营养值）
-    recordForm.value.calculated_energy = Math.round(response.total_calories || 0)
-    recordForm.value.calculated_protein = parseFloat((response.total_protein || 0).toFixed(1))
-    recordForm.value.calculated_carb = parseFloat((response.total_carbs || 0).toFixed(1))
-    recordForm.value.calculated_fat = parseFloat((response.total_fat || 0).toFixed(1))
-
-    loadingInstance.close()
-
-    // 显示识别结果提示
-    ElMessage.success({
-      message: `✅ 识别成功！\n食物：${response.dish_name}\n重量：${response.estimated_weight}克\n💡 提示：可以修改摄入量，营养信息会自动调整\n${response.reasoning ? '\n' + response.reasoning : ''}`,
-      duration: 6000,
-      dangerouslyUseHTMLString: true,
-      customClass: 'recognition-success-message'
-    })
-
-  } catch (error) {
-    loadingInstance.close()
-    console.error('食物识别失败:', error)
-    ElMessage.error({
-      message: '❌ 识别失败：' + (error.message || '请重试或手动输入'),
-      duration: 4000
-    })
-    clearImage()
-  } finally {
-    recognizing.value = false
-  }
-}
-
-// 添加记录
-async function handleAddRecord() {
-  if (!recordForm.value.meal_type) {
-    ElMessage.warning('请选择餐点类型')
-    return
-  }
-  if (!recordForm.value.food_name) {
-    ElMessage.warning('请输入食物名称')
-    return
-  }
-  if (recordForm.value.intake_amount <= 0) {
-    ElMessage.warning('请输入摄入量')
-    return
-  }
-
-  adding.value = true
-  try {
-    await addIntakeRecord(recordForm.value)
-    ElMessage.success('添加成功')
-    resetForm()
-    loadTodayStatus()
-  } catch (error) {
-    ElMessage.error('添加失败')
-  } finally {
-    adding.value = false
-  }
-}
-
-// 删除记录
-async function handleDelete(id) {
-  try {
-    await deleteIntakeRecord(id)
-    ElMessage.success('删除成功')
-    loadTodayStatus()
-  } catch (error) {
-    ElMessage.error('删除失败')
-  }
-}
-
-// 重置表单
-function resetForm() {
+  const requestedMealType = String(route.query?.mealType || '').trim().toLowerCase();
+  const mealType = ['breakfast', 'lunch', 'dinner', 'snack'].includes(requestedMealType)
+    ? requestedMealType
+    : 'breakfast';
   recordForm.value = {
-    meal_type: '',
+    meal_type: mealType,
     food_name: '',
     intake_amount: 100,
     calculated_energy: 0,
     calculated_protein: 0,
     calculated_carb: 0,
     calculated_fat: 0
-  }
-  // 清空AI识别数据
-  aiRecognizedData.value = {
-    per100g_calories: 0,
-    per100g_protein: 0,
-    per100g_carbs: 0,
-    per100g_fat: 0,
-    original_weight: 100
-  }
-  clearImage()
-}
+  };
+  showAddModal.value = true;
 
-// 获取餐点类型标签
-function getMealTypeLabel(type) {
+  await router.replace({ path: '/intake' });
+};
+
+// Computed
+const sortedRecords = computed(() => {
+  if (!nutritionStatus.value.records) return [];
+  // Sort by ID desc (newest first) or by created time
+  return [...nutritionStatus.value.records].reverse(); 
+});
+
+const energyPercentage = computed(() => {
+  const current = nutritionStatus.value.total_energy || 0;
+  const target = nutritionStatus.value.target_energy || 2000;
+  return Math.min(100, (current / target) * 100);
+});
+
+const energyColor = computed(() => {
+  const p = energyPercentage.value;
+  if (p > 100) return '#ef4444'; // Red if exceeded
+  return '#0d9488'; // Teal normally
+});
+
+const weekRangeText = computed(() => {
+  const start = weeklyReport.value?.start_date;
+  const end = weeklyReport.value?.end_date;
+  if (!start || !end) return '本周';
+  const startText = new Date(start).toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric' });
+  const endText = new Date(end).toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric' });
+  return `${startText} - ${endText}`;
+});
+
+const weekColumns = computed(() => {
+  const list = weeklyReport.value?.daily_data || [];
+  const today = new Date();
+  const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+  return list.map((day) => {
+    const date = day.date;
+    const dateObj = new Date(date);
+    const records = Array.isArray(day.records) ? day.records : [];
+
+    return {
+      date,
+      isToday: date === todayKey,
+      displayDate: `${dateObj.getMonth() + 1}月${dateObj.getDate()}日`,
+      weekLabel: dateObj.toLocaleDateString('zh-CN', { weekday: 'long' }),
+      totalEnergy: Math.round(day.total_energy || day.totalEnergy || 0),
+      totalProtein: Number(day.total_protein || day.totalProtein || 0).toFixed(1),
+      totalCarbohydrate: Number(day.total_carbohydrate || day.totalCarbohydrate || 0).toFixed(1),
+      totalFat: Number(day.total_fat || day.totalFat || 0).toFixed(1),
+      records
+    };
+  });
+});
+
+// Watcher for auto-calc
+watch(() => recordForm.value.intake_amount, (newVal) => {
+  if (aiData.value && newVal > 0) {
+    const factor = newVal / 100;
+    recordForm.value.calculated_energy = Math.round(aiData.value.calories * factor);
+    recordForm.value.calculated_protein = Number((aiData.value.protein * factor).toFixed(1));
+    recordForm.value.calculated_carb = Number((aiData.value.carb * factor).toFixed(1));
+    recordForm.value.calculated_fat = Number((aiData.value.fat * factor).toFixed(1));
+  }
+});
+
+// Lifecycle
+onMounted(() => {
+  currentDate.value = new Date().toLocaleDateString('zh-CN', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+  });
+  loadData();
+  openAddFoodFromRoute();
+});
+
+// Methods
+const loadTodayData = async () => {
+  loading.value = true;
+  try {
+    const res = await getTodayStatus();
+    nutritionStatus.value = res || {};
+  } catch (e) {
+    message.error('加载今日数据失败');
+  } finally {
+    loading.value = false;
+  }
+};
+
+const loadWeeklyData = async () => {
+  weeklyLoading.value = true;
+  try {
+    const res = await getWeeklyReport();
+    weeklyReport.value = res || { daily_data: [] };
+  } catch (e) {
+    message.error('加载周数据失败');
+  } finally {
+    weeklyLoading.value = false;
+  }
+};
+
+const loadData = async () => {
+  await Promise.all([loadTodayData(), loadWeeklyData()]);
+};
+
+const refreshView = async () => {
+  if (viewMode.value === 'week') {
+    await loadWeeklyData();
+    message.success('周视图已刷新');
+    return;
+  }
+
+  await loadTodayData();
+  message.success('日视图已刷新');
+};
+
+const triggerAIUpload = () => {
+  fileInputRef.value?.click();
+};
+
+const handleImageSelect = async (event) => {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  
+  recognizing.value = true;
+  try {
+    const res = await recognizeFood(file);
+    // Populate Form
+    recordForm.value.food_name = res.dish_name;
+    recordForm.value.intake_amount = res.estimated_weight;
+    recordForm.value.calculated_energy = Math.floor(res.total_calories);
+    recordForm.value.calculated_protein = Math.floor(res.total_protein);
+    recordForm.value.calculated_carb = Math.floor(res.total_carbs); // Note: API returns total_carbs
+    recordForm.value.calculated_fat = Math.floor(res.total_fat);
+
+    // Cache per 100g data
+    aiData.value = {
+      calories: res.calories_per_100g,
+      protein: res.protein_per_100g,
+      carb: res.carbs_per_100g,
+      fat: res.fat_per_100g
+    };
+
+    showAddModal.value = true;
+    message.success(`识别成功：${res.dish_name}`);
+  } catch (e) {
+    message.error('识别失败，请重试');
+  } finally {
+    recognizing.value = false;
+    // Reset input
+    event.target.value = '';
+  }
+};
+
+const handleAIAnalyze = async () => {
+  if (!recordForm.value.food_name) {
+    message.warning('请输入食物描述');
+    return;
+  }
+  analyzingText.value = true;
+  try {
+    const res = await analyzeFoodText(recordForm.value.food_name);
+    // Populate Form
+    recordForm.value.food_name = res.dish_name; // API returns dish_name
+    recordForm.value.intake_amount = res.estimated_weight;
+    recordForm.value.calculated_energy = Math.floor(res.total_calories);
+    recordForm.value.calculated_protein = Math.floor(res.total_protein);
+    recordForm.value.calculated_carb = Math.floor(res.total_carbs);
+    recordForm.value.calculated_fat = Math.floor(res.total_fat);
+
+    // Cache per 100g data
+    aiData.value = {
+      calories: res.calories_per_100g,
+      protein: res.protein_per_100g,
+      carb: res.carbs_per_100g,
+      fat: res.fat_per_100g
+    };
+
+    message.success(`AI 分析完成`);
+  } catch (e) {
+    message.error('分析失败，请重试');
+  } finally {
+    analyzingText.value = false;
+  }
+};
+
+const handleAddRecord = async () => {
+  if (!recordForm.value.food_name) {
+    message.warning('请输入食物名称');
+    return;
+  }
+  
+  adding.value = true;
+  try {
+    await addIntakeRecord(recordForm.value);
+    message.success('记录添加成功');
+    showAddModal.value = false;
+    // Reset form
+    recordForm.value = {
+      meal_type: 'breakfast', food_name: '', intake_amount: 100,
+      calculated_energy: 0, calculated_protein: 0, calculated_carb: 0, calculated_fat: 0
+    };
+    aiData.value = null;
+    await loadData();
+  } catch (e) {
+    message.error('添加失败');
+  } finally {
+    adding.value = false;
+  }
+};
+
+const handleDelete = async (id) => {
+  try {
+    await deleteIntakeRecord(id);
+    message.success('已删除');
+    await loadData();
+  } catch (e) {
+    message.error('删除失败');
+  }
+};
+
+const normalizeMealType = (value = '') => {
+  const text = String(value).trim().toLowerCase();
   const map = {
-    breakfast: '早餐',
-    lunch: '午餐',
-    dinner: '晚餐',
-    snack: '加餐'
-  }
-  return map[type] || type
-}
+    breakfast: 'breakfast',
+    lunch: 'lunch',
+    dinner: 'dinner',
+    snack: 'snack',
+    早餐: 'breakfast',
+    午餐: 'lunch',
+    晚餐: 'dinner',
+    加餐: 'snack'
+  };
+  return map[text] || 'snack';
+};
 
-// 返回上一页
-function goBack() {
-  router.back()
-}
+const getMealSections = (records = []) => {
+  const mealOrder = ['breakfast', 'lunch', 'dinner', 'snack'];
+  const grouped = {
+    breakfast: [],
+    lunch: [],
+    dinner: [],
+    snack: []
+  };
 
-// 处理下拉菜单命令
-function handleCommand(command) {
-  switch(command) {
-    case 'home':
-      router.push('/home')
-      break
-    case 'profile':
-      router.push('/profile/view')
-      break
-    case 'weekly':
-      router.push('/weekly')
-      break
-  }
-}
+  records.forEach((record) => {
+    const type = normalizeMealType(record.mealType || record.meal_type);
+    grouped[type].push(record);
+  });
+
+  return mealOrder
+    .map((type) => {
+      const items = grouped[type];
+      const energy = Math.round(items.reduce((sum, item) => sum + Number(item.calculatedEnergy || item.calculated_energy || 0), 0));
+      return { type, items, energy };
+    })
+    .filter((section) => section.items.length > 0);
+};
+
+const getPercentage = (val, target) => {
+  if (!target) return 0;
+  return Math.min(100, (val / target) * 100);
+};
+
+const getMealTypeLabel = (type) => {
+  const map = { breakfast: '早餐', lunch: '午餐', dinner: '晚餐', snack: '加餐' };
+  return map[type] || type;
+};
+
+const getMealTypeColor = (type) => {
+  const map = { breakfast: 'info', lunch: 'warning', dinner: 'success', snack: 'default' };
+  return map[type] || 'default';
+};
+
+const formatTime = (isoString) => {
+  if (!isoString) return '';
+  const d = new Date(isoString);
+  return d.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+};
 </script>
 
 <style scoped>
-.intake-container {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+.page-container {
   min-height: 100vh;
+  background-color: #F5F7FA;
+  position: relative;
 }
 
-.top-nav {
+.content-wrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+/* Header */
+.page-header {
+  margin-bottom: 32px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-  padding: 0 10px;
 }
 
-.back-button {
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
-  color: white;
-  font-size: 20px;
-  transition: all 0.3s;
-}
-
-.back-button:hover {
-  background: rgba(255, 255, 255, 0.3);
-  transform: scale(1.1);
-}
-
-.user-info-nav {
+.header-left {
   display: flex;
   align-items: center;
+  gap: 16px;
 }
 
-.user-info-display {
+.page-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.page-subtitle {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 4px 0 0 0;
+}
+
+.header-right {
   display: flex;
   align-items: center;
   gap: 10px;
-  cursor: pointer;
-  padding: 8px 16px;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 24px;
-  transition: all 0.3s;
 }
 
-.user-info-display:hover {
-  background: rgba(255, 255, 255, 0.3);
+/* Dashboard Card */
+.dashboard-card {
+  border-radius: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
 
-.user-info-display .username {
-  color: white;
-  font-weight: 500;
+.calorie-ring-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.ring-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+}
+
+.ring-val {
+  font-size: 24px;
+  font-weight: 800;
+  color: #1f2937;
+  white-space: nowrap;
+}
+
+.ring-label {
+  font-size: 12px;
+  color: #9ca3af;
+  margin-top: 2px;
+  white-space: nowrap;
+}
+
+.dashboard-title {
+  margin-top: 12px;
   font-size: 14px;
+  color: #4b5563;
+  font-weight: 500;
 }
 
-.user-info-display .el-icon {
-  color: white;
+.macro-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
-.page-header {
+.macro-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.macro-label { font-weight: 600; }
+.text-red { color: #ef4444; }
+.text-amber { color: #f59e0b; }
+.text-purple { color: #8b5cf6; }
+.macro-val { color: #6b7280; }
+
+.rounded-progress :deep(.n-progress-graph-line-rail),
+.rounded-progress :deep(.n-progress-graph-line-fill) {
+  border-radius: 9999px;
+}
+
+/* Actions Card */
+.actions-card {
+  margin-top: 24px;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.quick-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.camera-btn {
+  box-shadow: 0 10px 15px -3px rgba(13, 148, 136, 0.3), 0 4px 6px -2px rgba(13, 148, 136, 0.1);
+  transition: transform 0.2s;
+}
+
+.camera-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 25px -5px rgba(13, 148, 136, 0.4), 0 10px 10px -5px rgba(13, 148, 136, 0.1);
+}
+
+/* Timeline Card */
+.timeline-card {
+  height: 100%;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.meal-timeline {
+  padding: 8px 0;
+}
+
+/* Record Item */
+.record-card {
+  background-color: #f9fafb;
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.record-card:hover {
+  background-color: #f3f4f6;
+}
+
+.record-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.food-name {
+  font-weight: 600;
+  color: #374151;
+  font-size: 15px;
+}
+
+.food-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.meta-divider { color: #d1d5db; }
+.meta-val { color: #6b7280; font-weight: 500; }
+
+.record-macros {
+  display: flex;
+  gap: 12px;
+  padding-top: 8px;
+  border-top: 1px dashed #e5e7eb;
+}
+
+.mini-macro {
+  font-size: 11px;
+  color: #6b7280;
+  display: flex;
+  gap: 4px;
+}
+
+.mm-label {
+  background-color: #e5e7eb;
+  padding: 1px 4px;
+  border-radius: 4px;
+  font-weight: 600;
+  color: #4b5563;
+}
+
+.record-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+/* Modal */
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+/* Loading Mask */
+.ai-loading-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.9);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+
+.ai-loading-content {
   text-align: center;
-  color: white;
-  margin-bottom: 30px;
+  color: #0d9488;
+  font-weight: 600;
 }
 
-.page-header h2 {
-  font-size: 32px;
+/* Utilities */
+.loading-placeholder {
+  display: flex;
+  justify-content: center;
+  padding: 40px;
+}
+
+.empty-state {
+  padding: 40px 0;
+}
+
+.week-board {
+  background: #141923;
+  border-radius: 16px;
+  border: 1px solid #242c3b;
+  padding: 16px;
+}
+
+.week-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.week-title {
+  margin: 0;
+  color: #f3f4f6;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.week-columns {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(220px, 1fr));
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.day-column {
+  min-height: 560px;
+  background: #1b2230;
+  border: 1px solid #2a3345;
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.day-column.is-today {
+  border-color: #0d9488;
+  box-shadow: inset 0 0 0 1px rgba(13, 148, 136, 0.4);
+}
+
+.day-header {
   margin-bottom: 10px;
 }
 
-.date-info {
-  font-size: 16px;
-  opacity: 0.9;
-}
-
-.chart-card,
-.form-card,
-.list-card {
-  margin-bottom: 20px;
-  border-radius: 12px;
-}
-
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-weight: 600;
-  font-size: 18px;
-}
-
-.chart-container {
-  width: 100%;
-  height: 400px;
-}
-
-.nutrition-summary {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 15px;
-  margin-top: 20px;
-  padding-top: 20px;
-  border-top: 1px solid #eee;
-}
-
-.summary-item {
-  padding: 12px;
-  background: #f5f7fa;
-  border-radius: 8px;
-  display: flex;
-  justify-content: space-between;
-}
-
-.summary-item .label {
-  font-weight: 600;
-  color: #606266;
-}
-
-.summary-item .value {
-  color: #409EFF;
-  font-weight: 500;
-}
-
-.el-form {
-  max-width: 800px;
-}
-
-.full-width-number {
-  width: 100% !important;
-}
-
-:deep(.el-input-number) {
-  width: 100% !important;
-}
-
-:deep(.el-input-number .el-input__wrapper) {
-  width: 100% !important;
-  padding-left: 11px;
-  padding-right: 11px;
-}
-
-:deep(.el-input-number .el-input__inner) {
-  text-align: left !important;
-  width: 100% !important;
-}
-
-:deep(.el-table) {
+.day-date {
   font-size: 14px;
+  color: #e5e7eb;
 }
 
-/* AI识别区域样式 */
-.ai-recognition-zone {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
+.day-week-label {
+  margin-top: 2px;
+  font-size: 28px;
+  font-weight: 700;
+  color: #2dd4bf;
 }
 
-.ai-hint {
+.day-column.is-today .day-week-label {
+  color: #14b8a6;
+}
+
+.day-kcal {
+  margin-top: 4px;
+  color: #5eead4;
   font-size: 13px;
-  color: #909399;
-  font-style: italic;
 }
 
-.image-preview {
-  position: relative;
-  margin-top: 15px;
-  max-width: 300px;
+.day-macro-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 11px;
+  color: #9ca3af;
+  border-bottom: 1px dashed #334155;
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+}
+
+.meal-section-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.meal-section {
+  background: #232b3a;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 8px;
+}
+
+.meal-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.meal-title {
+  color: #f3f4f6;
+  font-weight: 700;
+  font-size: 19px;
+}
+
+.meal-total {
+  color: #94a3b8;
+  font-size: 12px;
+}
+
+.meal-item-card {
+  background: #111827;
+  border: 1px solid #263043;
   border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  padding: 8px;
 }
 
-.image-preview img {
-  width: 100%;
-  display: block;
+.meal-item-card + .meal-item-card {
+  margin-top: 8px;
 }
 
-.delete-preview {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: rgba(255, 255, 255, 0.9);
+.meal-item-name {
+  color: #2dd4bf;
+  font-weight: 600;
+  font-size: 15px;
+  margin-bottom: 6px;
 }
 
-/* 移动端优化 */
-@media (max-width: 768px) {
-  .intake-container {
-    padding: 10px;
+.meal-item-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: #cbd5e1;
+  font-size: 12px;
+}
+
+.day-empty {
+  margin-top: 10px;
+  border: 1px dashed #334155;
+  border-radius: 10px;
+  padding: 22px 8px;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 13px;
+}
+
+@media (max-width: 1024px) {
+  .content-wrapper {
+    padding: 14px;
   }
 
-  .page-header h2 {
-    font-size: 24px;
-  }
-
-  .chart-container {
-    height: 300px;
-  }
-
-  .nutrition-summary {
-    grid-template-columns: 1fr;
-  }
-
-  .el-form {
-    max-width: 100%;
-  }
-
-  .image-preview {
-    max-width: 100%;
-  }
-
-  .ai-recognition-zone {
-    flex-direction: column;
+  .page-header {
+    gap: 12px;
     align-items: flex-start;
-  }
-}
-
-/* 自定义加载样式 */
-:deep(.ai-loading) {
-  .el-loading-text {
-    font-size: 16px;
-    font-weight: 500;
-    white-space: pre-line;
-    text-align: center;
-  }
-}
-
-/* 识别成功消息样式 */
-:deep(.recognition-success-message) {
-  .el-message__content {
-    white-space: pre-line;
-    line-height: 1.6;
+    flex-direction: column;
   }
 }
 </style>

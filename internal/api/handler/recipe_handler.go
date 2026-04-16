@@ -3,8 +3,10 @@ package handler
 import (
 	"NutriPlan/internal/repository/models"
 	"NutriPlan/internal/service"
+	"context"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -33,41 +35,50 @@ type RecommendResponse struct {
 	Plans []DailyPlanDTO `json:"plans"`
 }
 
+type RecognizedIngredientsResponse struct {
+	Ingredients []string `json:"ingredients"`
+}
+
 // DailyPlanDTO 每日食谱计划DTO
 type DailyPlanDTO struct {
-	ID                 uint      `json:"id"`
-	Breakfast          RecipeDTO `json:"breakfast"`
-	Lunch              RecipeDTO `json:"lunch"`
-	Dinner             RecipeDTO `json:"dinner"`
-	Snack              RecipeDTO `json:"snack,omitempty"`
-	TotalEnergy        float64   `json:"total_energy"`
-	TotalProtein       float64   `json:"total_protein"`
-	TotalCarbohydrate  float64   `json:"total_carbohydrate"`
-	TotalFat           float64   `json:"total_fat"`
-	TargetEnergy       float64   `json:"target_energy"`
-	TargetProtein      float64   `json:"target_protein"`
-	TargetCarbohydrate float64   `json:"target_carbohydrate"`
-	TargetFat          float64   `json:"target_fat"`
-	MatchScore         float64   `json:"match_score"`
+	ID                 uint        `json:"id"`
+	Breakfast          RecipeDTO   `json:"breakfast"`
+	BreakfastItems     []RecipeDTO `json:"breakfast_items,omitempty"`
+	Lunch              RecipeDTO   `json:"lunch"`
+	LunchItems         []RecipeDTO `json:"lunch_items,omitempty"`
+	Dinner             RecipeDTO   `json:"dinner"`
+	DinnerItems        []RecipeDTO `json:"dinner_items,omitempty"`
+	Snack              RecipeDTO   `json:"snack,omitempty"`
+	SnackItems         []RecipeDTO `json:"snack_items,omitempty"`
+	TotalEnergy        float64     `json:"total_energy"`
+	TotalProtein       float64     `json:"total_protein"`
+	TotalCarbohydrate  float64     `json:"total_carbohydrate"`
+	TotalFat           float64     `json:"total_fat"`
+	TargetEnergy       float64     `json:"target_energy"`
+	TargetProtein      float64     `json:"target_protein"`
+	TargetCarbohydrate float64     `json:"target_carbohydrate"`
+	TargetFat          float64     `json:"target_fat"`
+	MatchScore         float64     `json:"match_score"`
 }
 
 // RecipeDTO 食谱DTO
 type RecipeDTO struct {
-	ID           uint     `json:"id"`
-	Name         string   `json:"name"`
-	Description  string   `json:"description"`
-	ImageURL     string   `json:"image_url"`
-	MealType     string   `json:"meal_type"`
-	Energy       float64  `json:"energy"`
-	Protein      float64  `json:"protein"`
-	Carbohydrate float64  `json:"carbohydrate"`
-	Fat          float64  `json:"fat"`
-	DietaryFiber float64  `json:"dietary_fiber"`
-	Ingredients  []string `json:"ingredients"`
-	CookingSteps []string `json:"cooking_steps"`
-	CookingTime  int      `json:"cooking_time"`
-	Difficulty   string   `json:"difficulty"`
-	IsFavorite   bool     `json:"is_favorite,omitempty"`
+	ID             uint     `json:"id"`
+	Name           string   `json:"name"`
+	Description    string   `json:"description"`
+	ImageURL       string   `json:"image_url"`
+	MealType       string   `json:"meal_type"`
+	PortionWeightG float64  `json:"portion_weight_g"`
+	Energy         float64  `json:"energy"`
+	Protein        float64  `json:"protein"`
+	Carbohydrate   float64  `json:"carbohydrate"`
+	Fat            float64  `json:"fat"`
+	DietaryFiber   float64  `json:"dietary_fiber"`
+	Ingredients    []string `json:"ingredients"`
+	CookingSteps   []string `json:"cooking_steps"`
+	CookingTime    int      `json:"cooking_time"`
+	Difficulty     string   `json:"difficulty"`
+	IsFavorite     bool     `json:"is_favorite,omitempty"`
 }
 
 // GetRecommendations 获取食谱推荐
@@ -130,6 +141,100 @@ func (h *RecipeHandler) GetRecommendations(c *gin.Context) {
 	})
 }
 
+func (h *RecipeHandler) RecognizeMealIngredients(c *gin.Context) {
+	file, err := c.FormFile("image")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "请上传食材图片，字段名为 image"})
+		return
+	}
+
+	contentType := file.Header.Get("Content-Type")
+	if contentType != "image/jpeg" && contentType != "image/png" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "仅支持 JPEG/PNG 图片"})
+		return
+	}
+
+	f, err := file.Open()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "图片读取失败"})
+		return
+	}
+	defer f.Close()
+
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 18*time.Second)
+	defer cancel()
+
+	ingredients, err := h.recipeService.RecognizeIngredientsFromImage(ctx, f)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "食材识别失败: " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, RecognizedIngredientsResponse{Ingredients: ingredients})
+}
+
+func (h *RecipeHandler) RegenerateSingleMeal(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "未授权"})
+		return
+	}
+
+	user, err := h.userService.GetUserByID(userID.(uint))
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "用户不存在"})
+		return
+	}
+
+	var req service.ConstrainedMealRegenerateRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "请求参数错误: " + err.Error()})
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 20*time.Second)
+	defer cancel()
+
+	result, err := h.recipeService.RegenerateConstrainedMeal(ctx, user, req)
+	if err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
+}
+
+func (h *RecipeHandler) AdoptRegeneratedMeal(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "未授权"})
+		return
+	}
+
+	var req service.ConstrainedMealAdoptRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "请求参数错误: " + err.Error()})
+		return
+	}
+
+	plan, err := h.recipeService.AdoptRegeneratedMeal(userID.(uint), req)
+	if err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+		return
+	}
+
+	planDTO, err := h.convertPlanToDTO(plan, userID.(uint))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "数据转换失败"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "单餐采纳成功",
+		"plan":    planDTO,
+	})
+}
+
 // SelectPlan 选择食谱计划
 // @Summary 选择食谱计划
 // @Description 用户选择某套食谱方案
@@ -155,11 +260,41 @@ func (h *RecipeHandler) SelectPlan(c *gin.Context) {
 	}
 
 	// 转换为model
+	toItemIDs := func(items []RecipeDTO, fallbackID uint) []uint {
+		ids := make([]uint, 0)
+		for _, item := range items {
+			if item.ID > 0 {
+				ids = append(ids, item.ID)
+			}
+		}
+		if len(ids) == 0 && fallbackID > 0 {
+			ids = append(ids, fallbackID)
+		}
+		return ids
+	}
+
+	breakfastIDs := toItemIDs(planDTO.BreakfastItems, planDTO.Breakfast.ID)
+	lunchIDs := toItemIDs(planDTO.LunchItems, planDTO.Lunch.ID)
+	dinnerIDs := toItemIDs(planDTO.DinnerItems, planDTO.Dinner.ID)
+	snackIDs := toItemIDs(planDTO.SnackItems, planDTO.Snack.ID)
+
+	firstID := func(ids []uint, fallback uint) uint {
+		if len(ids) > 0 {
+			return ids[0]
+		}
+		return fallback
+	}
+
 	plan := &models.DailyRecipePlan{
-		BreakfastRecipeID: planDTO.Breakfast.ID,
-		LunchRecipeID:     planDTO.Lunch.ID,
-		DinnerRecipeID:    planDTO.Dinner.ID,
-		SnackRecipeID:     planDTO.Snack.ID,
+		BreakfastRecipeID: firstID(breakfastIDs, planDTO.Breakfast.ID),
+		LunchRecipeID:     firstID(lunchIDs, planDTO.Lunch.ID),
+		DinnerRecipeID:    firstID(dinnerIDs, planDTO.Dinner.ID),
+		SnackRecipeID:     firstID(snackIDs, planDTO.Snack.ID),
+
+		BreakfastItemIDs: breakfastIDs,
+		LunchItemIDs:     lunchIDs,
+		DinnerItemIDs:    dinnerIDs,
+		SnackItemIDs:     snackIDs,
 
 		TotalEnergy:       planDTO.TotalEnergy,
 		TotalProtein:      planDTO.TotalProtein,
@@ -278,6 +413,30 @@ func (h *RecipeHandler) convertPlanToDTO(plan *models.DailyRecipePlan, userID ui
 	dto.Dinner = convertRecipeToDTO(&plan.DinnerRecipe)
 	dto.Snack = convertRecipeToDTO(&plan.SnackRecipe)
 
+	toRecipeDTOList := func(items []models.Recipe, fallback models.Recipe) []RecipeDTO {
+		result := make([]RecipeDTO, 0)
+		if len(items) == 0 {
+			if fallback.ID > 0 {
+				result = append(result, convertRecipeToDTO(&fallback))
+			}
+			return result
+		}
+
+		for _, item := range items {
+			if item.ID == 0 {
+				continue
+			}
+			copied := item
+			result = append(result, convertRecipeToDTO(&copied))
+		}
+		return result
+	}
+
+	dto.BreakfastItems = toRecipeDTOList(plan.BreakfastItems, plan.BreakfastRecipe)
+	dto.LunchItems = toRecipeDTOList(plan.LunchItems, plan.LunchRecipe)
+	dto.DinnerItems = toRecipeDTOList(plan.DinnerItems, plan.DinnerRecipe)
+	dto.SnackItems = toRecipeDTOList(plan.SnackItems, plan.SnackRecipe)
+
 	if userID > 0 {
 		if dto.Breakfast.ID > 0 {
 			if ok, _ := h.recipeService.IsFavorite(userID, dto.Breakfast.ID); ok {
@@ -299,6 +458,22 @@ func (h *RecipeHandler) convertPlanToDTO(plan *models.DailyRecipePlan, userID ui
 				dto.Snack.IsFavorite = true
 			}
 		}
+
+		markFavorites := func(items []RecipeDTO) {
+			for idx := range items {
+				if items[idx].ID == 0 {
+					continue
+				}
+				if ok, _ := h.recipeService.IsFavorite(userID, items[idx].ID); ok {
+					items[idx].IsFavorite = true
+				}
+			}
+		}
+
+		markFavorites(dto.BreakfastItems)
+		markFavorites(dto.LunchItems)
+		markFavorites(dto.DinnerItems)
+		markFavorites(dto.SnackItems)
 	}
 
 	return dto, nil
@@ -307,18 +482,19 @@ func (h *RecipeHandler) convertPlanToDTO(plan *models.DailyRecipePlan, userID ui
 // convertRecipeToDTO 转换食谱为DTO
 func convertRecipeToDTO(recipe *models.Recipe) RecipeDTO {
 	return RecipeDTO{
-		ID:           recipe.ID,
-		Name:         recipe.Name,
-		ImageURL:     recipe.ImageURL,
-		MealType:     string(recipe.MealType),
-		Energy:       recipe.Energy,
-		Protein:      recipe.Protein,
-		Carbohydrate: recipe.Carbohydrate,
-		Fat:          recipe.Fat,
-		Ingredients:  recipe.Ingredients,
-		CookingSteps: recipe.CookingSteps,
-		CookingTime:  recipe.CookingTime,
-		Difficulty:   recipe.Difficulty,
+		ID:             recipe.ID,
+		Name:           recipe.Name,
+		ImageURL:       recipe.ImageURL,
+		MealType:       string(recipe.MealType),
+		PortionWeightG: recipe.PortionWeightG,
+		Energy:         recipe.Energy,
+		Protein:        recipe.Protein,
+		Carbohydrate:   recipe.Carbohydrate,
+		Fat:            recipe.Fat,
+		Ingredients:    recipe.Ingredients,
+		CookingSteps:   recipe.CookingSteps,
+		CookingTime:    recipe.CookingTime,
+		Difficulty:     recipe.Difficulty,
 	}
 }
 

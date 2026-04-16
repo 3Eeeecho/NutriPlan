@@ -31,14 +31,14 @@ func main() {
 
 	// 创建 Repository 实例
 	userRepo := dao.NewGormUserRepository(dao.DB)
-	recipeRepo := dao.NewGormRecipeRepository(dao.DB)
+	recipeRepo := dao.NewGormRecipeRepository(dao.DB, config.AppConfig.Database.RecipeTable)
 	intakeRepo := dao.NewIntakeRepository(dao.DB)
 	shoppingListRepo := dao.NewShoppingListRepository(dao.DB)
 
 	// 创建 Service 实例
 	nutriService := service.NewNutriService()
 	userService := service.NewUserService(userRepo, nutriService)
-	recipeService := service.NewRecipeService(recipeRepo, nutriService)
+	recipeService := service.NewRecipeService(recipeRepo, nutriService, zhipuClient)
 	intakeService := service.NewIntakeService(intakeRepo, userRepo, nutriService)
 	shoppingListService := service.NewShoppingListService(shoppingListRepo, recipeRepo)
 	foodRecognitionService := service.NewFoodRecognitionService(zhipuClient)

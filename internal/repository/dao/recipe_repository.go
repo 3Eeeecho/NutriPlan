@@ -14,8 +14,20 @@ type RecipeRepository interface {
 	// FindByMealType 根据餐次类型以及目标用户查询食谱,并过滤掉禁忌食材
 	FindByMealType(mealType models.MealType, target models.HealthGoal, forbidden []string) ([]models.Recipe, error)
 
+	// 多路召回相关接口
+	FindLowCalorieRecipes(mealType models.MealType, limit int) ([]models.Recipe, error)
+	FindHighCalorieRecipes(mealType models.MealType, limit int) ([]models.Recipe, error)
+	FindByIngredientTags(mealType models.MealType, tags []string, limit int) ([]models.Recipe, error)
+	FindRandomRecipes(mealType models.MealType, limit int) ([]models.Recipe, error)
+
 	// FindByID 根据ID查询食谱
 	FindByID(id uint) (*models.Recipe, error)
+
+	// FindByIDsFromRuntimeTable 从 recipes 表按ID批量查询（用于计划外键与组合回填）
+	FindByIDsFromRuntimeTable(ids []uint) ([]models.Recipe, error)
+
+	// ResolveRecipeIDForPlan 将当前数据源表中的食谱ID映射为 recipes 表中的ID（用于外键保存）
+	ResolveRecipeIDForPlan(recipeID uint) (uint, error)
 
 	// CreateDailyPlan 创建每日食谱计划
 	CreateDailyPlan(plan *models.DailyRecipePlan) error
@@ -56,18 +68,24 @@ type RecipeRepository interface {
 
 // GormRecipeRepository GORM 实现
 type GormRecipeRepository struct {
-	db *gorm.DB
+	db          *gorm.DB
+	recipeTable string
 }
 
 // NewGormRecipeRepository 创建 GORM 食谱仓储实例
-func NewGormRecipeRepository(db *gorm.DB) RecipeRepository {
-	return &GormRecipeRepository{db: db}
+func NewGormRecipeRepository(db *gorm.DB, recipeTable string) RecipeRepository {
+	_ = recipeTable
+	return &GormRecipeRepository{db: db, recipeTable: "recipes"}
+}
+
+func (r *GormRecipeRepository) recipeQuery() *gorm.DB {
+	return r.db.Model(&models.Recipe{}).Table(r.recipeTable)
 }
 
 // FindByMealType 根据餐次类型以及目标用户查询食谱,并过滤掉禁忌食材
 func (r *GormRecipeRepository) FindByMealType(mealType models.MealType, target models.HealthGoal, forbidden []string) ([]models.Recipe, error) {
 	var recipes []models.Recipe
-	tx := r.db.Model(&models.Recipe{}).Where("meal_type = ?", mealType)
+	tx := r.recipeQuery().Where("meal_type = ?", mealType)
 
 	//添加禁忌食材过滤
 	for _, item := range forbidden {
@@ -83,14 +101,88 @@ func (r *GormRecipeRepository) FindByMealType(mealType models.MealType, target m
 	return recipes, err
 }
 
+// FindLowCalorieRecipes 查询低热量食谱 (热量从低到高)
+func (r *GormRecipeRepository) FindLowCalorieRecipes(mealType models.MealType, limit int) ([]models.Recipe, error) {
+	var recipes []models.Recipe
+	err := r.recipeQuery().Where("meal_type = ? AND energy > 0", mealType).Order("energy ASC").Limit(limit).Find(&recipes).Error
+	return recipes, err
+}
+
+// FindHighCalorieRecipes 查询高热量食谱 (热量从高到低)
+func (r *GormRecipeRepository) FindHighCalorieRecipes(mealType models.MealType, limit int) ([]models.Recipe, error) {
+	var recipes []models.Recipe
+	err := r.recipeQuery().Where("meal_type = ?", mealType).Order("energy DESC").Limit(limit).Find(&recipes).Error
+	return recipes, err
+}
+
+// FindByIngredientTags 根据偏好标签模糊查询食谱
+func (r *GormRecipeRepository) FindByIngredientTags(mealType models.MealType, tags []string, limit int) ([]models.Recipe, error) {
+	var recipes []models.Recipe
+	if len(tags) == 0 {
+		return r.FindRandomRecipes(mealType, limit)
+	}
+
+	tx := r.recipeQuery().Where("meal_type = ?", mealType)
+	// 构建 OR 查询条件
+	var orConditions []string
+	var args []interface{}
+	for _, tag := range tags {
+		if tag != "" {
+			orConditions = append(orConditions, "ingredients LIKE ?")
+			args = append(args, "%"+tag+"%")
+		}
+	}
+
+	if len(orConditions) > 0 {
+		tx = tx.Where(strings.Join(orConditions, " OR "), args...)
+	}
+
+	err := tx.Limit(limit).Find(&recipes).Error
+	return recipes, err
+}
+
+// FindRandomRecipes 随机探索食谱
+func (r *GormRecipeRepository) FindRandomRecipes(mealType models.MealType, limit int) ([]models.Recipe, error) {
+	var recipes []models.Recipe
+	// MySQL/SQLite RAND() 性能尚可接受(通常食谱表不大)
+	err := r.recipeQuery().Where("meal_type = ?", mealType).Order("RAND()").Limit(limit).Find(&recipes).Error
+	return recipes, err
+}
+
 // FindByID 根据ID查询食谱
 func (r *GormRecipeRepository) FindByID(id uint) (*models.Recipe, error) {
 	var recipe models.Recipe
-	err := r.db.First(&recipe, id).Error
+	err := r.recipeQuery().Where("id = ?", id).First(&recipe).Error
 	if err != nil {
 		return nil, err
 	}
 	return &recipe, nil
+}
+
+// FindByIDsFromRuntimeTable 从 recipes 表按ID批量查询
+func (r *GormRecipeRepository) FindByIDsFromRuntimeTable(ids []uint) ([]models.Recipe, error) {
+	if len(ids) == 0 {
+		return []models.Recipe{}, nil
+	}
+
+	var recipes []models.Recipe
+	err := r.db.Model(&models.Recipe{}).
+		Table("recipes").
+		Where("id IN ?", ids).
+		Find(&recipes).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return recipes, nil
+}
+
+// ResolveRecipeIDForPlan 将配置表中的 recipeID 解析为 recipes 表中的真实ID
+func (r *GormRecipeRepository) ResolveRecipeIDForPlan(recipeID uint) (uint, error) {
+	if recipeID == 0 {
+		return 0, nil
+	}
+	return recipeID, nil
 }
 
 // CreateDailyPlan 创建每日食谱计划
@@ -244,7 +336,7 @@ func (r *GormRecipeRepository) FindFuzzyByName(keyword string) (*models.Recipe, 
 		return nil, nil
 	}
 
-	err := r.db.Where("name LIKE ?", "%"+keyword+"%").
+	err := r.recipeQuery().Where("name LIKE ?", "%"+keyword+"%").
 		Order("LENGTH(name) ASC").
 		Find(recipe).Error
 

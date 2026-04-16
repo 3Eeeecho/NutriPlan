@@ -292,6 +292,12 @@ type NutritionRequirementsResponse struct {
 	FatRatio      float64 `json:"fat_ratio"`      // 脂肪比例 (%)
 }
 
+type SetDietModeRequest struct {
+	Mode   string `json:"mode" binding:"required"`
+	Days   int    `json:"days"`
+	Reason string `json:"reason"`
+}
+
 // GetNutritionRequirements 获取用户营养需求
 // @Summary 获取营养需求
 // @Description 根据用户档案计算目标热量和宏量营养素分配
@@ -354,5 +360,80 @@ func (h *UserHandler) GetNutritionRequirements(c *gin.Context) {
 		ProteinRatio:  proteinRatio,
 		CarbRatio:     carbRatio,
 		FatRatio:      fatRatio,
+	})
+}
+
+// GetDietMode 获取当前饮食模式
+func (h *UserHandler) GetDietMode(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "未授权访问"})
+		return
+	}
+
+	id, ok := userID.(uint)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "用户ID格式错误"})
+		return
+	}
+
+	user, err := h.userService.GetDietMode(id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if user == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "用户不存在"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"mode":   user.DietMode,
+		"source": user.DietModeSource,
+		"reason": user.DietModeReason,
+		"until":  user.DietModeUntil,
+	})
+}
+
+// SetDietMode 设置饮食模式
+func (h *UserHandler) SetDietMode(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "未授权访问"})
+		return
+	}
+
+	id, ok := userID.(uint)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "用户ID格式错误"})
+		return
+	}
+
+	var req SetDietModeRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "请求参数错误: " + err.Error()})
+		return
+	}
+
+	mode := models.DietMode(req.Mode)
+	switch mode {
+	case models.DietModeNormal, models.DietModeLightAdjust, models.DietModeBland, models.DietModeHeavyAdjust:
+	default:
+		c.JSON(http.StatusBadRequest, gin.H{"error": "不支持的mode，可选: normal/light_adjust/bland/heavy_adjust"})
+		return
+	}
+
+	user, err := h.userService.SetDietMode(id, mode, req.Days, req.Reason)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "饮食模式更新成功",
+		"mode":    user.DietMode,
+		"source":  user.DietModeSource,
+		"reason":  user.DietModeReason,
+		"until":   user.DietModeUntil,
 	})
 }

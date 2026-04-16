@@ -43,3 +43,20 @@ export const getNutritionRequirements = () => {
   })
 }
 
+// 获取当前饮食模式
+export const getDietMode = () => {
+  return request({
+    url: '/user/diet-mode',
+    method: 'get'
+  })
+}
+
+// 设置饮食模式
+export const setDietMode = (data) => {
+  return request({
+    url: '/user/diet-mode',
+    method: 'put',
+    data
+  })
+}
+

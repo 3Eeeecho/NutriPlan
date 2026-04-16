@@ -1,413 +1,681 @@
 <template>
-  <div class="recipe-detail">
-    <!-- 顶部导航栏 -->
-    <div class="top-nav">
-      <el-button @click="goBack" class="back-button" circle>
-        <el-icon><ArrowLeft /></el-icon>
-      </el-button>
-      <div class="user-info-nav">
-        <el-dropdown @command="handleCommand">
-          <span class="user-info-display">
-            <el-avatar :size="32" :icon="UserFilled" />
-            <span class="username">{{ authStore.user?.username || '用户' }}</span>
-            <el-icon><ArrowDown /></el-icon>
-          </span>
-          <template #dropdown>
-            <el-dropdown-menu>
-              <el-dropdown-item command="home">
-                <el-icon><HomeFilled /></el-icon>
-                返回首页
-              </el-dropdown-item>
-              <el-dropdown-item command="profile">
-                <el-icon><User /></el-icon>
-                个人档案
-              </el-dropdown-item>
-              <el-dropdown-item command="intake">
-                <el-icon><DataLine /></el-icon>
-                饮食记录
-              </el-dropdown-item>
-            </el-dropdown-menu>
-          </template>
-        </el-dropdown>
-      </div>
+  <div class="page-container">
+    <!-- Atmospheric Background Blobs -->
+    <div class="blob-container">
+      <div class="blob blob-1"></div>
+      <div class="blob blob-2"></div>
     </div>
 
-    <header class="header">
-      <h1>{{ recipe.name }}</h1>
-      <p v-if="recipe.description" class="desc">{{ recipe.description }}</p>
-      <div class="actions">
-        <button class="fav-btn" @click="toggleFavorite">
-          <span v-if="isFavorite">💖 取消收藏</span>
-          <span v-else>🤍 收藏</span>
-        </button>
-        <button class="share-btn" @click="shareRecipe">🔗 分享</button>
-        <button class="share-btn" @click="goFavorites">⭐ 我的收藏</button>
+    <div class="content-wrapper">
+      <!-- Loading State -->
+      <div v-if="loading" class="loading-state">
+        <n-spin size="large" />
       </div>
-    </header>
 
-    <section class="meta">
-      <div class="nutrition">
-        <div class="item">热量: <strong>{{ Math.floor(recipe.energy || 0) }} kcal</strong></div>
-        <div class="item">蛋白质: <strong>{{ Math.floor(recipe.protein || 0) }} g</strong></div>
-        <div class="item">碳水: <strong>{{ Math.floor(recipe.carbohydrate || 0) }} g</strong></div>
-        <div class="item">脂肪: <strong>{{ Math.floor(recipe.fat || 0) }} g</strong></div>
+      <!-- Error State -->
+      <div v-else-if="!recipe || !recipe.id" class="error-state">
+        <n-result status="404" title="未找到食谱" description="该食谱可能已被删除或不存在">
+          <template #footer>
+            <n-button @click="router.back()">返回上一页</n-button>
+          </template>
+        </n-result>
       </div>
-      <div class="cook-info">
-        <div>烹饪时间: {{ recipe.cooking_time || '-' }} 分钟</div>
-        <div>难度: {{ recipe.difficulty || '未知' }}</div>
+
+      <!-- Main Content -->
+      <div v-else class="animate-fade-in">
+        <!-- Back Button -->
+        <div class="back-btn-container">
+          <n-button text class="back-btn" @click="router.back()">
+            <template #icon>
+              <n-icon><ArrowBack /></n-icon>
+            </template>
+            返回
+          </n-button>
+        </div>
+
+        <!-- Header Section -->
+        <div class="header-section">
+          <div class="header-content">
+            <h1 class="recipe-title">{{ recipe.name }}</h1>
+            
+            <!-- Meta Tags -->
+            <div class="meta-tags">
+              <div class="meta-tag">
+                <n-icon class="icon-emerald"><TimeOutline /></n-icon>
+                <span>{{ recipe.cooking_time || 15 }} 分钟</span>
+              </div>
+              <div class="meta-tag">
+                <n-icon class="icon-orange"><FlameOutline /></n-icon>
+                <span>{{ recipe.difficulty || '简单' }}</span>
+              </div>
+              <div class="meta-tag" v-if="recipe.meal_type">
+                <n-icon class="icon-blue"><RestaurantOutline /></n-icon>
+                <span>{{ formatMealType(recipe.meal_type) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="action-buttons">
+            <n-button circle secondary type="default" size="large" @click="toggleFavorite">
+              <template #icon>
+                <n-icon :color="isFavorite ? '#ef4444' : undefined">
+                  <Heart v-if="isFavorite" />
+                  <HeartOutline v-else />
+                </n-icon>
+              </template>
+            </n-button>
+            <n-button circle secondary type="default" size="large" @click="shareRecipe">
+              <template #icon>
+                <n-icon><ShareSocialOutline /></n-icon>
+              </template>
+            </n-button>
+          </div>
+        </div>
+
+        <!-- Hero Visual Section -->
+        <div class="hero-visual" :style="{ background: getHeroBackground(recipe.name) }">
+          <span class="hero-emoji">{{ getHeroEmoji(recipe.name) }}</span>
+        </div>
+
+        <!-- Nutrition Grid -->
+        <div class="nutrition-grid">
+          <!-- Calories -->
+          <div class="nutrition-card">
+            <div class="nutri-value-row">
+              <span class="nutri-value text-emerald">{{ Math.floor(recipe.energy) }}</span>
+              <span class="nutri-unit">kcal</span>
+            </div>
+            <div class="nutri-label">热量</div>
+          </div>
+          <!-- Protein -->
+          <div class="nutrition-card">
+            <div class="nutri-value-row">
+              <span class="nutri-value text-red">{{ Math.floor(recipe.protein) }}</span>
+              <span class="nutri-unit">g</span>
+            </div>
+            <div class="nutri-label">蛋白质</div>
+          </div>
+          <!-- Carbs -->
+          <div class="nutrition-card">
+            <div class="nutri-value-row">
+              <span class="nutri-value text-amber">{{ Math.floor(recipe.carbohydrate) }}</span>
+              <span class="nutri-unit">g</span>
+            </div>
+            <div class="nutri-label">碳水</div>
+          </div>
+          <!-- Fat -->
+          <div class="nutrition-card">
+            <div class="nutri-value-row">
+              <span class="nutri-value text-purple">{{ Math.floor(recipe.fat) }}</span>
+              <span class="nutri-unit">g</span>
+            </div>
+            <div class="nutri-label">脂肪</div>
+          </div>
+        </div>
+
+        <div class="details-grid">
+          <!-- Ingredients (Left Col) -->
+          <div class="ingredients-col">
+            <n-card :bordered="false" class="detail-card" title="所需食材">
+              <template #header-extra>
+                <n-icon size="20" class="icon-gray"><BasketOutline /></n-icon>
+              </template>
+              
+              <div v-if="recipe.ingredients && recipe.ingredients.length" class="ingredients-list">
+                <div 
+                  v-for="(ing, idx) in recipe.ingredients" 
+                  :key="idx"
+                  class="ingredient-item"
+                >
+                  <div class="ing-name-wrapper">
+                    <div class="ing-dot"></div>
+                    <span class="ing-name">{{ parseIngredientName(ing) }}</span>
+                  </div>
+                  <span class="ing-amount">{{ parseIngredientAmount(ing) }}</span>
+                </div>
+              </div>
+              <div v-else class="empty-text">暂无食材信息</div>
+            </n-card>
+          </div>
+
+          <!-- Steps (Right 2 Cols) -->
+          <div class="steps-col">
+            <n-card :bordered="false" class="detail-card" title="烹饪步骤">
+              <template #header-extra>
+                <n-icon size="20" class="icon-gray"><ListOutline /></n-icon>
+              </template>
+
+              <div v-if="recipe.cooking_steps && recipe.cooking_steps.length" class="steps-list">
+                <div 
+                  v-for="(step, idx) in recipe.cooking_steps" 
+                  :key="idx"
+                  class="step-item group"
+                >
+                  <!-- Number Badge -->
+                  <div class="step-badge-wrapper">
+                    <div class="step-badge">
+                      {{ idx + 1 }}
+                    </div>
+                  </div>
+                  <!-- Step Text -->
+                  <div class="step-text-wrapper">
+                    <p class="step-text">
+                      {{ step }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div v-else class="empty-text">暂无烹饪步骤</div>
+            </n-card>
+          </div>
+        </div>
+
       </div>
-    </section>
-
-    <section class="ingredients" v-if="recipe.ingredients && recipe.ingredients.length">
-      <h3>食材</h3>
-      <ul>
-        <li v-for="(ing, idx) in recipe.ingredients" :key="idx">{{ formatIngredient(ing) }}</li>
-      </ul>
-    </section>
-
-    <section class="steps" v-if="recipe.cooking_steps && recipe.cooking_steps.length">
-      <h3>烹饪步骤</h3>
-      <ol>
-        <li v-for="(step, idx) in recipe.cooking_steps" :key="idx">{{ step }}</li>
-      </ol>
-    </section>
-
-    <div v-if="loading" class="loading">加载中…</div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { ArrowLeft, UserFilled, ArrowDown, HomeFilled, User, DataLine } from '@element-plus/icons-vue'
-import { getRecipeDetail, addFavorite, removeFavorite } from '@/api/recipeApi'
-import { useAuthStore } from '@/store/auth'
+import { ref, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { NButton, NIcon, NCard, NSpin, NResult, useMessage } from 'naive-ui';
+import { 
+  ArrowBack, 
+  HeartOutline, 
+  Heart, 
+  ShareSocialOutline, 
+  TimeOutline, 
+  FlameOutline, 
+  RestaurantOutline,
+  BasketOutline,
+  ListOutline
+} from '@vicons/ionicons5';
+import { getRecipeDetail, addFavorite, removeFavorite } from '@/api/recipeApi';
+import { useAuthStore } from '@/store/auth';
 
-const route = useRoute()
-const router = useRouter()
-const authStore = useAuthStore()
-const id = route.params.id
+const route = useRoute();
+const router = useRouter();
+const message = useMessage();
+const authStore = useAuthStore();
 
-const recipe = ref({})
-const loading = ref(false)
-const isFavorite = ref(false)
+const id = route.params.id;
+const recipe = ref(null);
+const loading = ref(true);
+const isFavorite = ref(false);
 
 const load = async () => {
-  loading.value = true
+  loading.value = true;
   try {
-    const res = await getRecipeDetail(id)
-      // axios interceptor already returns response body
-      recipe.value = res || {}
-      isFavorite.value = !!recipe.value.is_favorite
+    const res = await getRecipeDetail(id);
+    recipe.value = res || {};
+    isFavorite.value = !!recipe.value.is_favorite;
   } catch (e) {
-    console.error(e)
+    console.error(e);
+    message.error('加载食谱详情失败');
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
-
-onMounted(() => {
-  load()
-})
-
-const goBack = () => router.back()
-const goFavorites = () => router.push({ name: 'FavoriteList' })
-
-const handleCommand = (command) => {
-  switch (command) {
-    case 'home':
-      router.push('/home')
-      break
-    case 'profile':
-      router.push('/profile/view')
-      break
-    case 'intake':
-      router.push('/intake')
-      break
-  }
-}
+};
 
 const toggleFavorite = async () => {
+  if (!authStore.isAuthenticated) {
+    message.warning('请先登录');
+    return;
+  }
   try {
     if (isFavorite.value) {
-      await removeFavorite(id)
-      isFavorite.value = false
+      await removeFavorite(id);
+      isFavorite.value = false;
+      message.success('已取消收藏');
     } else {
-      await addFavorite(id)
-      isFavorite.value = true
+      await addFavorite(id);
+      isFavorite.value = true;
+      message.success('已加入收藏');
     }
   } catch (e) {
-    console.error(e)
+    message.error('操作失败');
   }
-}
+};
 
 const shareRecipe = async () => {
-  const url = window.location.href
+  const url = window.location.href;
   try {
-    await navigator.clipboard.writeText(url)
-    alert('已复制链接到剪贴板')
+    await navigator.clipboard.writeText(url);
+    message.success('链接已复制到剪贴板');
   } catch (e) {
-    // fallback
-    const dummy = document.createElement('textarea')
-    document.body.appendChild(dummy)
-    dummy.value = url
-    dummy.select()
-    document.execCommand('copy')
-    document.body.removeChild(dummy)
-    alert('已复制链接到剪贴板')
+    message.info('请手动复制浏览器链接分享');
   }
-}
+};
 
-const formatIngredient = (ing) => {
-  if (!ing) return ''
-  if (typeof ing === 'string') return ing
-  if (typeof ing === 'object') {
-    const name = ing.name || ''
-    const amount = ing.amount || ''
-    return amount ? `${name} - ${amount}` : name
+const parseIngredientName = (ing) => {
+  if (typeof ing === 'object' && ing !== null) return ing.name || '未知食材';
+  // If string usually "Tomato" or "Tomato - 100g"
+  if (typeof ing === 'string') {
+    const parts = ing.split(/[-:]/);
+    return parts[0].trim();
   }
-  return String(ing)
-}
+  return String(ing);
+};
+
+const parseIngredientAmount = (ing) => {
+  if (typeof ing === 'object' && ing !== null) return ing.amount || '';
+  if (typeof ing === 'string') {
+    const parts = ing.split(/[-:]/);
+    return parts.length > 1 ? parts[1].trim() : '';
+  }
+  return '';
+};
+
+const formatMealType = (type) => {
+  const map = {
+    breakfast: '早餐',
+    lunch: '午餐',
+    dinner: '晚餐',
+    snack: '加餐',
+    早餐: '早餐',
+    午餐: '午餐',
+    晚餐: '晚餐',
+    加餐: '加餐'
+  };
+  return map[type] || type;
+};
+
+// Hero helpers
+const getHeroEmoji = (name) => {
+  if (!name) return '🥘';
+  const map = {
+    '鸡': '🍗', '牛': '🥩', '猪': '🍖', '鱼': '🐟', '虾': '🦐', 
+    '蛋': '🥚', '菜': '🥬', '饭': '🍚', '面': '🍜', '汤': '🍲',
+    '沙拉': '🥗', '面包': '🍞', '奶': '🥛', '果': '🍎'
+  };
+  for (const key in map) {
+    if (name.includes(key)) return map[key];
+  }
+  return '🥘';
+};
+
+const getHeroBackground = (name) => {
+  const colors = [
+    'linear-gradient(135deg, #fef3c7 0%, #fffbeb 100%)', // amber-100
+    'linear-gradient(135deg, #fee2e2 0%, #fef2f2 100%)', // red-100
+    'linear-gradient(135deg, #d1fae5 0%, #ecfdf5 100%)', // emerald-100
+    'linear-gradient(135deg, #dbeafe 0%, #eff6ff 100%)', // blue-100
+    'linear-gradient(135deg, #f3e8ff 0%, #faf5ff 100%)'  // purple-100
+  ];
+  if (!name) return colors[0];
+  const index = name.length % colors.length;
+  return colors[index];
+};
+
+onMounted(() => {
+  load();
+});
 </script>
 
 <style scoped>
-.recipe-detail { 
-  max-width: 1000px; 
-  margin: 0 auto; 
-  padding: 2rem; 
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+/* Hero Visual */
+.hero-visual {
+  height: 192px; /* h-48 */
+  border-radius: 16px; /* rounded-2xl */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.hero-emoji {
+  font-size: 6rem; /* text-8xl approx */
+  line-height: 1;
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.page-container {
   min-height: 100vh;
+  /* background-color: #F5F7FA; */ /* Removed solid color */
+  background: linear-gradient(180deg, rgba(240, 253, 244, 0.6) 0%, #F5F7FA 40%, #F5F7FA 100%);
+  position: relative;
+  overflow-x: hidden; /* Prevent horizontal scroll from blobs */
 }
 
-/* 顶部导航栏样式 */
-.top-nav {
+.blob-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.3;
+}
+
+.blob-1 {
+  top: -10%;
+  left: -5%;
+  width: 500px;
+  height: 500px;
+  background-color: #bbf7d0; /* bg-green-200 */
+}
+
+.blob-2 {
+  top: 5%;
+  right: 10%;
+  width: 400px;
+  height: 400px;
+  background-color: #fef9c3; /* bg-yellow-100 */
+}
+
+.content-wrapper {
+  max-width: 1024px;
+  margin: 0 auto;
+  padding: 32px 16px;
+  position: relative;
+  z-index: 10;
+}
+
+.loading-state, .error-state {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
-  margin-bottom: 20px;
-  padding: 10px 0;
+  height: 256px;
 }
 
-.back-button {
-  background-color: rgba(255, 255, 255, 0.2);
-  color: white;
-  border: none;
-  width: 40px;
-  height: 40px;
-  transition: all 0.3s;
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out;
 }
 
-.back-button:hover {
-  background-color: rgba(255, 255, 255, 0.3);
-  transform: translateX(-3px);
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-.user-info-nav {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+/* Back Button */
+.back-btn-container {
+  margin-bottom: 16px;
 }
 
-.user-info-display {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  padding: 6px 12px;
-  border-radius: 20px;
-  transition: all 0.3s;
-  color: white;
-}
-
-.user-info-display:hover {
-  background-color: rgba(255, 255, 255, 0.2);
-}
-
-.username {
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.back-btn { 
-  background: rgba(255,255,255,0.2); 
-  border: none; 
-  color: #fff; 
-  cursor: pointer; 
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  margin-bottom: 1.5rem;
-  font-size: 0.95rem;
-  transition: all 0.2s ease;
+.back-btn {
+  color: #6b7280;
+  transition: color 0.3s;
 }
 
 .back-btn:hover {
-  background: rgba(255,255,255,0.3);
-  transform: translateX(-3px);
+  color: #059669;
 }
 
-.header { 
-  background: white;
-  padding: 2rem;
-  border-radius: 16px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-  margin-bottom: 1.5rem;
-}
-
-.header h1 { 
-  margin: 0 0 0.5rem 0; 
-  font-size: 2rem;
-  color: #2c3e50;
-  font-weight: 700;
-}
-
-.desc { 
-  color: #666; 
-  margin: 0.5rem 0 1.5rem 0;
-  font-size: 1rem;
-  line-height: 1.6;
-}
-
-.actions { 
-  display: flex; 
-  gap: 0.75rem; 
-  flex-wrap: wrap;
-  margin-top: 1rem;
-}
-
-.fav-btn, .share-btn { 
-  min-width: 130px; 
-  padding: 0.65rem 1.2rem; 
-  border-radius: 10px; 
-  border: none;
-  cursor: pointer; 
-  font-weight: 600;
-  font-size: 0.95rem;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
-  transition: all 0.2s ease;
-}
-
-.fav-btn:hover, .share-btn:hover { 
-  transform: translateY(-2px); 
-  box-shadow: 0 6px 16px rgba(0,0,0,0.15);
-}
-
-.fav-btn { 
-  background: linear-gradient(135deg, #ff6b9d 0%, #ff8e53 100%);
-  color: white;
-}
-
-.share-btn { 
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-  color: white;
-}
-
-.meta { 
-  background: white;
-  padding: 1.5rem;
-  border-radius: 16px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-  margin-bottom: 1.5rem;
-}
-
-.nutrition { 
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.nutrition .item { 
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  padding: 1rem;
-  border-radius: 12px;
-  text-align: center;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  font-size: 0.9rem;
-  color: #2c3e50;
-}
-
-.nutrition .item strong {
-  display: block;
-  font-size: 1.3rem;
-  margin-top: 0.3rem;
-  color: #667eea;
-}
-
-.cook-info {
+/* Header */
+.header-section {
   display: flex;
-  gap: 2rem;
-  padding-top: 1rem;
-  border-top: 2px solid #f0f0f0;
-  color: #555;
-  font-size: 0.95rem;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 32px;
 }
 
-.ingredients, .steps {
-  background: white;
-  padding: 2rem;
+@media (min-width: 768px) {
+  .header-section {
+    flex-direction: row;
+    align-items: flex-end;
+  }
+}
+
+.header-content {
+  flex: 1;
+}
+
+.recipe-title {
+  font-size: 2.25rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 12px;
+  line-height: 1.2;
+}
+
+@media (min-width: 768px) {
+  .recipe-title {
+    font-size: 2.5rem;
+  }
+}
+
+.meta-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.meta-tag {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background-color: white;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.icon-emerald { color: #10b981; }
+.icon-orange { color: #f97316; }
+.icon-blue { color: #3b82f6; }
+.icon-gray { color: #9ca3af; }
+
+.action-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+/* Nutrition Grid */
+.nutrition-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+@media (min-width: 768px) {
+  .nutrition-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.nutrition-card {
+  background-color: white;
+  padding: 16px;
   border-radius: 16px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-  margin-bottom: 1.5rem;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  border: 1px solid #f3f4f6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: box-shadow 0.3s;
 }
 
-.ingredients h3, .steps h3 {
-  margin: 0 0 1.2rem 0;
-  font-size: 1.4rem;
-  color: #2c3e50;
-  padding-bottom: 0.8rem;
-  border-bottom: 3px solid #667eea;
+.nutrition-card:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
-.ingredients ul { 
-  padding-left: 1.5rem;
-  margin: 0;
+.nutri-label {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  font-weight: 500;
+  margin-top: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
-.ingredients li {
-  padding: 0.5rem 0;
-  font-size: 1rem;
-  color: #555;
-  line-height: 1.6;
+.nutri-value-row {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
 }
 
-.steps ol { 
-  padding-left: 1.5rem;
-  margin: 0;
-  counter-reset: step-counter;
-  list-style: none;
+.nutri-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1;
+  font-family: var(--font-family-number);
 }
 
-.steps li {
-  padding: 1rem 0;
-  font-size: 1rem;
-  color: #555;
-  line-height: 1.8;
-  position: relative;
-  padding-left: 3rem;
-  counter-increment: step-counter;
+.text-emerald { color: #10b981; }
+.text-red { color: #ef4444; }
+.text-amber { color: #f59e0b; }
+.text-purple { color: #8b5cf6; }
+
+.nutri-unit {
+  font-size: 0.875rem;
+  color: #9ca3af;
+  font-weight: normal;
 }
 
-.steps li::before {
-  content: counter(step-counter);
-  position: absolute;
-  left: 0;
-  top: 0.8rem;
+/* Details Grid */
+.details-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+}
+
+@media (min-width: 1024px) {
+  .details-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.ingredients-col {
+  grid-column: span 1;
+}
+
+.steps-col {
+  grid-column: span 1;
+}
+
+@media (min-width: 1024px) {
+  .steps-col {
+    grid-column: span 2;
+  }
+}
+
+.detail-card {
+  border-radius: 16px;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  height: 100%;
+}
+
+.ingredients-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ingredient-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px;
+  border-radius: 8px;
+  transition: background-color 0.2s;
+}
+
+.ingredient-item:hover {
+  background-color: #f9fafb;
+}
+
+.ing-name-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ing-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #34d399;
+}
+
+.ing-name {
+  color: #374151;
+  font-weight: 500;
+}
+
+.ing-amount {
+  color: #9ca3af;
+  font-size: 0.875rem;
+}
+
+.empty-text {
+  color: #9ca3af;
+  font-style: italic;
+  text-align: center;
+  padding: 32px 0;
+}
+
+.steps-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.step-item {
+  display: flex;
+  gap: 16px;
+}
+
+.step-badge-wrapper {
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+.step-badge {
   width: 32px;
   height: 32px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
   border-radius: 50%;
+  background-color: #d1fae5;
+  color: #059669;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
+  transition: all 0.3s;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 
-.loading { 
-  text-align: center; 
+.group:hover .step-badge {
+  background-color: #10b981;
   color: white;
-  padding: 3rem;
-  font-size: 1.1rem;
+}
+
+.step-text-wrapper {
+  flex: 1;
+  padding-top: 4px;
+}
+
+.step-text {
+  color: #374151;
+  line-height: 1.625;
+  font-size: 1rem;
+  transition: color 0.3s;
+}
+
+.group:hover .step-text {
+  color: #111827;
 }
 </style>

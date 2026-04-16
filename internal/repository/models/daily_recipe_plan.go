@@ -19,6 +19,12 @@ type DailyRecipePlan struct {
 	DinnerRecipeID    uint `gorm:"not null;comment:晚餐食谱ID" json:"dinnerRecipeId"`
 	SnackRecipeID     uint `gorm:"default:null;comment:加餐食谱ID" json:"snackRecipeId"`
 
+	// 每餐组合明细（持久化为JSON数组，兼容“每餐多食物”）
+	BreakfastItemIDs []uint `gorm:"serializer:json;type:longtext;comment:早餐组合食谱ID列表" json:"breakfastItemIds"`
+	LunchItemIDs     []uint `gorm:"serializer:json;type:longtext;comment:午餐组合食谱ID列表" json:"lunchItemIds"`
+	DinnerItemIDs    []uint `gorm:"serializer:json;type:longtext;comment:晚餐组合食谱ID列表" json:"dinnerItemIds"`
+	SnackItemIDs     []uint `gorm:"serializer:json;type:longtext;comment:加餐组合食谱ID列表" json:"snackItemIds"`
+
 	// 计划总营养数据
 	TotalEnergy       float64 `gorm:"type:decimal(10,2);comment:计划总热量" json:"totalEnergy"`
 	TotalProtein      float64 `gorm:"type:decimal(10,2);comment:计划总蛋白" json:"totalProtein"`
@@ -38,6 +44,12 @@ type DailyRecipePlan struct {
 	LunchRecipe     Recipe `gorm:"foreignKey:LunchRecipeID" json:"lunchRecipe"`
 	DinnerRecipe    Recipe `gorm:"foreignKey:DinnerRecipeID" json:"dinnerRecipe"`
 	SnackRecipe     Recipe `gorm:"foreignKey:SnackRecipeID" json:"snackRecipe"`
+
+	// 推荐阶段扩展字段（不落库）
+	BreakfastItems []Recipe `gorm:"-" json:"breakfastItems,omitempty"`
+	LunchItems     []Recipe `gorm:"-" json:"lunchItems,omitempty"`
+	DinnerItems    []Recipe `gorm:"-" json:"dinnerItems,omitempty"`
+	SnackItems     []Recipe `gorm:"-" json:"snackItems,omitempty"`
 }
 
 func (DailyRecipePlan) TableName() string {

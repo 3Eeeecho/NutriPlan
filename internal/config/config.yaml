@@ -18,6 +18,8 @@ database:
   host: "127.0.0.1:3306"
   # 数据库名
   name: "nutri_plan"
+  # 食谱查询表: recipes | test_recipes
+  recipe_table: "recipes"
 
 # 营养计算配置
 nutrients:
@@ -33,4 +35,4 @@ nutrients:
   min_calorie: 1200            # 最低安全热量 (kcal)
 
 zhipu:
-  api_key: 9e6b6f2f45f9461cad14595542222864.lUFszudafvb2IIjc
+  api_key: cecda84b84534c61a4dd7075c9b8684b.cGsEXtUdSk6cggIa

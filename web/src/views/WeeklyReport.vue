@@ -1,123 +1,82 @@
 <template>
-  <div class="weekly-container">
-    <!-- 顶部导航栏 -->
-    <div class="top-nav">
-      <el-button @click="goBack" class="back-button" circle>
-        <el-icon><ArrowLeft /></el-icon>
-      </el-button>
-      <div class="user-info-nav">
-        <el-dropdown @command="handleCommand">
-          <span class="user-info-display">
-            <el-avatar :size="32" :icon="UserFilled" />
-            <span class="username">{{ authStore.user?.username || '用户' }}</span>
-            <el-icon><ArrowDown /></el-icon>
-          </span>
-          <template #dropdown>
-            <el-dropdown-menu>
-              <el-dropdown-item command="home">
-                <el-icon><HomeFilled /></el-icon>
-                返回首页
-              </el-dropdown-item>
-              <el-dropdown-item command="profile">
-                <el-icon><User /></el-icon>
-                个人档案
-              </el-dropdown-item>
-              <el-dropdown-item command="intake">
-                <el-icon><DataLine /></el-icon>
-                饮食记录
-              </el-dropdown-item>
-            </el-dropdown-menu>
-          </template>
-        </el-dropdown>
+  <PageLayout>
+    <div class="weekly-container">
+      <!-- 页面头部 -->
+      <div class="page-header">
+        <div class="header-left">
+          <BackButton />
+        </div>
+        <div class="header-content">
+          <h2 class="page-title">本周饮食趋势报告</h2>
+          <p class="date-range" v-if="report.start_date">
+            {{ formatDate(report.start_date) }} - {{ formatDate(report.end_date) }}
+          </p>
+        </div>
+        <div class="header-right"></div>
       </div>
+
+      <n-spin :show="loading">
+        <!-- 周平均营养统计 -->
+        <div class="section-title">本周平均摄入</div>
+        <div class="stats-grid">
+          <StatCard
+            icon="⚡"
+            :iconBg="'linear-gradient(135deg, #10b981 0%, #059669 100%)'"
+            :value="report.avg_energy?.toFixed(0) || 0"
+            label="平均热量"
+            subtitle="kcal"
+          />
+          <StatCard
+            icon="🍗"
+            :iconBg="'linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)'"
+            :value="report.avg_protein?.toFixed(1) || 0"
+            label="平均蛋白质"
+            subtitle="g"
+          />
+          <StatCard
+            icon="🍚"
+            :iconBg="'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'"
+            :value="report.avg_carb?.toFixed(1) || 0"
+            label="平均碳水"
+            subtitle="g"
+          />
+          <StatCard
+            icon="🥑"
+            :iconBg="'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)'"
+            :value="report.avg_fat?.toFixed(1) || 0"
+            label="平均脂肪"
+            subtitle="g"
+          />
+        </div>
+
+        <!-- 趋势图表 -->
+        <n-card class="chart-card" title="每日营养摄入趋势" :bordered="false">
+          <div ref="chartRef" class="chart-container"></div>
+        </n-card>
+
+        <!-- 对比图表 -->
+        <n-card class="chart-card" title="实际摄入 vs 目标摄入" :bordered="false">
+          <div ref="compareChartRef" class="chart-container"></div>
+        </n-card>
+      </n-spin>
     </div>
-
-    <div class="page-header">
-      <h2>本周饮食趋势报告</h2>
-      <p class="date-range" v-if="report.start_date">
-        {{ formatDate(report.start_date) }} - {{ formatDate(report.end_date) }}
-      </p>
-    </div>
-
-    <!-- 周平均营养 -->
-    <el-card class="average-card" shadow="hover" v-loading="loading">
-      <template #header>
-        <div class="card-header">
-          <span>本周平均营养摄入</span>
-        </div>
-      </template>
-      <div class="average-grid">
-        <div class="average-item">
-          <div class="icon-wrapper energy">
-            <i class="el-icon-lightning"></i>
-          </div>
-          <div class="info">
-            <div class="label">平均热量</div>
-            <div class="value">{{ report.avg_energy?.toFixed(0) || 0 }} kcal</div>
-          </div>
-        </div>
-        <div class="average-item">
-          <div class="icon-wrapper protein">
-            <i class="el-icon-food"></i>
-          </div>
-          <div class="info">
-            <div class="label">平均蛋白质</div>
-            <div class="value">{{ report.avg_protein?.toFixed(1) || 0 }} g</div>
-          </div>
-        </div>
-        <div class="average-item">
-          <div class="icon-wrapper carb">
-            <i class="el-icon-dessert"></i>
-          </div>
-          <div class="info">
-            <div class="label">平均碳水</div>
-            <div class="value">{{ report.avg_carb?.toFixed(1) || 0 }} g</div>
-          </div>
-        </div>
-        <div class="average-item">
-          <div class="icon-wrapper fat">
-            <i class="el-icon-ice-cream"></i>
-          </div>
-          <div class="info">
-            <div class="label">平均脂肪</div>
-            <div class="value">{{ report.avg_fat?.toFixed(1) || 0 }} g</div>
-          </div>
-        </div>
-      </div>
-    </el-card>
-
-    <!-- 趋势图表 -->
-    <el-card class="chart-card" shadow="hover">
-      <template #header>
-        <div class="card-header">
-          <span>每日营养摄入趋势</span>
-        </div>
-      </template>
-      <div ref="chartRef" class="chart-container"></div>
-    </el-card>
-
-    <!-- 对比图表 -->
-    <el-card class="compare-card" shadow="hover">
-      <template #header>
-        <div class="card-header">
-          <span>实际摄入 vs 目标摄入对比</span>
-        </div>
-      </template>
-      <div ref="compareChartRef" class="chart-container"></div>
-    </el-card>
-  </div>
+  </PageLayout>
 </template>
 
 <script setup>
 import { ref, onMounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import { ArrowLeft, UserFilled, User, ArrowDown, HomeFilled, DataLine } from '@element-plus/icons-vue'
+import { useMessage, NCard, NSpin } from 'naive-ui'
 import * as echarts from 'echarts'
-import { useAuthStore } from '@/store/auth'
 import { getWeeklyReport } from '@/api/intakeApi'
+import { useAuthStore } from '@/store/auth'
+import { buildCompletedRecordsForDate } from '@/utils/completedRecipes'
+import PageLayout from '@/components/layout/PageLayout.vue'
+import BackButton from '@/components/layout/BackButton.vue'
+import StatCard from '@/components/ui/StatCard.vue'
 
 const router = useRouter()
+const message = useMessage()
 const authStore = useAuthStore()
 
 const chartRef = ref(null)
@@ -128,21 +87,97 @@ let compareChartInstance = null
 const loading = ref(false)
 const report = ref({})
 
+const normalizeDateKey = (value) => {
+  const match = String(value || '').match(/^(\d{4})-(\d{1,2})-(\d{1,2})/)
+  if (!match) return String(value || '')
+  return `${match[1]}-${String(match[2]).padStart(2, '0')}-${String(match[3]).padStart(2, '0')}`
+}
+
+function mergeCompletedRecipesToReport(data) {
+  const source = data || {}
+  const dailyData = Array.isArray(source.daily_data) ? source.daily_data : []
+
+  let weekEnergy = 0
+  let weekProtein = 0
+  let weekCarb = 0
+  let weekFat = 0
+  let dayCount = 0
+
+  const mergedDailyData = dailyData.map((day) => {
+    const dateKey = normalizeDateKey(day?.date)
+    const completedRecords = buildCompletedRecordsForDate(authStore.user?.id, dateKey)
+
+    const completedTotals = completedRecords.reduce((sum, record) => {
+      sum.energy += Number(record.calculatedEnergy || 0)
+      sum.protein += Number(record.calculatedProtein || 0)
+      sum.carb += Number(record.calculatedCarb || 0)
+      sum.fat += Number(record.calculatedFat || 0)
+      return sum
+    }, { energy: 0, protein: 0, carb: 0, fat: 0 })
+
+    const totalEnergy = Number(day?.total_energy || day?.totalEnergy || 0) + completedTotals.energy
+    const totalProtein = Number(day?.total_protein || day?.totalProtein || 0) + completedTotals.protein
+    const totalCarbohydrate = Number(day?.total_carbohydrate || day?.totalCarbohydrate || 0) + completedTotals.carb
+    const totalFat = Number(day?.total_fat || day?.totalFat || 0) + completedTotals.fat
+
+    if (totalEnergy > 0 || totalProtein > 0 || totalCarbohydrate > 0 || totalFat > 0) {
+      dayCount += 1
+      weekEnergy += totalEnergy
+      weekProtein += totalProtein
+      weekCarb += totalCarbohydrate
+      weekFat += totalFat
+    }
+
+    return {
+      ...day,
+      total_energy: totalEnergy,
+      total_protein: totalProtein,
+      total_carbohydrate: totalCarbohydrate,
+      total_fat: totalFat,
+      records: [...completedRecords, ...(Array.isArray(day?.records) ? day.records : [])]
+    }
+  })
+
+  return {
+    ...source,
+    daily_data: mergedDailyData,
+    avg_energy: dayCount > 0 ? weekEnergy / dayCount : 0,
+    avg_protein: dayCount > 0 ? weekProtein / dayCount : 0,
+    avg_carb: dayCount > 0 ? weekCarb / dayCount : 0,
+    avg_fat: dayCount > 0 ? weekFat / dayCount : 0
+  }
+}
+
+// 设计系统颜色
+const colors = {
+  energy: '#10b981',
+  protein: '#ef4444',
+  carb: '#f59e0b',
+  fat: '#8b5cf6'
+}
+
 onMounted(() => {
   loadWeeklyReport()
+  window.addEventListener('resize', handleResize)
 })
+
+function handleResize() {
+  chartInstance?.resize()
+  compareChartInstance?.resize()
+}
 
 // 加载周报告
 async function loadWeeklyReport() {
   loading.value = true
   try {
     const data = await getWeeklyReport()
-    report.value = data
+    report.value = mergeCompletedRecipesToReport(data)
     await nextTick()
     initTrendChart()
     initCompareChart()
   } catch (error) {
-    ElMessage.error('加载周报告失败')
+    message.error('加载周报告失败')
+    console.error(error)
   } finally {
     loading.value = false
   }
@@ -171,82 +206,46 @@ function initTrendChart() {
   const option = {
     tooltip: {
       trigger: 'axis',
-      axisPointer: {
-        type: 'cross',
-        crossStyle: {
-          color: '#999'
-        }
-      },
-      backgroundColor: 'rgba(50, 50, 50, 0.9)',
-      borderColor: '#333',
-      textStyle: {
-        color: '#fff'
-      }
+      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+      borderColor: '#eee',
+      textStyle: { color: '#333' },
+      axisPointer: { type: 'cross', lineStyle: { color: '#999' } }
     },
     legend: {
       data: ['热量', '蛋白质', '碳水化合物', '脂肪'],
-      top: 10,
-      textStyle: {
-        fontSize: 13,
-        fontWeight: 500
-      }
+      bottom: 0,
+      icon: 'circle'
     },
     grid: {
-      left: '5%',
-      right: '5%',
-      bottom: '5%',
-      top: '15%',
+      left: '3%',
+      right: '4%',
+      bottom: '10%',
+      top: '10%',
       containLabel: true
     },
     xAxis: {
       type: 'category',
       boundaryGap: false,
       data: dates,
-      axisLabel: {
-        color: '#606266',
-        fontSize: 12
-      },
-      axisLine: {
-        lineStyle: {
-          color: '#dcdfe6'
-        }
-      }
+      axisLine: { lineStyle: { color: '#e5e7eb' } },
+      axisLabel: { color: '#6b7280' }
     },
     yAxis: [
       {
         type: 'value',
         name: '热量(kcal)',
         position: 'left',
-        axisLabel: {
-          formatter: '{value}',
-          color: '#909399'
-        },
-        splitLine: {
-          lineStyle: {
-            color: '#ebeef5',
-            type: 'dashed'
-          }
-        },
-        nameTextStyle: {
-          color: '#E6A23C',
-          fontWeight: 'bold'
-        }
+        splitLine: { lineStyle: { type: 'dashed', color: '#f3f4f6' } },
+        axisLabel: { color: '#9ca3af' },
+        nameTextStyle: { color: colors.energy, fontWeight: 'bold' }
       },
       {
         type: 'value',
         name: '营养素(g)',
         position: 'right',
-        axisLabel: {
-          formatter: '{value}',
-          color: '#909399'
-        },
-        splitLine: {
-          show: false
-        },
-        nameTextStyle: {
-          color: '#67C23A',
-          fontWeight: 'bold'
-        }
+        splitLine: { show: false },
+        axisLabel: { color: '#9ca3af' },
+        nameTextStyle: { color: '#6b7280', fontWeight: 'bold' }
       }
     ],
     series: [
@@ -255,21 +254,12 @@ function initTrendChart() {
         type: 'line',
         data: energyData,
         smooth: true,
-        symbol: 'circle',
-        symbolSize: 8,
-        lineStyle: {
-          width: 3,
-          color: '#E6A23C'
-        },
-        itemStyle: { 
-          color: '#E6A23C',
-          borderWidth: 2,
-          borderColor: '#fff'
-        },
+        symbol: 'none',
+        lineStyle: { width: 3, color: colors.energy },
         areaStyle: {
           color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-            { offset: 0, color: 'rgba(230, 162, 60, 0.3)' },
-            { offset: 1, color: 'rgba(230, 162, 60, 0.05)' }
+            { offset: 0, color: 'rgba(16, 185, 129, 0.2)' },
+            { offset: 1, color: 'rgba(16, 185, 129, 0.01)' }
           ])
         },
         yAxisIndex: 0
@@ -279,15 +269,8 @@ function initTrendChart() {
         type: 'line',
         data: proteinData,
         smooth: true,
-        symbol: 'circle',
-        symbolSize: 6,
-        lineStyle: {
-          width: 2,
-          color: '#67C23A'
-        },
-        itemStyle: { 
-          color: '#67C23A'
-        },
+        symbol: 'none',
+        lineStyle: { width: 2, color: colors.protein },
         yAxisIndex: 1
       },
       {
@@ -295,15 +278,8 @@ function initTrendChart() {
         type: 'line',
         data: carbData,
         smooth: true,
-        symbol: 'circle',
-        symbolSize: 6,
-        lineStyle: {
-          width: 2,
-          color: '#409EFF'
-        },
-        itemStyle: { 
-          color: '#409EFF'
-        },
+        symbol: 'none',
+        lineStyle: { width: 2, color: colors.carb },
         yAxisIndex: 1
       },
       {
@@ -311,15 +287,8 @@ function initTrendChart() {
         type: 'line',
         data: fatData,
         smooth: true,
-        symbol: 'circle',
-        symbolSize: 6,
-        lineStyle: {
-          width: 2,
-          color: '#F56C6C'
-        },
-        itemStyle: { 
-          color: '#F56C6C'
-        },
+        symbol: 'none',
+        lineStyle: { width: 2, color: colors.fat },
         yAxisIndex: 1
       }
     ]
@@ -338,10 +307,8 @@ function initCompareChart() {
 
   compareChartInstance = echarts.init(compareChartRef.value)
 
-  // 使用本周的平均数据与目标对比
   const firstDay = report.value.daily_data[0]
   
-  // 原始数据
   const actualRawData = [
     report.value.avg_energy || 0,
     report.value.avg_protein || 0,
@@ -356,7 +323,6 @@ function initCompareChart() {
     firstDay.target_fat || 0
   ]
   
-  // 缩放后用于显示的数据（热量除以10）
   const energyScale = 10
   const actualData = [
     actualRawData[0] / energyScale,
@@ -375,72 +341,40 @@ function initCompareChart() {
   const option = {
     tooltip: {
       trigger: 'axis',
-      axisPointer: {
-        type: 'shadow'
-      },
-      backgroundColor: 'rgba(50, 50, 50, 0.9)',
-      borderColor: '#333',
-      textStyle: {
-        color: '#fff'
-      },
+      axisPointer: { type: 'shadow' },
+      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+      textStyle: { color: '#333' },
       formatter: function(params) {
         const dataIndex = params[0].dataIndex
         let result = params[0].name + '<br/>'
         params.forEach((item, idx) => {
           const rawValue = idx === 0 ? actualRawData[dataIndex] : targetRawData[dataIndex]
-          const percent = idx === 0 && params.length > 1
-            ? Math.round((actualRawData[dataIndex] / targetRawData[dataIndex]) * 100) + '%'
-            : ''
-          result += item.marker + item.seriesName + ': ' + Math.round(rawValue) + 
-                   (percent ? ' (' + percent + ')' : '') + '<br/>'
+          result += item.marker + item.seriesName + ': ' + Math.round(rawValue) + '<br/>'
         })
         return result
       }
     },
     legend: {
       data: ['实际摄入', '目标摄入'],
-      top: 10,
-      textStyle: {
-        fontSize: 13,
-        fontWeight: 500
-      }
+      bottom: 0
     },
     grid: {
-      left: '5%',
-      right: '5%',
-      bottom: '5%',
-      top: '15%',
+      left: '3%',
+      right: '4%',
+      bottom: '10%',
+      top: '10%',
       containLabel: true
     },
     xAxis: {
       type: 'category',
-      data: ['热量(kcal)×10', '蛋白质(g)', '碳水化合物(g)', '脂肪(g)'],
-      axisLabel: {
-        fontSize: 12,
-        fontWeight: 500,
-        color: '#606266'
-      },
-      axisLine: {
-        lineStyle: {
-          color: '#dcdfe6'
-        }
-      }
+      data: ['热量(/10)', '蛋白质', '碳水', '脂肪'],
+      axisLine: { lineStyle: { color: '#e5e7eb' } },
+      axisLabel: { color: '#6b7280', fontWeight: 'bold' }
     },
     yAxis: {
       type: 'value',
-      name: '数值',
-      axisLabel: {
-        color: '#909399'
-      },
-      splitLine: {
-        lineStyle: {
-          color: '#ebeef5',
-          type: 'dashed'
-        }
-      },
-      axisLine: {
-        show: false
-      }
+      splitLine: { lineStyle: { type: 'dashed', color: '#f3f4f6' } },
+      axisLabel: { color: '#9ca3af' }
     },
     series: [
       {
@@ -449,67 +383,30 @@ function initCompareChart() {
         data: actualData.map(v => Math.round(v)),
         itemStyle: { 
           color: function(params) {
-            // 热量使用橙色系
-            if (params.dataIndex === 0) {
-              return new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                { offset: 0, color: '#E6A23C' },
-                { offset: 1, color: '#faad14' }
-              ])
-            }
-            return new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-              { offset: 0, color: '#409EFF' },
-              { offset: 1, color: '#1890ff' }
-            ])
+            const colorMap = [colors.energy, colors.protein, colors.carb, colors.fat]
+            return colorMap[params.dataIndex]
           },
-          borderRadius: [8, 8, 0, 0]
+          borderRadius: [4, 4, 0, 0]
         },
-        label: {
-          show: true,
-          position: 'top',
-          formatter: function(params) {
-            return Math.round(actualRawData[params.dataIndex])
-          },
-          fontSize: 13,
-          fontWeight: 'bold',
-          color: function(params) {
-            return params.dataIndex === 0 ? '#E6A23C' : '#409EFF'
-          }
-        },
-        barWidth: '35%'
+        barGap: '20%',
+        barCategoryGap: '40%'
       },
       {
         name: '目标摄入',
         type: 'bar',
         data: targetData.map(v => Math.round(v)),
         itemStyle: { 
-          color: function(params) {
-            // 热量使用淡绿色系
-            if (params.dataIndex === 0) {
-              return new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                { offset: 0, color: '#95de64' },
-                { offset: 1, color: '#73d13d' }
-              ])
-            }
-            return new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-              { offset: 0, color: '#67C23A' },
-              { offset: 1, color: '#52c41a' }
-            ])
-          },
-          borderRadius: [8, 8, 0, 0]
+          color: '#e5e7eb', // 灰色作为目标背景
+          borderRadius: [4, 4, 0, 0]
         },
         label: {
           show: true,
           position: 'top',
+          color: '#9ca3af',
           formatter: function(params) {
-            return Math.round(targetRawData[params.dataIndex])
-          },
-          fontSize: 13,
-          fontWeight: 'bold',
-          color: function(params) {
-            return params.dataIndex === 0 ? '#73d13d' : '#67C23A'
+             return Math.round(targetRawData[params.dataIndex])
           }
-        },
-        barWidth: '35%'
+        }
       }
     ]
   }
@@ -517,7 +414,6 @@ function initCompareChart() {
   compareChartInstance.setOption(option)
 }
 
-// 格式化日期
 function formatDate(dateStr) {
   if (!dateStr) return ''
   const date = new Date(dateStr)
@@ -526,181 +422,86 @@ function formatDate(dateStr) {
     day: 'numeric'
   })
 }
-
-// 返回上一页
-function goBack() {
-  router.back()
-}
-
-// 处理下拉菜单命令
-function handleCommand(command) {
-  switch(command) {
-    case 'home':
-      router.push('/home')
-      break
-    case 'profile':
-      router.push('/profile/view')
-      break
-    case 'intake':
-      router.push('/intake')
-      break
-  }
-}
 </script>
 
 <style scoped>
 .weekly-container {
-  max-width: 1400px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  min-height: 100vh;
-}
-
-.top-nav {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  padding: 0 10px;
-}
-
-.back-button {
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
-  color: white;
-  font-size: 20px;
-  transition: all 0.3s;
-}
-
-.back-button:hover {
-  background: rgba(255, 255, 255, 0.3);
-  transform: scale(1.1);
-}
-
-.user-info-nav {
-  display: flex;
-  align-items: center;
-}
-
-.user-info-display {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-  padding: 8px 16px;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 24px;
-  transition: all 0.3s;
-}
-
-.user-info-display:hover {
-  background: rgba(255, 255, 255, 0.3);
-}
-
-.user-info-display .username {
-  color: white;
-  font-weight: 500;
-  font-size: 14px;
-}
-
-.user-info-display .el-icon {
-  color: white;
+  padding: 24px;
 }
 
 .page-header {
-  text-align: center;
-  color: white;
-  margin-bottom: 30px;
+  display: flex;
+  align-items: center;
+  margin-bottom: 32px;
+  position: relative;
 }
 
-.page-header h2 {
-  font-size: 32px;
-  margin-bottom: 10px;
+.header-left, .header-right {
+  width: 80px; /* 占位，保证标题居中 */
+}
+
+.header-content {
+  flex: 1;
+  text-align: center;
+}
+
+.page-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: 4px;
 }
 
 .date-range {
-  font-size: 16px;
-  opacity: 0.9;
-}
-
-.average-card,
-.chart-card,
-.compare-card {
-  margin-bottom: 20px;
-  border-radius: 12px;
-}
-
-.card-header {
-  font-weight: 600;
-  font-size: 18px;
-}
-
-.average-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 20px;
-}
-
-.average-item {
-  display: flex;
-  align-items: center;
-  padding: 20px;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  border-radius: 12px;
-  transition: transform 0.3s;
-}
-
-.average-item:hover {
-  transform: translateY(-5px);
-}
-
-.icon-wrapper {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 28px;
-  color: white;
-  margin-right: 15px;
-}
-
-.icon-wrapper.energy {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-}
-
-.icon-wrapper.protein {
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-}
-
-.icon-wrapper.carb {
-  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-}
-
-.icon-wrapper.fat {
-  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-}
-
-.info {
-  flex: 1;
-}
-
-.info .label {
   font-size: 14px;
-  color: #606266;
-  margin-bottom: 5px;
+  color: var(--color-text-secondary);
 }
 
-.info .value {
-  font-size: 24px;
+.section-title {
+  font-size: 18px;
   font-weight: 600;
-  color: #303133;
+  color: var(--color-text-primary);
+  margin-bottom: 16px;
+  margin-left: 4px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+  margin-bottom: 32px;
+}
+
+.chart-card {
+  margin-bottom: 24px;
+  border-radius: 16px;
+  box-shadow: var(--shadow-sm);
 }
 
 .chart-container {
   width: 100%;
-  height: 450px;
+  height: 400px;
+}
+
+@media (max-width: 768px) {
+  .weekly-container {
+    padding: 16px;
+  }
+  
+  .page-header {
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .header-left {
+    width: 100%;
+    text-align: left;
+  }
+  
+  .chart-container {
+    height: 300px;
+  }
 }
 </style>

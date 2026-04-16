@@ -1,256 +1,311 @@
 <template>
   <div class="recipe-card" @click="viewDetail">
-    <div class="card-header">
-      <span class="meal-icon">{{ icon }}</span>
-      <h4>{{ title }}</h4>
+    <div class="card-image-placeholder" :style="getVisuals(recipe.name).style">
+      <span class="meal-icon">{{ getVisuals(recipe.name).emoji }}</span>
     </div>
-    <div class="card-body">
-      <h5 class="recipe-name">{{ recipe.name }}</h5>
-      <p v-if="recipe.description" class="recipe-desc">{{ recipe.description }}</p>
+    
+    <div class="card-content">
+      <div class="header">
+        <h4 class="recipe-name">{{ recipe.name }}</h4>
+        <n-tag size="small" :bordered="false" type="success" round class="meal-tag">
+          {{ title }}
+        </n-tag>
+      </div>
       
-      <div class="nutrition-info">
-        <div class="nutrition-badge">
-          <span class="badge-label">热量</span>
-          <span class="badge-value">{{ Math.floor(recipe.energy) }} kcal</span>
+      <p v-if="recipe.description" class="recipe-desc text-ellipsis">{{ recipe.description }}</p>
+      
+      <div class="nutrition-grid">
+        <div class="nutrient-item">
+          <div class="value-row">
+            <span class="value energy">{{ Math.floor(recipe.energy) }}</span>
+            <span class="unit">kcal</span>
+          </div>
+          <span class="label">热量</span>
         </div>
-        <div class="nutrition-badge">
-          <span class="badge-label">蛋白质</span>
-          <span class="badge-value">{{ Math.floor(recipe.protein) }}g</span>
+        <div class="nutrient-item">
+          <div class="value-row">
+            <span class="value protein">{{ Math.floor(recipe.protein) }}</span>
+            <span class="unit">g</span>
+          </div>
+          <span class="label">蛋白质</span>
         </div>
-        <div class="nutrition-badge">
-          <span class="badge-label">碳水</span>
-          <span class="badge-value">{{ Math.floor(recipe.carbohydrate) }}g</span>
+        <div class="nutrient-item">
+          <div class="value-row">
+            <span class="value carb">{{ Math.floor(recipe.carbohydrate) }}</span>
+            <span class="unit">g</span>
+          </div>
+          <span class="label">碳水</span>
         </div>
-        <div class="nutrition-badge">
-          <span class="badge-label">脂肪</span>
-          <span class="badge-value">{{ Math.floor(recipe.fat) }}g</span>
+        <div class="nutrient-item">
+          <div class="value-row">
+            <span class="value fat">{{ Math.floor(recipe.fat) }}</span>
+            <span class="unit">g</span>
+          </div>
+          <span class="label">脂肪</span>
         </div>
       </div>
 
-      <div v-if="recipe.ingredients && recipe.ingredients.length > 0" class="ingredients">
-        <span class="ingredients-label">食材：</span>
-        <span class="ingredients-list">{{ formatIngredients(recipe.ingredients) }}</span>
+      <div class="footer-info">
+        <div class="meta">
+          <span class="time" v-if="recipe.cooking_time">
+            <n-icon><TimeOutline /></n-icon> {{ recipe.cooking_time }}m
+          </span>
+          <span class="difficulty" v-if="recipe.difficulty">
+            {{ getDifficultyEmoji(recipe.difficulty) }}
+          </span>
+        </div>
+        
+        <n-button 
+          circle 
+          secondary 
+          :type="localFavorite ? 'error' : 'default'" 
+          @click.stop="toggleFavorite"
+          class="fav-btn"
+        >
+          <template #icon>
+            <n-icon><Heart v-if="localFavorite" /><HeartOutline v-else /></n-icon>
+          </template>
+        </n-button>
       </div>
-
-      <div v-if="recipe.cooking_time" class="cooking-info">
-        <span>⏱️ {{ recipe.cooking_time }}分钟</span>
-        <span v-if="recipe.difficulty">{{ getDifficultyEmoji(recipe.difficulty) }} {{ recipe.difficulty }}</span>
-      </div>
-    </div>
-
-    <div class="card-footer">
-      <button class="view-btn" @click.stop="viewDetail">查看详情</button>
-      <button class="fav-small" @click.stop="toggleFavorite">
-        <span v-if="localFavorite">💖</span>
-        <span v-else>🤍</span>
-      </button>
     </div>
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { NTag, NButton, NIcon, useMessage } from 'naive-ui'
+import { TimeOutline, Heart, HeartOutline } from '@vicons/ionicons5'
 import { addFavorite, removeFavorite } from '@/api/recipeApi'
 
-export default {
-  name: 'RecipeCard',
-  props: {
-    title: {
-      type: String,
-      required: true
-    },
-    recipe: {
-      type: Object,
-      required: true
-    },
-    icon: {
-      type: String,
-      default: '🍽️'
-    }
+const props = defineProps({
+  title: {
+    type: String,
+    required: true
   },
-  data() {
-    return {
-      localFavorite: this.recipe.is_favorite || false
-    }
+  recipe: {
+    type: Object,
+    required: true
   },
-  methods: {
-    formatIngredients(ingredients) {
-      if (Array.isArray(ingredients)) {
-        return ingredients.join('、');
-      }
-      return ingredients;
-    },
-    getDifficultyEmoji(difficulty) {
-      const emojiMap = {
-        '简单': '⭐',
-        '中等': '⭐⭐',
-        '困难': '⭐⭐⭐'
-      };
-      return emojiMap[difficulty] || '⭐';
-    },
-    viewDetail() {
-      this.$router.push({ name: 'RecipeDetail', params: { id: this.recipe.id } })
-    },
-    async toggleFavorite(e) {
-      e && e.stopPropagation && e.stopPropagation()
-      try {
-        if (this.localFavorite) {
-          await removeFavorite(this.recipe.id)
-          this.localFavorite = false
-        } else {
-          await addFavorite(this.recipe.id)
-          this.localFavorite = true
-        }
-      } catch (err) {
-        console.error(err)
-      }
+  icon: {
+    type: String,
+    default: '🍽️'
+  }
+})
+
+const router = useRouter()
+const message = useMessage()
+const localFavorite = ref(props.recipe.is_favorite || false)
+
+function getVisuals(name) {
+  if (!name) return { emoji: '🥘', style: { backgroundColor: '#f3f4f6' } };
+
+  const n = name;
+  let emoji = '🥘';
+  let bg = '#f3f4f6'; // gray-100 default
+
+  // Keyword Matching
+  if (n.includes('鸡') || n.includes('鸭')) {
+    emoji = '🍗';
+    bg = '#ffedd5'; // orange-100
+  } else if (n.includes('牛') || n.includes('羊') || n.includes('猪') || n.includes('肉')) {
+    emoji = '🥩';
+    bg = '#fee2e2'; // red-100
+  } else if (n.includes('蛋')) {
+    emoji = '🍳';
+    bg = '#fef3c7'; // amber-100
+  } else if (n.includes('鱼') || n.includes('虾') || n.includes('海鲜')) {
+    emoji = '🍤';
+    bg = '#dbeafe'; // blue-100
+  } else if (n.includes('菜') || n.includes('沙拉') || n.includes('素')) {
+    emoji = '🥗';
+    bg = '#d1fae5'; // emerald-100
+  } else if (n.includes('饭') || n.includes('面') || n.includes('粥') || n.includes('饼')) {
+    emoji = '🍜';
+    bg = '#fef9c3'; // yellow-100
+  } else if (n.includes('奶') || n.includes('拿铁') || n.includes('咖啡')) {
+    emoji = '☕';
+    bg = '#f3e8ff'; // purple-100
+  } else if (n.includes('果') || n.includes('莓')) {
+    emoji = '🍎';
+    bg = '#ffe4e6'; // rose-100
+  }
+
+  return { 
+    emoji, 
+    style: { backgroundColor: bg } 
+  };
+}
+
+function getDifficultyEmoji(difficulty) {
+  const map = {
+    '简单': '🟢',
+    '中等': '🟡',
+    '困难': '🔴'
+  };
+  return map[difficulty] || '⚪';
+}
+
+function viewDetail() {
+  router.push({ name: 'RecipeDetail', params: { id: props.recipe.id } })
+}
+
+async function toggleFavorite(e) {
+  try {
+    if (localFavorite.value) {
+      await removeFavorite(props.recipe.id)
+      localFavorite.value = false
+      message.success('已取消收藏')
+    } else {
+      await addFavorite(props.recipe.id)
+      localFavorite.value = true
+      message.success('已加入收藏')
     }
+  } catch (err) {
+    console.error(err)
+    message.error('操作失败')
   }
 }
 </script>
 
 <style scoped>
 .recipe-card {
-  background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
-  border-radius: 12px;
+  background: white;
+  border-radius: 16px;
   overflow: hidden;
+  border: 1px solid var(--color-border-primary, #e5e7eb);
   transition: all 0.3s ease;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .recipe-card:hover {
-  transform: scale(1.02);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.1);
+  border-color: var(--color-primary, #10b981);
 }
 
-.card-header {
+.card-image-placeholder {
+  height: 140px; /* Increased height for better proportion */
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1rem;
-  background: rgba(255, 255, 255, 0.3);
-  backdrop-filter: blur(10px);
+  justify-content: center;
+  font-size: 72px; /* Increased emoji size */
+  position: relative;
+  transition: all 0.3s;
 }
 
-.meal-icon {
-  font-size: 1.5rem;
+.recipe-card:hover .card-image-placeholder {
+  transform: scale(1.05);
 }
 
-.card-header h4 {
-  margin: 0;
-  font-size: 1rem;
-  color: #333;
-  font-weight: 600;
-}
-
-.card-body {
-  padding: 1rem;
-  background: rgba(255, 255, 255, 0.6);
-}
-
-.card-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  padding: 0.75rem 1rem 1rem;
-}
-
-.view-btn {
+.card-content {
+  padding: 16px;
   flex: 1;
-  padding: 0.55rem 0.8rem;
-  border-radius: 10px;
-  border: none;
-  background: #ff7a59;
-  color: #fff;
-  font-weight: 700;
-  cursor: pointer;
-  box-shadow: 0 6px 14px rgba(255, 122, 89, 0.35);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  display: flex;
+  flex-direction: column;
 }
 
-.view-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 8px 16px rgba(255, 122, 89, 0.45);
-}
-
-.fav-small {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  border: none;
-  background: #fff;
-  cursor: pointer;
-  font-size: 1.2rem;
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-
-.fav-small:hover {
-  transform: translateY(-1px) scale(1.03);
-  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.12);
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+  gap: 8px;
 }
 
 .recipe-name {
-  margin: 0 0 0.5rem 0;
-  font-size: 1.1rem;
-  color: #2c3e50;
+  font-size: 16px;
   font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .recipe-desc {
-  margin: 0 0 1rem 0;
-  font-size: 0.85rem;
-  color: #666;
+  font-size: 13px;
+  color: #6b7280;
+  margin-bottom: 16px;
+  line-height: 1.5;
+  height: 40px; /* 固定高度保持卡片整齐 */
 }
 
-.nutrition-info {
+.text-ellipsis {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.nutrition-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 0.5rem;
-  margin-bottom: 1rem;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  margin-bottom: 16px;
+  padding: 8px;
+  background: #f9fafb;
+  border-radius: 8px;
 }
 
-.nutrition-badge {
-  background: white;
-  padding: 0.4rem 0.6rem;
-  border-radius: 6px;
-  text-align: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+.nutrient-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
 }
 
-.badge-label {
-  display: block;
-  font-size: 0.7rem;
-  color: #888;
-  margin-bottom: 0.2rem;
+.value-row {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
 }
 
-.badge-value {
-  display: block;
-  font-size: 0.9rem;
+.nutrient-item .value {
+  font-size: 14px;
   font-weight: 700;
-  color: #333;
 }
 
-.ingredients {
-  margin-bottom: 0.75rem;
-  font-size: 0.85rem;
-  color: #555;
+.nutrient-item .unit {
+  font-size: 10px;
+  color: #9ca3af;
 }
 
-.ingredients-label {
-  font-weight: 600;
+.nutrient-item .label {
+  font-size: 11px;
+  color: #6b7280;
 }
 
-.ingredients-list {
-  color: #666;
-}
+.value.energy { color: #10b981; }
+.value.protein { color: #ef4444; }
+.value.carb { color: #f59e0b; }
+.value.fat { color: #8b5cf6; }
 
-.cooking-info {
+.footer-info {
+  margin-top: auto;
   display: flex;
   justify-content: space-between;
-  font-size: 0.8rem;
-  color: #777;
-  padding-top: 0.5rem;
-  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  align-items: center;
+  padding-top: 12px;
+  border-top: 1px solid #f3f4f6;
+}
+
+.meta {
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  color: #6b7280;
+  align-items: center;
+}
+
+.meta .time {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 </style>

@@ -1,917 +1,959 @@
 <template>
-  <div class="recipe-recommend-container">
-    <!-- 顶部导航栏 -->
-    <div class="top-nav">
-      <el-button @click="router.push('/home')" class="back-button" circle>
-        <el-icon><ArrowLeft /></el-icon>
-      </el-button>
-      <div class="user-info-nav">
-        <el-dropdown @command="handleCommand">
-          <span class="user-info-display">
-            <el-avatar :size="32" :icon="UserFilled" />
-            <span class="username">{{ authStore.user?.username || '用户' }}</span>
-            <el-icon><ArrowDown /></el-icon>
-          </span>
-          <template #dropdown>
-            <el-dropdown-menu>
-              <el-dropdown-item command="home">
-                <el-icon><HomeFilled /></el-icon>
-                返回首页
-              </el-dropdown-item>
-              <el-dropdown-item command="profile">
-                <el-icon><User /></el-icon>
-                个人档案
-              </el-dropdown-item>
-              <el-dropdown-item command="intake">
-                <el-icon><DataLine /></el-icon>
-                饮食记录
-              </el-dropdown-item>
-            </el-dropdown-menu>
+  <div class="page-container">
+    <div class="main-wrapper">
+      <!-- 页面头部: 标题与操作 -->
+      <div class="page-header">
+        <div class="header-left">
+          <n-button quaternary circle size="large" @click="router.push('/home')">
+            <template #icon>
+              <n-icon><ArrowBack /></n-icon>
+            </template>
+          </n-button>
+          <div>
+            <h1 class="page-title">智能食谱推荐</h1>
+            <p class="page-subtitle">基于您的营养需求，为您定制专属每日食谱</p>
+          </div>
+        </div>
+        
+        <div class="header-right">
+          <n-button
+            secondary
+            type="primary"
+            class="action-btn"
+            @click="openRegenerateModal"
+          >
+            受限单餐重构
+          </n-button>
+
+          <n-button 
+            v-if="currentSelectedPlan" 
+            type="error" 
+            secondary
+            class="action-btn"
+            @click="reselectPlan"
+          >
+            <template #icon>
+              <n-icon><Refresh /></n-icon>
+            </template>
+            重新选择
+          </n-button>
+
+          <n-button 
+            v-else
+            secondary 
+            type="primary" 
+            :loading="loading" 
+            @click="fetchRecommendations(true)"
+          >
+            <template #icon>
+              <n-icon><Refresh /></n-icon>
+            </template>
+            换一批推荐
+          </n-button>
+        </div>
+      </div>
+
+      <!-- Loading 状态 -->
+      <div v-if="loading" class="loading-state">
+        <n-spin size="large">
+          <template #description>正在为您生成个性化营养方案...</template>
+        </n-spin>
+      </div>
+
+      <!-- Error 状态 -->
+      <div v-else-if="error" class="error-state">
+        <n-result status="500" title="获取推荐失败" :description="error">
+          <template #footer>
+            <n-button type="primary" @click="fetchRecommendations(true)">重试</n-button>
           </template>
-        </el-dropdown>
+        </n-result>
+      </div>
+
+      <!-- 内容区域 -->
+      <div v-else class="content-area">
+        
+        <!-- 场景1: 已选择方案 (Selected Plan View) -->
+        <div v-if="currentSelectedPlan" class="selected-view">
+          <n-alert title="今日食谱已锁定" type="success" class="mb-6">
+            您已选择今日的饮食计划。按照此计划执行，助您达成健康目标！
+            <template #action>
+              <n-button size="small" type="error" ghost @click="reselectPlan">
+                重新选择
+              </n-button>
+            </template>
+          </n-alert>
+
+          <n-grid :x-gap="24" :y-gap="24" cols="1 l:3" responsive="screen">
+            <!-- 左侧：营养概览 -->
+            <n-gi span="1">
+              <n-card title="今日营养目标" :bordered="false" class="nutrition-card">
+                <div class="nutrition-summary">
+                  <div class="macro-item">
+                    <n-progress type="circle" :percentage="getPercentage(currentSelectedPlan.total_energy, currentSelectedPlan.target_energy)" color="#10b981">
+                      <div class="progress-text">
+                        <span class="value">{{ Math.floor(currentSelectedPlan.total_energy) }}</span>
+                        <span class="label">kcal</span>
+                      </div>
+                    </n-progress>
+                    <div class="macro-label">热量 ({{ Math.floor(currentSelectedPlan.target_energy) }})</div>
+                  </div>
+                  
+                  <div class="macros-bars">
+                    <div class="macro-bar">
+                      <div class="mb-header">
+                        <div class="mb-label-group">
+                          <n-icon color="#ef4444"><FitnessOutline /></n-icon>
+                          <span class="mb-label protein">蛋白质</span>
+                        </div>
+                        <span class="mb-val">{{ Math.floor(currentSelectedPlan.total_protein) }} / {{ Math.floor(currentSelectedPlan.target_protein) }}g</span>
+                      </div>
+                      <n-progress 
+                        type="line" 
+                        :percentage="getPercentage(currentSelectedPlan.total_protein, currentSelectedPlan.target_protein)" 
+                        color="#ef4444" 
+                        :height="12"
+                        :show-indicator="false" 
+                        class="thick-progress"
+                      />
+                    </div>
+                    
+                    <div class="macro-bar">
+                      <div class="mb-header">
+                        <div class="mb-label-group">
+                          <n-icon color="#f59e0b"><LeafOutline /></n-icon>
+                          <span class="mb-label carb">碳水</span>
+                        </div>
+                        <span class="mb-val">{{ Math.floor(currentSelectedPlan.total_carbohydrate) }} / {{ Math.floor(currentSelectedPlan.target_carbohydrate) }}g</span>
+                      </div>
+                      <n-progress 
+                        type="line" 
+                        :percentage="getPercentage(currentSelectedPlan.total_carbohydrate, currentSelectedPlan.target_carbohydrate)" 
+                        color="#f59e0b" 
+                        :height="12"
+                        :show-indicator="false" 
+                        class="thick-progress"
+                      />
+                    </div>
+                    
+                    <div class="macro-bar">
+                      <div class="mb-header">
+                        <div class="mb-label-group">
+                          <n-icon color="#8b5cf6"><WaterOutline /></n-icon>
+                          <span class="mb-label fat">脂肪</span>
+                        </div>
+                        <span class="mb-val">{{ Math.floor(currentSelectedPlan.total_fat) }} / {{ Math.floor(currentSelectedPlan.target_fat) }}g</span>
+                      </div>
+                      <n-progress 
+                        type="line" 
+                        :percentage="getPercentage(currentSelectedPlan.total_fat, currentSelectedPlan.target_fat)" 
+                        color="#8b5cf6" 
+                        :height="12"
+                        :show-indicator="false" 
+                        class="thick-progress"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </n-card>
+            </n-gi>
+
+            <!-- 右侧：餐单详情 -->
+            <n-gi span="2">
+              <n-card title="每日菜单" :bordered="false">
+                <div class="meal-timeline">
+                  <MealItem title="早餐" icon="🌅" :recipe="currentSelectedPlan.breakfast" :recipes="getMealItems(currentSelectedPlan, 'breakfast')" :is-synced="isMealSynced('早餐', currentSelectedPlan.breakfast)" @sync="handleSyncMeal" />
+                  <MealItem title="午餐" icon="☀️" :recipe="currentSelectedPlan.lunch" :recipes="getMealItems(currentSelectedPlan, 'lunch')" :is-synced="isMealSynced('午餐', currentSelectedPlan.lunch)" @sync="handleSyncMeal" />
+                  <MealItem title="晚餐" icon="🌙" :recipe="currentSelectedPlan.dinner" :recipes="getMealItems(currentSelectedPlan, 'dinner')" :is-synced="isMealSynced('晚餐', currentSelectedPlan.dinner)" @sync="handleSyncMeal" />
+                  <MealItem v-if="currentSelectedPlan.snack" title="加餐" icon="🍎" :recipe="currentSelectedPlan.snack" :recipes="getMealItems(currentSelectedPlan, 'snack')" :is-synced="isMealSynced('加餐', currentSelectedPlan.snack)" @sync="handleSyncMeal" />
+                </div>
+              </n-card>
+            </n-gi>
+          </n-grid>
+        </div>
+
+        <!-- 场景2: 推荐列表 (Recommendations List) -->
+        <div v-else class="recommendations-view">
+          <div class="section-title">
+            <h3>为您生成的 {{ plans.length }} 套方案</h3>
+            <span class="subtitle">点击查看详情并选择</span>
+          </div>
+
+          <n-grid :x-gap="24" :y-gap="24" cols="1 m:2 l:3" responsive="screen">
+            <n-gi v-for="(plan, index) in plans" :key="index">
+              <n-card 
+                class="plan-card" 
+                :class="{ 'active': selectedPlanIndex === index }"
+                @click="selectPlan(index)"
+                content-style="padding: 0;"
+              >
+                <div class="card-content">
+                  <!-- Header Section -->
+                  <div class="card-header-section">
+                    <div class="plan-info">
+                      <h3 class="plan-name">方案 {{ index + 1 }}</h3>
+                      <div class="match-badge">
+                        <n-icon size="14"><CheckmarkCircle /></n-icon>
+                        {{ plan.match_score }}% 匹配
+                      </div>
+                    </div>
+                    <div class="calories-display">
+                      <span class="cal-val">{{ Math.floor(plan.total_energy) }}</span>
+                      <span class="cal-unit">kcal</span>
+                    </div>
+                  </div>
+
+                  <!-- Meal List (Compact) -->
+                  <div class="compact-meal-list">
+                    <div class="compact-meal-item">
+                      <div class="cmi-icon">🌅</div>
+                      <div class="cmi-content">
+                        <span class="cmi-name">{{ formatMealNames(plan, 'breakfast') }}</span>
+                        <span class="cmi-cal">{{ Math.floor(getMealEnergy(plan, 'breakfast')) }} kcal</span>
+                      </div>
+                    </div>
+                    <div class="compact-meal-item">
+                      <div class="cmi-icon">☀️</div>
+                      <div class="cmi-content">
+                        <span class="cmi-name">{{ formatMealNames(plan, 'lunch') }}</span>
+                        <span class="cmi-cal">{{ Math.floor(getMealEnergy(plan, 'lunch')) }} kcal</span>
+                      </div>
+                    </div>
+                    <div class="compact-meal-item">
+                      <div class="cmi-icon">🌙</div>
+                      <div class="cmi-content">
+                        <span class="cmi-name">{{ formatMealNames(plan, 'dinner') }}</span>
+                        <span class="cmi-cal">{{ Math.floor(getMealEnergy(plan, 'dinner')) }} kcal</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Macro Pills -->
+                  <div class="macro-pills">
+                    <div class="macro-pill protein">
+                      <span class="pill-dot"></span>
+                      <span>{{ Math.floor(plan.total_protein) }}g 蛋白</span>
+                    </div>
+                    <div class="macro-pill carb">
+                      <span class="pill-dot"></span>
+                      <span>{{ Math.floor(plan.total_carbohydrate) }}g 碳水</span>
+                    </div>
+                    <div class="macro-pill fat">
+                      <span class="pill-dot"></span>
+                      <span>{{ Math.floor(plan.total_fat) }}g 脂肪</span>
+                    </div>
+                  </div>
+
+                  <!-- Action Area -->
+                  <div class="card-action-area">
+                    <n-button 
+                      v-if="selectedPlanIndex === index" 
+                      type="primary" 
+                      block 
+                      size="large"
+                      class="confirm-btn"
+                      @click.stop="confirmSelection"
+                    >
+                      确认选择
+                    </n-button>
+                    <div v-else class="select-hint">点击查看详情</div>
+                  </div>
+                </div>
+              </n-card>
+            </n-gi>
+          </n-grid>
+
+          <!-- 选中方案的详情弹窗/展开视图 (Optional, for now handled by selection state visually) -->
+           <!-- 为了简化交互，点击卡片即选中高亮，再次点击确认或点击下方按钮确认 -->
+        </div>
       </div>
     </div>
 
-    <div class="header">
-      <h1>🍽️ 智能食谱推荐</h1>
-      <p class="subtitle">基于您的营养需求，为您定制专属每日食谱</p>
-    </div>
+    <n-modal v-model:show="showRegenerateModal" preset="card" title="受限食材单餐重构" style="width: 720px" :mask-closable="false">
+      <div class="regen-form">
+        <n-select v-model:value="regenForm.meal_type" :options="mealTypeOptions" placeholder="选择餐次" />
+        <n-input v-model:value="ingredientText" type="textarea" :rows="3" placeholder="输入食材，使用逗号分隔，如：番茄, 鸡蛋, 牛肉" />
 
-    <!-- Loading State -->
-    <div v-if="loading" class="loading">
-      <div class="spinner"></div>
-      <p>正在为您生成推荐方案...</p>
-    </div>
-
-    <!-- Error State -->
-    <div v-else-if="error" class="error-message">
-      <p>{{ error }}</p>
-      <button @click="fetchRecommendations"
-        class="retry-btn">重新获取</button>
-    </div>
-
-    <!-- Recommendations -->
-    <div v-else class="content">
-      <!-- Selected Plan View -->
-      <div v-if="currentSelectedPlan"
-        class="selected-plan-view">
-        <div class="selected-header">
-          <h3>✅ 您已选择今日食谱</h3>
-          <button @click="reselectPlan"
-            class="reselect-btn">重新选择</button>
+        <div class="regen-upload-row">
+          <input type="file" accept="image/png,image/jpeg" @change="onIngredientImageChange" />
+          <n-button :loading="recognizingIngredients" @click="recognizeIngredientsFromImage">图片识别食材</n-button>
         </div>
 
-        <div class="plan-card selected-display">
-          <div class="plan-header">
-            <h4>{{ currentSelectedPlan.plan_name || '今日推荐方案'
-              }}</h4>
-            <div class="match-score"
-              :class="getScoreClass(currentSelectedPlan.match_score)">
-              <span class="score-value">{{
-                currentSelectedPlan.match_score }}%</span>
-              <span class="score-label">匹配度</span>
-            </div>
-          </div>
+        <div class="ingredient-tags">
+          <n-tag v-for="item in regenForm.ingredients" :key="item" closable @close="removeIngredient(item)">{{ item }}</n-tag>
+        </div>
 
-          <div class="meals">
-            <RecipeCard title="早餐"
-              :recipe="currentSelectedPlan.breakfast"
-              icon="🌅" />
-            <RecipeCard title="午餐"
-              :recipe="currentSelectedPlan.lunch"
-              icon="☀️" />
-            <RecipeCard title="晚餐"
-              :recipe="currentSelectedPlan.dinner"
-              icon="🌙" />
-            <RecipeCard v-if="currentSelectedPlan.snack"
-              title="加餐" :recipe="currentSelectedPlan.snack"
-              icon="🍎" />
-          </div>
+        <n-button type="primary" :loading="regeneratingMeal" @click="startRegenerateMeal">开始重构</n-button>
 
-          <div class="plan-nutrition">
-            <h5>营养总计</h5>
-            <div class="nutrition-bars">
-              <div class="bar-item">
-                <span class="bar-label">热量</span>
-                <div class="bar-container">
-                  <div class="bar-fill energy"
-                    :style="{ width: getPercentage(currentSelectedPlan.total_energy, currentSelectedPlan.target_energy) + '%' }">
-                  </div>
-                </div>
-                <span class="bar-value">{{
-                  Math.floor(currentSelectedPlan.total_energy)
-                  }} / {{
-                    Math.floor(currentSelectedPlan.target_energy)
-                  }}</span>
-              </div>
-              <div class="bar-item">
-                <span class="bar-label">蛋白质</span>
-                <div class="bar-container">
-                  <div class="bar-fill protein"
-                    :style="{ width: getPercentage(currentSelectedPlan.total_protein, currentSelectedPlan.target_protein) + '%' }">
-                  </div>
-                </div>
-                <span class="bar-value">{{
-                  Math.floor(currentSelectedPlan.total_protein)
-                  }}g / {{
-                    Math.floor(currentSelectedPlan.target_protein)
-                  }}g</span>
-              </div>
-              <div class="bar-item">
-                <span class="bar-label">碳水</span>
-                <div class="bar-container">
-                  <div class="bar-fill carb"
-                    :style="{ width: getPercentage(currentSelectedPlan.total_carbohydrate, currentSelectedPlan.target_carbohydrate) + '%' }">
-                  </div>
-                </div>
-                <span class="bar-value">{{
-                  Math.floor(currentSelectedPlan.total_carbohydrate)
-                  }}g / {{
-                    Math.floor(currentSelectedPlan.target_carbohydrate)
-                  }}g</span>
-              </div>
-              <div class="bar-item">
-                <span class="bar-label">脂肪</span>
-                <div class="bar-container">
-                  <div class="bar-fill fat"
-                    :style="{ width: getPercentage(currentSelectedPlan.total_fat, currentSelectedPlan.target_fat) + '%' }">
-                  </div>
-                </div>
-                <span class="bar-value">{{
-                  Math.floor(currentSelectedPlan.total_fat)
-                  }}g / {{
-                    Math.floor(currentSelectedPlan.target_fat)
-                  }}g</span>
-              </div>
-            </div>
-          </div>
+        <div v-if="regeneratingMeal" class="regen-skeleton">
+          <n-skeleton text :repeat="4" />
+          <n-skeleton text style="width: 70%" />
+        </div>
+
+        <div v-if="regenResult && !regeneratingMeal" class="regen-result">
+          <h4>{{ regenResult.meal?.meal_name }}</h4>
+          <p>{{ regenResult.meal?.dietitian_tip }}</p>
+          <p v-if="regenResult.supplementary_tip" class="supplement-tip">{{ regenResult.supplementary_tip }}</p>
+          <n-divider />
+          <n-button type="success" :loading="adoptingMeal" @click="adoptMealResult">采纳该餐次</n-button>
         </div>
       </div>
-
-      <!-- Recommendation List View -->
-      <div v-else>
-        <!-- Nutrition Summary -->
-        <div class="nutrition-summary">
-          <h3>您的每日营养目标</h3>
-          <div class="nutrition-grid">
-            <div class="nutrition-item energy">
-              <span class="label">热量</span>
-              <span class="value">{{ targetNutrition.energy
-                }} kcal</span>
-            </div>
-            <div class="nutrition-item protein">
-              <span class="label">蛋白质</span>
-              <span class="value">{{ targetNutrition.protein
-                }} g</span>
-            </div>
-            <div class="nutrition-item carb">
-              <span class="label">碳水</span>
-              <span class="value">{{ targetNutrition.carb }}
-                g</span>
-            </div>
-            <div class="nutrition-item fat">
-              <span class="label">脂肪</span>
-              <span class="value">{{ targetNutrition.fat }}
-                g</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Recipe Plans -->
-        <div class="plans-section">
-          <h3>为您推荐 {{ plans.length }} 套每日食谱方案</h3>
-
-          <div class="plans-grid">
-            <div v-for="(plan, index) in plans"
-              :key="plan.id || index" class="plan-card"
-              :class="{ selected: selectedPlanIndex === index }"
-              @click="selectPlan(index)">
-              <div class="plan-header">
-                <h4>方案 {{ index + 1 }}</h4>
-                <div class="match-score"
-                  :class="getScoreClass(plan.match_score)">
-                  <span class="score-value">{{
-                    plan.match_score }}%</span>
-                  <span class="score-label">匹配度</span>
-                </div>
-              </div>
-
-              <!-- Meals -->
-              <div class="meals">
-                <RecipeCard title="早餐"
-                  :recipe="plan.breakfast" icon="🌅" />
-                <RecipeCard title="午餐" :recipe="plan.lunch"
-                  icon="☀️" />
-                <RecipeCard title="晚餐" :recipe="plan.dinner"
-                  icon="🌙" />
-                <RecipeCard v-if="plan.snack" title="加餐"
-                  :recipe="plan.snack" icon="🍎" />
-              </div>
-
-              <!-- Total Nutrition -->
-              <div class="plan-nutrition">
-                <h5>营养总计</h5>
-                <div class="nutrition-bars">
-                  <div class="bar-item">
-                    <span class="bar-label">热量</span>
-                    <div class="bar-container">
-                      <div class="bar-fill energy"
-                        :style="{ width: getPercentage(plan.total_energy, plan.target_energy) + '%' }">
-                      </div>
-                    </div>
-                    <span class="bar-value">{{
-                      Math.floor(plan.total_energy) }} / {{
-                        Math.floor(plan.target_energy)
-                      }}</span>
-                  </div>
-                  <div class="bar-item">
-                    <span class="bar-label">蛋白质</span>
-                    <div class="bar-container">
-                      <div class="bar-fill protein"
-                        :style="{ width: getPercentage(plan.total_protein, plan.target_protein) + '%' }">
-                      </div>
-                    </div>
-                    <span class="bar-value">{{
-                      Math.floor(plan.total_protein) }}g /
-                      {{ Math.floor(plan.target_protein)
-                      }}g</span>
-                  </div>
-                  <div class="bar-item">
-                    <span class="bar-label">碳水</span>
-                    <div class="bar-container">
-                      <div class="bar-fill carb"
-                        :style="{ width: getPercentage(plan.total_carbohydrate, plan.target_carbohydrate) + '%' }">
-                      </div>
-                    </div>
-                    <span class="bar-value">{{
-                      Math.floor(plan.total_carbohydrate)
-                      }}g / {{
-                        Math.floor(plan.target_carbohydrate)
-                      }}g</span>
-                  </div>
-                  <div class="bar-item">
-                    <span class="bar-label">脂肪</span>
-                    <div class="bar-container">
-                      <div class="bar-fill fat"
-                        :style="{ width: getPercentage(plan.total_fat, plan.target_fat) + '%' }">
-                      </div>
-                    </div>
-                    <span class="bar-value">{{
-                      Math.floor(plan.total_fat) }}g / {{
-                        Math.floor(plan.target_fat) }}g</span>
-                  </div>
-                </div>
-              </div>
-
-              <button v-if="selectedPlanIndex === index"
-                @click.stop="confirmSelection"
-                class="select-btn selected">
-                ✓ 已选择此方案
-              </button>
-              <button v-else @click.stop="selectPlan(index)"
-                class="select-btn">
-                选择此方案
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Action Buttons -->
-        <div class="actions">
-          <button @click="fetchRecommendations"
-            class="action-btn secondary">
-            🔄 重新推荐
-          </button>
-          <button @click="confirmSelection"
-            class="action-btn primary"
-            :disabled="selectedPlanIndex === null">
-            确认选择
-          </button>
-        </div>
-      </div>
-    </div>
+    </n-modal>
   </div>
 </template>
 
-<script>
-import { ref, onMounted, computed } from 'vue';
+<script setup>
+import { ref, onMounted, onActivated } from 'vue';
 import { useRouter } from 'vue-router';
-import { ArrowLeft, UserFilled, ArrowDown, HomeFilled, User, DataLine } from '@element-plus/icons-vue';
-import { getRecipeRecommendations, selectRecipePlan, getSelectedRecipePlan } from '../api/recipeApi';
-import { getNutritionRequirements } from '../api/user';
-import RecipeCard from '../components/RecipeCard.vue';
+import { 
+  NButton, NIcon, NSpin, NResult, NGrid, NGi, NCard, NTag, NProgress, NAlert, useMessage, NImage,
+  NModal, NSelect, NInput, NDivider, NSkeleton
+} from 'naive-ui';
+import { 
+  ArrowBack, Refresh, FitnessOutline, LeafOutline, WaterOutline, CheckmarkCircle 
+} from '@vicons/ionicons5';
+import MealItem from '@/components/MealItem.vue';
+import {
+  getRecipeRecommendations,
+  selectRecipePlan,
+  getSelectedRecipePlan,
+  recognizeMealIngredients,
+  regenerateConstrainedMeal,
+  adoptRegeneratedMeal
+} from '@/api/recipeApi';
+import { addIntakeRecord, getTodayStatus } from '@/api/intakeApi';
+import { getNutritionRequirements } from '@/api/user';
 import { useAuthStore } from '@/store/auth';
-import Swal from 'sweetalert2';
 
-export default {
-  name: 'RecipeRecommend',
-  components: {
-    RecipeCard,
-    ArrowLeft,
-    UserFilled,
-    ArrowDown,
-    HomeFilled,
-    User,
-    DataLine
-  },
-  setup() {
-    const router = useRouter();
-    const authStore = useAuthStore();
-    const loading = ref(true);
-    const error = ref(null);
-    const plans = ref([]);
-    const selectedPlanIndex = ref(null);
-    const currentSelectedPlan = ref(null);
-    const targetNutrition = ref({
-      energy: 0,
-      protein: 0,
-      carb: 0,
-      fat: 0
-    });
+const router = useRouter();
+const message = useMessage();
+const authStore = useAuthStore();
 
-    const fetchRecommendations = async (ignoreSelected = false) => {
-      loading.value = true;
-      error.value = null;
+const loading = ref(true);
+const error = ref(null);
+const plans = ref([]);
+const selectedPlanIndex = ref(null);
+const currentSelectedPlan = ref(null);
+const targetNutrition = ref({});
+const todayRecords = ref([]); // Store today's intake records
 
+const showRegenerateModal = ref(false);
+const ingredientText = ref('');
+const ingredientImageFile = ref(null);
+const recognizingIngredients = ref(false);
+const regeneratingMeal = ref(false);
+const adoptingMeal = ref(false);
+const regenResult = ref(null);
+const regenForm = ref({
+  meal_type: 'lunch',
+  ingredients: []
+});
+const mealTypeOptions = [
+  { label: '早餐', value: 'breakfast' },
+  { label: '午餐', value: 'lunch' },
+  { label: '晚餐', value: 'dinner' },
+  { label: '加餐', value: 'snack' }
+];
+
+// 初始化
+onMounted(async () => {
+  await fetchRecommendations();
+  await loadTodayRecords();
+});
+
+// 当页面被缓存时，每次进入都需要刷新记录状态
+onActivated(async () => {
+  await loadTodayRecords();
+});
+
+const loadTodayRecords = async () => {
+  try {
+    const res = await getTodayStatus(); // Reusing the API from IntakeRecord
+    if (res && res.records) {
+      todayRecords.value = res.records;
+    }
+  } catch (e) {
+    console.error('Failed to load today records', e);
+  }
+};
+
+const isMealSynced = (title, recipe) => {
+  if (!recipe || !todayRecords.value) return false;
+  const typeMap = { '早餐': 'breakfast', '午餐': 'lunch', '晚餐': 'dinner', '加餐': 'snack' };
+  const mealType = typeMap[title];
+  // Simple check: if we have a record with same meal_type and food_name
+  return todayRecords.value.some(r => r.mealType === mealType && r.foodName === recipe.name);
+};
+
+const getMealItems = (plan, mealType) => {
+  if (!plan) return [];
+  const key = `${mealType}_items`;
+  if (Array.isArray(plan[key]) && plan[key].length > 0) {
+    return plan[key];
+  }
+  return plan[mealType] ? [plan[mealType]] : [];
+};
+
+const formatMealNames = (plan, mealType) => {
+  const items = getMealItems(plan, mealType);
+  if (items.length === 0) return '未安排';
+  return items.map(item => item?.name).filter(Boolean).join(' + ');
+};
+
+const getMealEnergy = (plan, mealType) => {
+  return getMealItems(plan, mealType)
+    .reduce((sum, item) => sum + (Number(item?.energy) || 0), 0);
+};
+
+const fetchRecommendations = async (forceRefresh = false) => {
+  loading.value = true;
+  error.value = null;
+  selectedPlanIndex.value = null;
+
+  try {
+    // 1. 如果不是强制刷新，先检查是否有已选方案
+    if (!forceRefresh) {
       try {
-        // 1. 先尝试获取已选方案 (除非强制忽略)
-        if (!ignoreSelected) {
-          try {
-            const selected = await getSelectedRecipePlan();
-            if (selected && selected.id) {
-              currentSelectedPlan.value = selected;
-              loading.value = false;
-              return; // 如果有已选方案，直接显示，不获取推荐
-            }
-          } catch (e) {
-            // 没有今天的已选方案(404)，继续获取推荐
-            console.log('No selected plan found, fetching new recommendations...');
-          }
+        const selected = await getSelectedRecipePlan();
+        if (selected && selected.id) {
+          currentSelectedPlan.value = selected;
+          loading.value = false;
+          return;
         }
-
-        // 2. 获取营养需求
-        const nutritionResp = await getNutritionRequirements();
-        targetNutrition.value = {
-          energy: Math.floor(nutritionResp.target_calorie || 0),
-          protein: Math.floor(nutritionResp.protein_gram || 0),
-          carb: Math.floor(nutritionResp.carb_gram || 0),
-          fat: Math.floor(nutritionResp.fat_gram || 0)
-        };
-
-        // 3. 获取食谱推荐
-        const recipeResp = await getRecipeRecommendations(3);
-        plans.value = recipeResp.plans || [];
-        selectedPlanIndex.value = null;
-      } catch (err) {
-        error.value = err.response?.data?.error || '获取推荐失败，请重试';
-        console.error(err);
-      } finally {
-        loading.value = false;
+      } catch (e) {
+        // 忽略 404
       }
-    };
+    }
 
-    const reselectPlan = async () => {
-      currentSelectedPlan.value = null;
-      await fetchRecommendations(true);
-    };
+    // 2. 获取推荐
+    // 并行获取营养目标和推荐列表
+    const [nutritionResp, recipeResp] = await Promise.all([
+      getNutritionRequirements(),
+      getRecipeRecommendations(3)
+    ]);
 
-    const selectPlan = (index) => {
-      selectedPlanIndex.value = index;
-    };
+    targetNutrition.value = nutritionResp;
+    plans.value = recipeResp.plans || [];
 
-    const confirmSelection = async () => {
-      if (selectedPlanIndex.value === null) return;
+  } catch (err) {
+    console.error(err);
+    error.value = err.response?.data?.error || '获取推荐失败，请稍后重试';
+    message.error(error.value);
+  } finally {
+    loading.value = false;
+  }
+};
 
-      const plan = plans.value[selectedPlanIndex.value];
-      try {
-        // 传递整个plan对象而不是只传id
-        await selectRecipePlan(plan);
-        // 更新当前已选方案并刷新视图
-        currentSelectedPlan.value = plan;
+const selectPlan = (index) => {
+  selectedPlanIndex.value = index;
+};
 
-        // 保存成功提示
-        Swal.fire({
-          title: '成功',
-          text: '食谱方案已保存！',
-          icon: 'success',
-          confirmButtonText: '确定'
-        });
-      } catch (err) {
-        // 保存失败错误提示
-        Swal.fire({
-          title: '保存失败',
-          text: err.response?.data?.error || '未知错误',
-          icon: 'error',
-          confirmButtonText: '确定'
-        });
-      }
-    };
+const confirmSelection = async () => {
+  if (selectedPlanIndex.value === null) return;
+  
+  const plan = plans.value[selectedPlanIndex.value];
+  try {
+    loading.value = true;
+    await selectRecipePlan(plan);
+    currentSelectedPlan.value = plan;
+    message.success('已成功锁定今日食谱！');
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } catch (err) {
+    message.error(err.response?.data?.error || '保存失败');
+    loading.value = false;
+  } finally {
+    loading.value = false;
+  }
+};
 
-    const getPercentage = (actual, target) => {
-      if (!target) return 0;
-      return Math.min(100, Math.round((actual / target) * 100));
-    };
+const reselectPlan = () => {
+  currentSelectedPlan.value = null;
+  // 此时 plans 还有数据，可以直接显示推荐列表，或者重新获取
+  if (plans.value.length === 0) {
+    fetchRecommendations(true);
+  }
+};
 
-    const getScoreClass = (score) => {
-      if (score >= 90) return 'excellent';
-      if (score >= 80) return 'good';
-      return 'fair';
-    };
+const handleSyncMeal = async ({ recipe, type }) => {
+  console.log('RecipeRecommend handleSyncMeal triggered', recipe, type);
+  if (!recipe) return;
+  
+  const typeMap = {
+    '早餐': 'breakfast',
+    '午餐': 'lunch',
+    '晚餐': 'dinner',
+    '加餐': 'snack'
+  };
+  
+  const mealType = typeMap[type] || 'snack';
+  
+  try {
+    await addIntakeRecord({
+      meal_type: mealType,
+      food_name: recipe.name,
+      intake_amount: 100, // Assuming 1 serving = 100% or similar logic. Backend expects amount in g usually, but for recipe we might not have weight. Defaulting to 100g or 1 serving context. Ideally recipe has weight.
+      // If recipe doesn't have weight, we send estimated nutrition directly.
+      calculated_energy: recipe.energy,
+      calculated_protein: recipe.protein,
+      calculated_carb: recipe.carbohydrate,
+      calculated_fat: recipe.fat
+    });
+    message.success(`已将 ${type} (${recipe.name}) 同步到饮食记录`);
+    await loadTodayRecords(); // Refresh status
+  } catch (err) {
+    console.error(err);
+    message.error('同步失败，请重试');
+  }
+};
 
-    const handleCommand = (command) => {
-      switch (command) {
-        case 'home':
-          router.push('/home');
-          break;
-        case 'profile':
-          router.push('/profile/view');
-          break;
-        case 'intake':
-          router.push('/intake');
-          break;
-      }
-    };
+const getPercentage = (val, target) => {
+  if (!target) return 0;
+  return Math.min(100, Math.round((val / target) * 100));
+};
 
-    onMounted(() => {
-      // 只在没有数据时才获取推荐，避免返回时重新刷新
-      if (plans.value.length === 0 && !currentSelectedPlan.value) {
-        fetchRecommendations();
-      }
+const parseIngredientText = () => {
+  const parsed = ingredientText.value
+    .split(/[，,\n]/)
+    .map(item => item.trim())
+    .filter(Boolean);
+  const merged = [...regenForm.value.ingredients, ...parsed];
+  regenForm.value.ingredients = Array.from(new Set(merged));
+};
+
+const removeIngredient = (value) => {
+  regenForm.value.ingredients = regenForm.value.ingredients.filter(item => item !== value);
+};
+
+const onIngredientImageChange = (event) => {
+  ingredientImageFile.value = event.target.files?.[0] || null;
+};
+
+const openRegenerateModal = () => {
+  regenResult.value = null;
+  ingredientText.value = '';
+  ingredientImageFile.value = null;
+  regenForm.value = {
+    meal_type: 'lunch',
+    ingredients: []
+  };
+  showRegenerateModal.value = true;
+};
+
+const recognizeIngredientsFromImage = async () => {
+  if (!ingredientImageFile.value) {
+    message.warning('请先选择一张食材图片');
+    return;
+  }
+  try {
+    recognizingIngredients.value = true;
+    const resp = await recognizeMealIngredients(ingredientImageFile.value);
+    const list = Array.isArray(resp?.ingredients) ? resp.ingredients : [];
+    regenForm.value.ingredients = Array.from(new Set([...regenForm.value.ingredients, ...list]));
+    message.success('图片识别完成，请确认食材列表');
+  } catch (err) {
+    message.error(err.response?.data?.error || '食材识别失败');
+  } finally {
+    recognizingIngredients.value = false;
+  }
+};
+
+const startRegenerateMeal = async () => {
+  parseIngredientText();
+  if (!regenForm.value.meal_type) {
+    message.warning('请选择餐次');
+    return;
+  }
+  if (!regenForm.value.ingredients.length) {
+    message.warning('请至少填写一种食材');
+    return;
+  }
+
+  try {
+    regeneratingMeal.value = true;
+    regenResult.value = await regenerateConstrainedMeal({
+      meal_type: regenForm.value.meal_type,
+      ingredients: regenForm.value.ingredients
+    });
+  } catch (err) {
+    message.error(err.response?.data?.error || '重构失败，请稍后再试');
+  } finally {
+    regeneratingMeal.value = false;
+  }
+};
+
+const adoptMealResult = async () => {
+  if (!regenResult.value?.meal) return;
+
+  try {
+    adoptingMeal.value = true;
+    const resp = await adoptRegeneratedMeal({
+      meal_type: regenForm.value.meal_type,
+      meal: regenResult.value.meal
     });
 
-    return {
-      loading,
-      error,
-      plans,
-      selectedPlanIndex,
-      currentSelectedPlan,
-      targetNutrition,
-      fetchRecommendations,
-      reselectPlan,
-      selectPlan,
-      confirmSelection,
-      getPercentage,
-      getScoreClass,
-      handleCommand,
-      authStore,
-      router
-    };
+    if (resp?.plan) {
+      currentSelectedPlan.value = resp.plan;
+    }
+    await loadTodayRecords();
+    message.success('已采纳重构餐次，主页统计将自动刷新');
+    showRegenerateModal.value = false;
+  } catch (err) {
+    message.error(err.response?.data?.error || '采纳失败，请重试');
+  } finally {
+    adoptingMeal.value = false;
   }
 };
 </script>
 
 <style scoped>
-.recipe-recommend-container {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 2rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+.page-container {
   min-height: 100vh;
+  background-color: #F5F7FA;
 }
 
-/* 顶部导航栏样式 */
-.top-nav {
+.main-wrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+/* Header */
+.page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-  padding: 10px 0;
+  margin-bottom: 32px;
 }
 
-.back-button {
-  background-color: rgba(255, 255, 255, 0.2);
-  color: white;
-  border: none;
-  width: 40px;
-  height: 40px;
-  transition: all 0.3s;
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
 
-.back-button:hover {
-  background-color: rgba(255, 255, 255, 0.3);
-  transform: translateX(-3px);
+.page-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+  line-height: 1.2;
 }
 
-.user-info-nav {
+.page-subtitle {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 4px 0 0 0;
+}
+
+/* Loading & Error */
+.loading-state, .error-state {
+  display: flex;
+  justify-content: center;
+  padding: 60px 0;
+}
+
+/* Selected View */
+.nutrition-card {
+  height: 100%;
+}
+
+.nutrition-summary {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+
+.macro-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.progress-text {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+}
+
+.progress-text .value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1f2937;
+  line-height: 1;
+}
+
+.progress-text .label {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.macro-label {
+  margin-top: 8px;
+  font-size: 14px;
+  color: #4b5563;
+  font-weight: 500;
+}
+
+.macros-bars {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.mb-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.mb-label.protein { color: #ef4444; }
+.mb-label.carb { color: #f59e0b; }
+.mb-label.fat { color: #8b5cf6; }
+
+.mb-val { color: #6b7280; }
+
+.meal-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Recommendations View */
+.section-title {
+  margin-bottom: 24px;
+}
+
+.section-title h3 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+}
+
+.section-title .subtitle {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.mb-label-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.thick-progress :deep(.n-progress-graph-line-rail),
+.thick-progress :deep(.n-progress-graph-line-fill) {
+  border-radius: 9999px;
+}
+
+/* Plan Card Styles */
+.plan-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 2px solid transparent;
+  cursor: pointer;
+  overflow: hidden;
+  border-radius: 16px;
+  background-color: white;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); /* shadow-sm */
+}
+
+.plan-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* shadow-lg */
+}
+
+.plan-card.active {
+  border-color: #10b981; /* ring-primary-500 */
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); /* shadow-xl */
+}
+
+.card-content {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.card-header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.plan-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 4px 0;
+}
+
+.match-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #059669;
+  background-color: #d1fae5;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+.calories-display {
+  text-align: right;
+}
+
+.cal-val {
+  display: block;
+  font-size: 24px;
+  font-weight: 800;
+  color: #1f2937;
+  line-height: 1;
+}
+
+.cal-unit {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.compact-meal-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 4px 0;
+}
+
+.compact-meal-item {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.user-info-display {
+.cmi-icon {
+  font-size: 18px;
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  padding: 6px 12px;
-  border-radius: 20px;
-  transition: all 0.3s;
-  color: white;
-}
-
-.user-info-display:hover {
-  background-color: rgba(255, 255, 255, 0.2);
-}
-
-.username {
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.header {
-  text-align: center;
-  color: white;
-  margin-bottom: 3rem;
-  position: relative;
-}
-
-.back-btn-wrapper {
-  position: absolute;
-  left: 0;
-  top: 0;
-}
-
-.back-btn {
-  color: white !important;
-  font-size: 1rem;
-  font-weight: 500;
-}
-
-.back-btn:hover {
-  opacity: 0.8;
-}
-
-.header h1 {
-  font-size: 2.5rem;
-  margin-bottom: 0.5rem;
-  font-weight: 700;
-}
-
-.subtitle {
-  font-size: 1.1rem;
-  opacity: 0.9;
-}
-
-.loading {
-  text-align: center;
-  color: white;
-  padding: 4rem 0;
-}
-
-.spinner {
-  width: 50px;
-  height: 50px;
-  border: 4px solid rgba(255, 255, 255, 0.3);
-  border-top-color: white;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin: 0 auto 1rem;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.error-message {
-  background: rgba(255, 77, 77, 0.9);
-  color: white;
-  padding: 2rem;
-  border-radius: 12px;
-  text-align: center;
-}
-
-.retry-btn {
-  margin-top: 1rem;
-  padding: 0.75rem 1.5rem;
-  background: white;
-  color: #ff4d4d;
-  border: none;
+  justify-content: center;
+  background-color: #f3f4f6;
   border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
+  flex-shrink: 0;
 }
 
-.content {
-  background: white;
-  border-radius: 20px;
-  padding: 2rem;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-}
-
-.nutrition-summary {
-  margin-bottom: 3rem;
-  padding: 1.5rem;
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  border-radius: 15px;
-  color: white;
-}
-
-.nutrition-summary h3 {
-  margin-bottom: 1rem;
-  font-size: 1.3rem;
-}
-
-.nutrition-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 1rem;
-}
-
-.nutrition-item {
-  background: rgba(255, 255, 255, 0.2);
-  padding: 1rem;
-  border-radius: 10px;
-  text-align: center;
-  backdrop-filter: blur(10px);
-}
-
-.nutrition-item .label {
-  display: block;
-  font-size: 0.9rem;
-  margin-bottom: 0.5rem;
-  opacity: 0.9;
-}
-
-.nutrition-item .value {
-  display: block;
-  font-size: 1.5rem;
-  font-weight: 700;
-}
-
-.plans-section h3 {
-  margin-bottom: 2rem;
-  color: #333;
-  font-size: 1.5rem;
-}
-
-.plans-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-  gap: 2rem;
-  margin-bottom: 2rem;
-}
-
-.plan-card {
-  border: 3px solid transparent;
-  border-radius: 15px;
-  padding: 1.5rem;
-  background: linear-gradient(white, white) padding-box,
-    linear-gradient(135deg, #667eea, #764ba2) border-box;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.plan-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-}
-
-.plan-card.selected {
-  border-color: #667eea;
-  background: linear-gradient(white, white) padding-box,
-    linear-gradient(135deg, #667eea, #764ba2) border-box;
-  box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4);
-}
-
-.plan-header {
+.cmi-content {
+  flex: 1;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
-}
-
-.plan-header h4 {
-  font-size: 1.3rem;
-  color: #333;
-}
-
-.match-score {
-  text-align: center;
-  padding: 0.5rem 1rem;
-  border-radius: 10px;
-  background: #f0f0f0;
-}
-
-.match-score.excellent {
-  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-  color: white;
-}
-
-.match-score.good {
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-  color: white;
-}
-
-.match-score.fair {
-  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-  color: white;
-}
-
-.score-value {
-  display: block;
-  font-size: 1.5rem;
-  font-weight: 700;
-}
-
-.score-label {
-  display: block;
-  font-size: 0.75rem;
-  opacity: 0.9;
-}
-
-.meals {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.plan-nutrition {
-  background: #f8f9fa;
-  padding: 1rem;
-  border-radius: 10px;
-  margin-bottom: 1rem;
-}
-
-.plan-nutrition h5 {
-  margin-bottom: 1rem;
-  color: #333;
-}
-
-.nutrition-bars {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.bar-item {
-  display: grid;
-  grid-template-columns: 60px 1fr 100px;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.85rem;
-}
-
-.bar-label {
-  color: #666;
-  font-weight: 500;
-}
-
-.bar-container {
-  height: 8px;
-  background: #e0e0e0;
-  border-radius: 4px;
   overflow: hidden;
 }
 
-.bar-fill {
-  height: 100%;
-  border-radius: 4px;
-  transition: width 0.3s ease;
+.cmi-name {
+  font-size: 14px;
+  color: #374151;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-right: 8px;
 }
 
-.bar-fill.energy {
-  background: linear-gradient(90deg, #f093fb 0%, #f5576c 100%);
+.cmi-cal {
+  font-size: 12px;
+  color: #9ca3af;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
-.bar-fill.protein {
-  background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
-}
-
-.bar-fill.carb {
-  background: linear-gradient(90deg, #43e97b 0%, #38f9d7 100%);
-}
-
-.bar-fill.fat {
-  background: linear-gradient(90deg, #fa709a 0%, #fee140 100%);
-}
-
-.bar-value {
-  color: #666;
-  font-size: 0.8rem;
-  text-align: right;
-}
-
-.select-btn {
-  width: 100%;
-  padding: 0.75rem;
-  border: 2px solid #667eea;
-  background: white;
-  color: #667eea;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.select-btn:hover {
-  background: #667eea;
-  color: white;
-}
-
-.select-btn.selected {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border-color: transparent;
-}
-
-.actions {
+.macro-pills {
   display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.macro-pill {
+  flex: 1;
+  display: flex;
+  align-items: center;
   justify-content: center;
-  gap: 1rem;
-  margin-top: 2rem;
+  gap: 6px;
+  font-size: 12px;
+  padding: 6px 4px;
+  border-radius: 999px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.macro-pill.protein { background-color: #fee2e2; color: #991b1b; }
+.macro-pill.carb { background-color: #fef3c7; color: #92400e; }
+.macro-pill.fat { background-color: #f3e8ff; color: #6b21a8; }
+
+.pill-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: currentColor;
+}
+
+.card-action-area {
+  margin-top: 8px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.select-hint {
+  font-size: 14px;
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+.confirm-btn {
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.mb-6 {
+  margin-bottom: 24px;
 }
 
 .action-btn {
-  padding: 1rem 2rem;
-  border: none;
-  border-radius: 10px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
+  font-weight: 500;
 }
 
-.action-btn.primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-}
-
-.action-btn.primary:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
-}
-
-.action-btn.primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.action-btn.secondary {
-  background: white;
-  color: #667eea;
-  border: 2px solid #667eea;
-}
-
-.action-btn.secondary:hover {
-  background: #667eea;
-  color: white;
-}
-
-.selected-plan-view {
-  animation: fadeIn 0.5s ease;
-}
-
-.selected-header {
+.regen-form {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.regen-upload-row {
+  display: flex;
   align-items: center;
-  margin-bottom: 2rem;
+  gap: 10px;
 }
 
-.selected-header h3 {
-  font-size: 1.5rem;
-  color: #333;
-  margin: 0;
+.ingredient-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
-.reselect-btn {
-  padding: 0.5rem 1rem;
-  border: 1px solid #ff4d4d;
-  background: white;
-  color: #ff4d4d;
-  border-radius: 8px;
-  cursor: pointer;
+.regen-skeleton {
+  padding: 8px 0;
+}
+
+.regen-result h4 {
+  margin: 0 0 8px 0;
+}
+
+.supplement-tip {
+  color: #059669;
   font-weight: 600;
-  transition: all 0.3s ease;
-}
-
-.reselect-btn:hover {
-  background: #ff4d4d;
-  color: white;
-}
-
-.selected-display {
-  border-color: #667eea;
-  box-shadow: 0 10px 30px rgba(102, 126, 234, 0.2);
-  cursor: default;
-}
-
-.selected-display:hover {
-  transform: none;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 </style>

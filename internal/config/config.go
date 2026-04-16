@@ -23,11 +23,12 @@ type ServerConfig struct {
 
 // DatabaseConfig 包含了数据库连接相关的配置
 type DatabaseConfig struct {
-	Driver   string `mapstructure:"driver"`
-	User     string `mapstructure:"user"`
-	Password string `mapstructure:"password"`
-	Host     string `mapstructure:"host"`
-	Name     string `mapstructure:"name"`
+	Driver      string `mapstructure:"driver"`
+	User        string `mapstructure:"user"`
+	Password    string `mapstructure:"password"`
+	Host        string `mapstructure:"host"`
+	Name        string `mapstructure:"name"`
+	RecipeTable string `mapstructure:"recipe_table"`
 }
 
 // NutrientsConfig 包含了营养计算相关的配置

@@ -1,0 +1,15 @@
+{
+  "staple_keywords": [
+    "米饭", "糙米", "燕麦", "藜麦", "红薯", "土豆", "玉米", "南瓜", "全麦", "面", "粉", "粥", "馒头", "面包", "饼", "米线", "河粉", "年糕",
+    "rice", "oat", "quinoa", "potato", "corn", "pumpkin", "whole wheat", "bread", "noodle", "pasta", "porridge"
+  ],
+  "breakfast_priority_keywords": {
+    "yogurt": ["酸奶", "yogurt"],
+    "egg": ["鸡蛋", "蛋", "egg"]
+  },
+  "diet_mode_forbidden_keywords": {
+    "light_adjust": ["重辣", "特辣", "油炸", "爆炒"],
+    "bland": ["辣", "麻辣", "油炸", "烧烤", "火锅", "肥肠", "奶油", "炸"],
+    "heavy_adjust": ["辣", "麻辣", "油炸", "烧烤", "火锅", "奶油", "炸", "酥", "肥"]
+  }
+}

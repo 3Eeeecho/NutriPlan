@@ -4,7 +4,13 @@ import { useAuthStore } from "@/store/auth";
 const routes = [
   {
     path: "/",
-    redirect: "/home",
+    redirect: "/welcome",
+  },
+  {
+    path: "/welcome",
+    name: "Welcome",
+    component: () => import("@/components/HeroSection.vue"),
+    meta: { requiresAuth: false },
   },
   {
     path: "/login",
@@ -19,58 +25,61 @@ const routes = [
     meta: { requiresAuth: false },
   },
   {
-    path: "/home",
-    name: "Home",
-    component: () => import("@/views/Home.vue"),
+    path: "/",
+    component: () => import("@/layouts/AppShell.vue"),
     meta: { requiresAuth: true },
-  },
-  {
-    path: "/profile",
-    name: "Profile",
-    component: () => import("@/views/Profile.vue"),
-    meta: { requiresAuth: true },
-  },
-  {
-    path: "/profile/view",
-    name: "ProfileView",
-    component: () => import("@/views/ProfileView.vue"),
-    meta: { requiresAuth: true },
-  },
-  {
-    path: "/recipes",
-    name: "RecipeRecommend",
-    component: () => import("@/views/RecipeRecommend.vue"),
-    meta: { requiresAuth: true },
-  },
-  {
-    path: "/recipes/:id",
-    name: "RecipeDetail",
-    component: () => import("@/views/RecipeDetail.vue"),
-    meta: { requiresAuth: true },
-  },
-  {
-    path: "/favorites",
-    name: "FavoriteList",
-    component: () => import("@/views/FavoriteList.vue"),
-    meta: { requiresAuth: true },
-  },
-  {
-    path: "/intake",
-    name: "IntakeRecord",
-    component: () => import("@/views/IntakeRecord.vue"),
-    meta: { requiresAuth: true },
-  },
-  {
-    path: "/weekly",
-    name: "WeeklyReport",
-    component: () => import("@/views/WeeklyReport.vue"),
-    meta: { requiresAuth: true },
-  },
-  {
-    path: "/shopping",
-    name: "ShoppingList",
-    component: () => import("@/views/ShoppingList.vue"),
-    meta: { requiresAuth: true },
+    children: [
+      {
+        path: "home",
+        name: "Home",
+        component: () => import("@/views/Home.vue"),
+      },
+      {
+        path: "profile",
+        name: "Profile",
+        component: () => import("@/views/Profile.vue"),
+      },
+      {
+        path: "profile/view",
+        name: "ProfileView",
+        component: () => import("@/views/ProfileView.vue"),
+      },
+      {
+        path: "recipes",
+        name: "RecipeRecommend",
+        component: () => import("@/views/RecipeRecommend.vue"),
+      },
+      {
+        path: "recipes/:id",
+        name: "RecipeDetail",
+        component: () => import("@/views/RecipeDetail.vue"),
+      },
+      {
+        path: "favorites",
+        name: "FavoriteList",
+        component: () => import("@/views/FavoriteList.vue"),
+      },
+      {
+        path: "intake",
+        name: "IntakeRecord",
+        component: () => import("@/views/IntakeRecord.vue"),
+      },
+      {
+        path: "weekly-planner",
+        name: "WeeklyPlanner",
+        component: () => import("@/views/WeeklyPlanner.vue"),
+      },
+      {
+        path: "weekly",
+        name: "WeeklyReport",
+        component: () => import("@/views/WeeklyReport.vue"),
+      },
+      {
+        path: "shopping",
+        name: "ShoppingList",
+        component: () => import("@/views/ShoppingList.vue"),
+      },
+    ],
   },
 ];
 

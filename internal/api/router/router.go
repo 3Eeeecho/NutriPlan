@@ -55,6 +55,12 @@ func NewRouter(deps RouterDeps) *gin.Engine {
 
 			// 获取营养需求 (GET /api/v1/user/nutrition)
 			auth.GET("/nutrition", userHandler.GetNutritionRequirements)
+
+			// 获取当前饮食模式 (GET /api/v1/user/diet-mode)
+			auth.GET("/diet-mode", userHandler.GetDietMode)
+
+			// 设置饮食模式 (PUT /api/v1/user/diet-mode)
+			auth.PUT("/diet-mode", userHandler.SetDietMode)
 		}
 
 		// --- 食谱推荐路由 ---
@@ -63,6 +69,15 @@ func NewRouter(deps RouterDeps) *gin.Engine {
 		{
 			// 获取食谱推荐 (GET /api/v1/recipes/recommend)
 			recipes.GET("/recommend", recipeHandler.GetRecommendations)
+
+			// 识别可用食材 (POST /api/v1/recipes/ingredients/recognize)
+			recipes.POST("/ingredients/recognize", recipeHandler.RecognizeMealIngredients)
+
+			// 受限单餐重构 (POST /api/v1/recipes/meal/regenerate)
+			recipes.POST("/meal/regenerate", recipeHandler.RegenerateSingleMeal)
+
+			// 采纳重构单餐 (POST /api/v1/recipes/meal/adopt)
+			recipes.POST("/meal/adopt", recipeHandler.AdoptRegeneratedMeal)
 
 			// 选择食谱计划 (POST /api/v1/recipes/plan/select)
 			recipes.POST("/plan/select", recipeHandler.SelectPlan)
@@ -121,6 +136,9 @@ func NewRouter(deps RouterDeps) *gin.Engine {
 		{
 			// 上传图片进行菜品识别 (POST /api/v1/food/recognize)
 			food.POST("/recognize", foodRecognitionHandler.RecognizeFood)
+
+			// 根据文本描述分析食物 (POST /api/v1/food/analyze-text)
+			food.POST("/analyze-text", foodRecognitionHandler.AnalyzeFoodText)
 		}
 
 	}

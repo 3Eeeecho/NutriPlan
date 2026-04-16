@@ -66,3 +66,37 @@ export const getFavoriteList = () => {
     method: 'get'
   });
 };
+
+// 从图片识别可用食材
+export const recognizeMealIngredients = (imageFile) => {
+  const formData = new FormData();
+  formData.append('image', imageFile);
+  return request({
+    url: '/recipes/ingredients/recognize',
+    method: 'post',
+    data: formData,
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    },
+    timeout: 20000
+  });
+};
+
+// 受限食材单餐重构
+export const regenerateConstrainedMeal = (payload) => {
+  return request({
+    url: '/recipes/meal/regenerate',
+    method: 'post',
+    data: payload,
+    timeout: 20000
+  });
+};
+
+// 采纳重构结果
+export const adoptRegeneratedMeal = (payload) => {
+  return request({
+    url: '/recipes/meal/adopt',
+    method: 'post',
+    data: payload
+  });
+};

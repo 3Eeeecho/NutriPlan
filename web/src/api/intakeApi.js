@@ -26,24 +26,28 @@ export function deleteIntakeRecord(id) {
 }
 
 /**
- * 获取当日营养状态
+ * 获取指定日期营养状态
+ * @param {string} [date] - YYYY-MM-DD
  * @returns {Promise}
  */
-export function getTodayStatus() {
+export function getTodayStatus(date) {
   return request({
     url: '/intake/today',
-    method: 'get'
+    method: 'get',
+    params: date ? { date } : undefined
   })
 }
 
 /**
  * 获取周报告
+ * @param {{start_date?: string, end_date?: string}} [params]
  * @returns {Promise}
  */
-export function getWeeklyReport() {
+export function getWeeklyReport(params) {
   return request({
     url: '/intake/weekly',
-    method: 'get'
+    method: 'get',
+    params
   })
 }
 
