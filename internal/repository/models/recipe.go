@@ -5,32 +5,31 @@ import (
 )
 
 type Recipe struct {
-	gorm.Model // 包含了 ID, CreatedAt, UpdatedAt, DeletedAt
+	gorm.Model
 
-	Name           string   `gorm:"type:varchar(200);not null;index;comment:食谱名称" json:"name"`
-	ImageURL       string   `gorm:"type:varchar(500);comment:封面图片链接" json:"imageUrl"`
-	MealType       MealType `gorm:"type:varchar(20);not null;index;comment:适合餐点类型" json:"mealType"`
-	Difficulty     string   `gorm:"type:varchar(20);comment:烹饪难度" json:"difficulty"`
-	CookingTime    int      `gorm:"default:0;comment:烹饪耗时(分)" json:"cookingTime"`
-	PortionWeightG float64  `gorm:"type:decimal(8,2);default:100;comment:推荐食用重量(g)" json:"portionWeightG"`
+	Name             string   `gorm:"type:varchar(200);not null;index;comment:椋熻氨鍚嶇О" json:"name"`
+	ImageURL         string   `gorm:"type:varchar(500);comment:灏侀潰鍥剧墖閾炬帴" json:"imageUrl"`
+	MealType         MealType `gorm:"type:varchar(20);not null;index;comment:閫傚悎椁愭绫诲瀷" json:"mealType"`
+	AllowedMealTypes []string `gorm:"serializer:json;type:text;comment:allowed meal types" json:"allowedMealTypes"`
+	Difficulty       string   `gorm:"type:varchar(20);comment:鐑归オ闅惧害" json:"difficulty"`
+	CookingTime      int      `gorm:"default:0;comment:鐑归ऑ鑰楁椂(鍒嗛挓)" json:"cookingTime"`
+	PortionWeightG   float64  `gorm:"type:decimal(8,2);default:100;comment:鎺ㄨ崘椋熺敤閲嶉噺(g)" json:"portionWeightG"`
 
-	// --- 核心营养素
-	Energy       float64 `gorm:"type:decimal(10,2);not null;index;comment:每100g热量 (kcal)" json:"energy"` // 加 index 方便按热量排序推荐
-	Protein      float64 `gorm:"type:decimal(10,2);not null;comment:蛋白质 (g)" json:"protein"`
-	Carbohydrate float64 `gorm:"type:decimal(10,2);not null;comment:碳水化合物 (g)" json:"carbohydrate"`
-	Fat          float64 `gorm:"type:decimal(10,2);not null;comment:脂肪 (g)" json:"fat"`
+	Energy       float64 `gorm:"type:decimal(10,2);not null;index;comment:姣?00g鐑噺(kcal)" json:"energy"`
+	Protein      float64 `gorm:"type:decimal(10,2);not null;comment:姣?00g铔嬬櫧璐?g)" json:"protein"`
+	Carbohydrate float64 `gorm:"type:decimal(10,2);not null;comment:姣?00g纰虫按鍖栧悎鐗?g)" json:"carbohydrate"`
+	Fat          float64 `gorm:"type:decimal(10,2);not null;comment:姣?00g鑴傝偑(g)" json:"fat"`
 
-	// --- 复杂结构 (直接使用 Slice，让 GORM 自动序列化) ---
-	Ingredients  []string `gorm:"serializer:json;not null;comment:所需食材清单" json:"ingredients"`
-	CookingSteps []string `gorm:"serializer:json;comment:烹饪步骤" json:"cookingSteps"`
+	Ingredients  []string `gorm:"serializer:json;not null;comment:鎵€闇€椋熸潗娓呭崟" json:"ingredients"`
+	CookingSteps []string `gorm:"serializer:json;comment:鐑归ऑ姝ラ" json:"cookingSteps"`
 
-	// TargetUsers: 推荐给谁吃 (白名单) -> 例如 ["减脂", "高血压"]
-	// ForbiddenUsers: 谁绝对不能吃 (黑名单) -> 例如 ["糖尿病", "痛风"] -> 过滤user的HealthConditions(健康状况)
-	TargetUsers    []string `gorm:"serializer:json;index;comment:适用人群" json:"targetUsers"`
-	ForbiddenUsers []string `gorm:"serializer:json;index;comment:禁忌人群" json:"forbiddenUsers"`
+	TargetUsers    []string `gorm:"serializer:json;index;comment:閫傜敤浜虹兢" json:"targetUsers"`
+	ForbiddenUsers []string `gorm:"serializer:json;index;comment:绂佸繉浜虹兢" json:"forbiddenUsers"`
 
-	// TODO 暂时没有用于逻辑判断
-	HealthScore int `gorm:"default:5;comment:推荐评分1-10" json:"healthScore"`
+	IsWeightLossFriendly   bool `gorm:"not null;default:false;index;comment:鏄惁閫傚悎鍑忚剛" json:"isWeightLossFriendly"`
+	IsMuscleGainFriendly   bool `gorm:"not null;default:false;index;comment:鏄惁閫傚悎澧炶倢" json:"isMuscleGainFriendly"`
+	IsSugarControlFriendly bool `gorm:"not null;default:false;index;comment:鏄惁閫傚悎鎺х硸" json:"isSugarControlFriendly"`
+	IsGeneralFriendly      bool `gorm:"not null;default:true;index;comment:鏄惁灞炰簬鏅€氬彲鎺ㄨ崘椋熷搧" json:"isGeneralFriendly"`
 }
 
 func (Recipe) TableName() string {

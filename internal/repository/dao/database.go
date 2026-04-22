@@ -54,6 +54,7 @@ func InitDatabase(cfg config.DatabaseConfig) error {
 	// 数据库模型迁移
 	err = db.AutoMigrate(
 		&models.User{},
+		&models.Recipe{},
 		&models.DailyRecipePlan{},
 		&models.UserWeightLog{},
 		&models.DailyIntakeRecord{},

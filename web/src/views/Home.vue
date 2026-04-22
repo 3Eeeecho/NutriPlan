@@ -115,15 +115,16 @@
                   </div>
 
                   <div class="meal-food-row">
-                    <div class="meal-thumb">
-                      <img v-if="meal.thumb" :src="meal.thumb" alt="餐次缩略图" />
-                      <span v-else>{{ meal.icon }}</span>
-                    </div>
-                    <div class="meal-food-content">
-                      <div class="food-hints compact">
-                        <span v-for="hint in meal.hints" :key="hint" class="food-chip">{{ hint }}</span>
+                    <div
+                      v-for="(item, index) in meal.previewItems"
+                      :key="`${meal.type}-preview-${index}-${item.name}`"
+                      class="food-preview-item"
+                    >
+                      <div class="food-image-card">
+                        <img v-if="item.image" :src="item.image" :alt="item.name || '餐次缩略图'" />
+                        <span v-else class="food-image-fallback">{{ meal.icon }}</span>
                       </div>
-                      <p v-if="!meal.records.length" class="meal-empty-copy">还没想好{{ meal.name }}吃什么？点击查看推荐</p>
+                      <p class="food-preview-name">{{ item.name }}</p>
                     </div>
                   </div>
                 </div>
@@ -134,9 +135,9 @@
                   </div>
                   <p class="meal-summary">{{ meal.display_energy }} kcal</p>
                   <p class="meal-summary-sub">蛋白质 {{ meal.display_protein }}g</p>
-                  <div class="quick-add-icon" aria-label="记录餐次">
-                    <n-icon><AddCircleOutline /></n-icon>
-                  </div>
+                  <button class="record-action-btn" aria-label="立即记录餐次">
+                    立即记录
+                  </button>
                 </div>
               </div>
 
@@ -1100,7 +1101,6 @@ const 时间线餐次 = computed(() => {
   const now = new Date()
   const nowMinutes = now.getHours() * 60 + now.getMinutes()
   const selectedIsToday = 是否今天.value
-
   const mapped = 餐次顺序.value.map((type, index, orderedTypes) => {
     const 基础配置 = 配置映射[type]
     if (!基础配置) return null
@@ -1165,6 +1165,32 @@ const 时间线餐次 = computed(() => {
       phase = 'past'
     }
 
+    const previewItems = records.length > 0
+      ? records.slice(0, 3).map((item, recordIndex) => {
+          const foodName = item.foodName || item.food_name || `${config.name}食物${recordIndex + 1}`
+          return {
+            name: foodName,
+            image: item.imageUrl || item.image_url || 食物图片映射[foodName] || defaultFoodThumb
+          }
+        })
+      : planItems.length > 0
+        ? planItems.slice(0, 3).map((item, planIndex) => ({
+            name: item.name || `${config.name}推荐${planIndex + 1}`,
+            image: item.imageUrl || item.image_url || 食物图片映射[item.name] || defaultFoodThumb
+          }))
+        : (示例食谱映射[config.type] || []).slice(0, 3).map((item) => ({
+            name: item.name,
+            image: item.image || 食物图片映射[item.name] || defaultFoodThumb
+          }))
+
+    const normalizedPreviewItems = previewItems.length
+      ? previewItems
+      : [{
+          name: `${config.name}待添加`,
+          image: '',
+          emoji: config.icon
+        }]
+
     return {
       ...config,
       time: 餐次时间映射.value[config.type] || config.time,
@@ -1178,6 +1204,7 @@ const 时间线餐次 = computed(() => {
       display_energy: Math.max(0, displayEnergy),
       display_protein: Math.max(0, displayProtein),
       thumb: records[0]?.imageUrl || records[0]?.image_url || planItems[0]?.imageUrl || planItems[0]?.image_url || 食物图片映射[hints[0]] || '',
+      previewItems: normalizedPreviewItems,
       variant: consumed > 0 ? (config.type === 'lunch' ? 'logged' : 'filled') : 'empty',
       phase
     }
@@ -2385,64 +2412,68 @@ onMounted(async () => {
 }
 
 .meal-food-row {
-  display: flex;
-  gap: 10px;
-  align-items: center;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
+  gap: 16px;
+  min-width: 0;
+  width: 100%;
 }
 
-.meal-thumb {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  border: 1px solid #dce9df;
-  background: #ffffff;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+.food-preview-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  min-width: 0;
+}
+
+.food-image-card {
+  width: 100%;
+  max-width: 148px;
+  height: 96px;
+  border-radius: 20px;
+  border: 1px solid rgba(214, 230, 218, 0.88);
+  background: #f8fbf8;
+  box-shadow: 0 10px 18px rgba(58, 90, 72, 0.1);
   overflow: hidden;
   display: grid;
   place-items: center;
-  flex-shrink: 0;
+  padding: 6px;
+  box-sizing: border-box;
   color: #446f5f;
 }
 
-.meal-thumb img {
+.food-image-card.secondary {
+  opacity: 0.96;
+}
+
+.food-image-card img {
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  object-position: center;
+  background: #f8fbf8;
+}
+
+.food-image-fallback {
+  font-size: 1.7rem;
+}
+
+.food-preview-name {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.meal-food-content {
-  min-width: 0;
-  flex: 1;
-}
-
-.food-hints {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.food-hints.compact {
   margin: 0;
-}
-
-.food-chip {
-  padding: 4px 10px;
-  border-radius: 16px;
-  background: #e8f5e9;
-  display: inline-flex;
-  align-items: center;
+  color: #204c3f;
   font-size: 0.92rem;
-  font-weight: 600;
-  color: #2e7d32;
-  border: 1px solid rgba(46, 125, 50, 0.18);
-  white-space: nowrap;
-}
-
-.meal-empty-copy {
-  margin: 6px 0 0;
-  color: #8aa093;
-  font-size: 0.92rem;
-  font-weight: 600;
+  font-weight: 700;
+  line-height: 1.35;
+  text-align: center;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .meal-side {
@@ -2452,7 +2483,43 @@ onMounted(async () => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 5px;
+  gap: 8px;
+}
+
+.record-action-btn {
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #8dc75d 0%, #72aa46 100%);
+  color: #ffffff;
+  font-size: 0.84rem;
+  font-weight: 700;
+  line-height: 1;
+  padding: 9px 16px;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(114, 170, 70, 0.24);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+}
+
+.record-action-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 22px rgba(114, 170, 70, 0.32);
+  filter: brightness(1.03);
+}
+
+.record-action-btn:active {
+  transform: translateY(0);
+}
+
+.meal-primary-name,
+.meal-secondary-line,
+.food-text-container,
+.quick-add-icon {
+  display: none;
+}
+
+.meal-side {
+  min-width: 0;
+  flex-shrink: 0;
 }
 
 .mini-ring {
@@ -2487,23 +2554,6 @@ onMounted(async () => {
   color: #5f8474;
   font-size: 0.86rem;
   font-weight: 700;
-}
-
-.quick-add-icon {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  border: 1px solid #d3e5c6;
-  background: #f2faee;
-  color: #6ea744;
-  display: grid;
-  place-items: center;
-  transition: all 0.2s ease;
-}
-
-.meal-side:hover .quick-add-icon {
-  transform: translateY(-1px);
-  background: #eaf7df;
 }
 
 .footer-tip {
