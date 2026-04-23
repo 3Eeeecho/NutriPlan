@@ -371,6 +371,28 @@ def classify_allowed_meal_types(recipe) -> list[str]:
     return [meal_type for meal_type in VALID_MEAL_TYPES if meal_type in allowed]
 
 
+def classify_allowed_meal_types_v2(recipe) -> list[str]:
+    primary = normalize_meal_type(recipe.get("meal_type"))
+    breakfast = VALID_MEAL_TYPES[0]
+    lunch = VALID_MEAL_TYPES[1]
+    dinner = VALID_MEAL_TYPES[2]
+    snack = VALID_MEAL_TYPES[3]
+
+    if primary == breakfast:
+        return [breakfast]
+
+    if primary == snack:
+        return [snack]
+
+    if primary in {lunch, dinner}:
+        return [lunch, dinner]
+
+    return [lunch]
+
+
+classify_allowed_meal_types = classify_allowed_meal_types_v2
+
+
 def load_recipes(args, columns: set[str]):
     select_fields = [
         "id",

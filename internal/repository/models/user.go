@@ -11,7 +11,7 @@ type User struct {
 	// 账号信息
 	Username string `gorm:"type:varchar(50);not null;uniqueIndex;comment:用户名" json:"username"`
 	Password string `gorm:"type:varchar(255);not null;comment:加密后的密码" json:"-"` // json:"-" 确保密码不返回给前端
-	Email    string `gorm:"type:varchar(100);uniqueIndex;comment:邮箱地址" json:"email"`
+	Email    *string `gorm:"type:varchar(100);uniqueIndex;comment:邮箱地址" json:"email"`
 
 	// 基础身体数据
 	Gender            string     `gorm:"type:varchar(10);comment:性别 (Male/Female)" json:"gender"`

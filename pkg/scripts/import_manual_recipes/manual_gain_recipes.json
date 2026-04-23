@@ -1,0 +1,3617 @@
+[
+    {
+        "name":  "茶叶蛋",
+        "image_url":  "https://loremflickr.com/640/480/food,tea,egg?lock=1",
+        "meal_type":  "早餐",
+        "allowed_meal_types":  [
+                                   "早餐",
+                                   "加餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  35,
+        "portion_weight_g":  60,
+        "energy":  144,
+        "protein":  12.5,
+        "carbohydrate":  2.8,
+        "fat":  9.6,
+        "ingredients":  [
+                            "鸡蛋 100g",
+                            "生抽 8g",
+                            "老抽 2g",
+                            "八角 1g",
+                            "茶叶 1g"
+                        ],
+        "cooking_steps":  [
+                              "鸡蛋冷水下锅煮熟后过凉水。",
+                              "敲裂蛋壳，加入生抽、老抽、八角和茶叶继续小火煮。",
+                              "关火浸泡20分钟后即可食用。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+                                "蛋类过敏"
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  true,
+        "is_sugar_control_friendly":  true,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "水煮蛋",
+        "image_url":  "https://loremflickr.com/640/480/food,boiled,egg?lock=2",
+        "meal_type":  "早餐",
+        "allowed_meal_types":  [
+                                   "早餐",
+                                   "加餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  12,
+        "portion_weight_g":  50,
+        "energy":  143,
+        "protein":  12.7,
+        "carbohydrate":  1.1,
+        "fat":  9.4,
+        "ingredients":  [
+                            "鸡蛋 100g",
+                            "清水 300g"
+                        ],
+        "cooking_steps":  [
+                              "鸡蛋洗净后冷水下锅。",
+                              "水开后继续煮6到7分钟。",
+                              "捞出过凉水后剥壳即可。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "增肌",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+                                "蛋类过敏"
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  true,
+        "is_sugar_control_friendly":  true,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "无糖豆浆",
+        "image_url":  "https://loremflickr.com/640/480/food,soy,milk?lock=3",
+        "meal_type":  "早餐",
+        "allowed_meal_types":  [
+                                   "早餐",
+                                   "加餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  25,
+        "portion_weight_g":  250,
+        "energy":  31,
+        "protein":  3.0,
+        "carbohydrate":  1.8,
+        "fat":  1.6,
+        "ingredients":  [
+                            "黄豆 15g",
+                            "清水 120g"
+                        ],
+        "cooking_steps":  [
+                              "黄豆提前浸泡6小时以上。",
+                              "将黄豆和清水放入豆浆机打匀煮熟。",
+                              "过滤后不加糖直接饮用。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+                                "大豆过敏"
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  true,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "原味无糖酸奶",
+        "image_url":  "https://loremflickr.com/640/480/food,plain,yogurt?lock=4",
+        "meal_type":  "早餐",
+        "allowed_meal_types":  [
+                                   "早餐",
+                                   "加餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  5,
+        "portion_weight_g":  180,
+        "energy":  72,
+        "protein":  3.8,
+        "carbohydrate":  6.2,
+        "fat":  3.4,
+        "ingredients":  [
+                            "无糖酸奶 100g"
+                        ],
+        "cooking_steps":  [
+                              "取冷藏无糖酸奶。",
+                              "装入碗中即可直接食用。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+                                "乳糖不耐受",
+                                "奶制品过敏"
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  true,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "燕麦粥",
+        "image_url":  "https://loremflickr.com/640/480/food,oatmeal,porridge?lock=5",
+        "meal_type":  "早餐",
+        "allowed_meal_types":  [
+                                   "早餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  10,
+        "portion_weight_g":  250,
+        "energy":  68,
+        "protein":  2.4,
+        "carbohydrate":  12.1,
+        "fat":  1.3,
+        "ingredients":  [
+                            "即食燕麦 20g",
+                            "清水 120g"
+                        ],
+        "cooking_steps":  [
+                              "锅中加入清水煮开。",
+                              "倒入燕麦片，小火煮3到5分钟。",
+                              "煮至略微浓稠即可。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  true,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "小米南瓜粥",
+        "image_url":  "https://loremflickr.com/640/480/food,millet,pumpkin,porridge?lock=6",
+        "meal_type":  "早餐",
+        "allowed_meal_types":  [
+                                   "早餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  30,
+        "portion_weight_g":  300,
+        "energy":  46,
+        "protein":  1.4,
+        "carbohydrate":  9.7,
+        "fat":  0.4,
+        "ingredients":  [
+                            "小米 15g",
+                            "南瓜 35g",
+                            "清水 160g"
+                        ],
+        "cooking_steps":  [
+                              "小米淘洗干净，南瓜切小块。",
+                              "将小米和南瓜放入锅中，加水煮开。",
+                              "转小火煮至软烂即可。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  false,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "全麦馒头",
+        "image_url":  "https://loremflickr.com/640/480/food,whole,wheat,mantou?lock=7",
+        "meal_type":  "早餐",
+        "allowed_meal_types":  [
+                                   "早餐"
+                               ],
+        "difficulty":  "中等",
+        "cooking_time":  70,
+        "portion_weight_g":  70,
+        "energy":  223,
+        "protein":  8.1,
+        "carbohydrate":  45.2,
+        "fat":  1.2,
+        "ingredients":  [
+                            "全麦面粉 80g",
+                            "酵母 1g",
+                            "清水 40g"
+                        ],
+        "cooking_steps":  [
+                              "全麦面粉加酵母和清水揉成面团。",
+                              "发酵至两倍大后排气整形成馒头。",
+                              "上锅蒸15分钟，焖3分钟后取出。"
+                          ],
+        "target_users":  [
+                             "大众"
+                         ],
+        "forbidden_users":  [
+                                "麸质过敏"
+                            ],
+        "is_weight_loss_friendly":  false,
+        "is_muscle_gain_friendly":  true,
+        "is_sugar_control_friendly":  false,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "水煮玉米",
+        "image_url":  "https://loremflickr.com/640/480/food,boiled,corn?lock=8",
+        "meal_type":  "早餐",
+        "allowed_meal_types":  [
+                                   "早餐",
+                                   "加餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  20,
+        "portion_weight_g":  150,
+        "energy":  112,
+        "protein":  3.2,
+        "carbohydrate":  22.8,
+        "fat":  1.2,
+        "ingredients":  [
+                            "甜玉米 100g",
+                            "清水 400g"
+                        ],
+        "cooking_steps":  [
+                              "玉米洗净切段。",
+                              "冷水下锅煮开后转中火煮15分钟。",
+                              "捞出沥干即可食用。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  false,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "家常鸡蛋饼",
+        "image_url":  "https://loremflickr.com/640/480/food,egg,pancake?lock=9",
+        "meal_type":  "早餐",
+        "allowed_meal_types":  [
+                                   "早餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  15,
+        "portion_weight_g":  90,
+        "energy":  176,
+        "protein":  7.3,
+        "carbohydrate":  22.6,
+        "fat":  6.1,
+        "ingredients":  [
+                            "鸡蛋 50g",
+                            "面粉 30g",
+                            "小葱 10g",
+                            "清水 40g",
+                            "食用油 3g"
+                        ],
+        "cooking_steps":  [
+                              "鸡蛋、面粉和清水调成面糊，加入小葱。",
+                              "平底锅刷薄油，倒入面糊摊平。",
+                              "两面煎熟后切块即可。"
+                          ],
+        "target_users":  [
+                             "大众"
+                         ],
+        "forbidden_users":  [
+                                "蛋类过敏",
+                                "麸质过敏"
+                            ],
+        "is_weight_loss_friendly":  false,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  false,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "番茄鸡蛋面",
+        "image_url":  "https://loremflickr.com/640/480/food,tomato,egg,noodles?lock=10",
+        "meal_type":  "早餐",
+        "allowed_meal_types":  [
+                                   "早餐",
+                                   "午餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  18,
+        "portion_weight_g":  280,
+        "energy":  109,
+        "protein":  4.8,
+        "carbohydrate":  15.2,
+        "fat":  3.1,
+        "ingredients":  [
+                            "鲜面条 60g",
+                            "番茄 40g",
+                            "鸡蛋 30g",
+                            "小葱 5g",
+                            "食用油 2g"
+                        ],
+        "cooking_steps":  [
+                              "番茄切块，鸡蛋打散备用。",
+                              "锅中少油炒鸡蛋盛出，再炒番茄出汁。",
+                              "加入清水煮开，下面条和鸡蛋煮熟即可。"
+                          ],
+        "target_users":  [
+                             "大众"
+                         ],
+        "forbidden_users":  [
+                                "蛋类过敏",
+                                "麸质过敏"
+                            ],
+        "is_weight_loss_friendly":  false,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  false,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "番茄鸡胸肉",
+        "image_url":  "https://loremflickr.com/640/480/food,tomato,chicken?lock=11",
+        "meal_type":  "午餐",
+        "allowed_meal_types":  [
+                                   "午餐",
+                                   "晚餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  18,
+        "portion_weight_g":  180,
+        "energy":  118,
+        "protein":  18.6,
+        "carbohydrate":  4.2,
+        "fat":  3.1,
+        "ingredients":  [
+                            "鸡胸肉 70g",
+                            "番茄 60g",
+                            "小葱 5g",
+                            "生抽 4g",
+                            "食用油 2g"
+                        ],
+        "cooking_steps":  [
+                              "鸡胸肉切片，用少量生抽抓匀。",
+                              "番茄切块下锅炒出汁水。",
+                              "加入鸡胸肉翻炒至熟，收汁后出锅。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "增肌",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  true,
+        "is_sugar_control_friendly":  true,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "青椒鸡丁",
+        "image_url":  "https://loremflickr.com/640/480/food,green,pepper,chicken,stirfry?lock=12",
+        "meal_type":  "午餐",
+        "allowed_meal_types":  [
+                                   "午餐",
+                                   "晚餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  15,
+        "portion_weight_g":  180,
+        "energy":  126,
+        "protein":  17.4,
+        "carbohydrate":  4.8,
+        "fat":  4.0,
+        "ingredients":  [
+                            "鸡胸肉 70g",
+                            "青椒 40g",
+                            "蒜末 5g",
+                            "生抽 5g",
+                            "食用油 3g"
+                        ],
+        "cooking_steps":  [
+                              "鸡胸肉切丁，加少许生抽腌制。",
+                              "青椒切块，蒜末爆香后下鸡丁翻炒。",
+                              "加入青椒炒至断生即可。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "增肌",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  true,
+        "is_sugar_control_friendly":  true,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "香菇滑鸡",
+        "image_url":  "https://loremflickr.com/640/480/food,mushroom,chicken,stirfry?lock=13",
+        "meal_type":  "午餐",
+        "allowed_meal_types":  [
+                                   "午餐",
+                                   "晚餐"
+                               ],
+        "difficulty":  "中等",
+        "cooking_time":  25,
+        "portion_weight_g":  180,
+        "energy":  132,
+        "protein":  15.8,
+        "carbohydrate":  5.6,
+        "fat":  5.0,
+        "ingredients":  [
+                            "鸡腿肉 65g",
+                            "香菇 25g",
+                            "青椒 15g",
+                            "生抽 5g",
+                            "食用油 3g"
+                        ],
+        "cooking_steps":  [
+                              "鸡腿肉去皮切块，香菇切片。",
+                              "热锅少油先炒鸡肉至变色。",
+                              "加入香菇和青椒炒熟后调味即可。"
+                          ],
+        "target_users":  [
+                             "大众"
+                         ],
+        "forbidden_users":  [
+
+                            ],
+        "is_weight_loss_friendly":  false,
+        "is_muscle_gain_friendly":  true,
+        "is_sugar_control_friendly":  true,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "芹菜牛肉丝",
+        "image_url":  "https://loremflickr.com/640/480/food,celery,beef,stirfry?lock=14",
+        "meal_type":  "午餐",
+        "allowed_meal_types":  [
+                                   "午餐",
+                                   "晚餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  18,
+        "portion_weight_g":  180,
+        "energy":  121,
+        "protein":  16.2,
+        "carbohydrate":  4.3,
+        "fat":  4.1,
+        "ingredients":  [
+                            "瘦牛肉 65g",
+                            "芹菜 35g",
+                            "生抽 4g",
+                            "姜丝 3g",
+                            "食用油 3g"
+                        ],
+        "cooking_steps":  [
+                              "牛肉切丝，用生抽稍微抓匀。",
+                              "芹菜切段，热锅下姜丝和牛肉快速翻炒。",
+                              "加入芹菜炒熟后即可出锅。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "增肌",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+                                "牛肉忌口"
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  true,
+        "is_sugar_control_friendly":  true,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "西兰花虾仁",
+        "image_url":  "https://loremflickr.com/640/480/food,broccoli,shrimp?lock=15",
+        "meal_type":  "午餐",
+        "allowed_meal_types":  [
+                                   "午餐",
+                                   "晚餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  15,
+        "portion_weight_g":  180,
+        "energy":  88,
+        "protein":  11.8,
+        "carbohydrate":  4.9,
+        "fat":  2.2,
+        "ingredients":  [
+                            "虾仁 60g",
+                            "西兰花 40g",
+                            "蒜末 4g",
+                            "料酒 3g",
+                            "食用油 2g"
+                        ],
+        "cooking_steps":  [
+                              "虾仁去腥，西兰花焯水备用。",
+                              "蒜末爆香后下虾仁翻炒至变色。",
+                              "加入西兰花继续翻炒，调味后出锅。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "增肌",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+                                "海鲜过敏"
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  true,
+        "is_sugar_control_friendly":  true,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "糙米饭",
+        "image_url":  "https://loremflickr.com/640/480/food,brown,rice?lock=16",
+        "meal_type":  "午餐",
+        "allowed_meal_types":  [
+                                   "午餐",
+                                   "晚餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  40,
+        "portion_weight_g":  130,
+        "energy":  116,
+        "protein":  2.6,
+        "carbohydrate":  25.1,
+        "fat":  0.9,
+        "ingredients":  [
+                            "糙米 35g",
+                            "清水 70g"
+                        ],
+        "cooking_steps":  [
+                              "糙米淘洗后浸泡30分钟。",
+                              "放入电饭煲，加适量清水煮熟。",
+                              "焖10分钟后翻松即可。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  true,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "杂粮饭",
+        "image_url":  "https://loremflickr.com/640/480/food,multigrain,rice?lock=17",
+        "meal_type":  "午餐",
+        "allowed_meal_types":  [
+                                   "午餐",
+                                   "晚餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  45,
+        "portion_weight_g":  130,
+        "energy":  118,
+        "protein":  3.4,
+        "carbohydrate":  24.3,
+        "fat":  1.0,
+        "ingredients":  [
+                            "大米 20g",
+                            "燕麦米 8g",
+                            "红豆 5g",
+                            "糙米 10g",
+                            "清水 75g"
+                        ],
+        "cooking_steps":  [
+                              "将大米、燕麦米、红豆和糙米淘洗干净。",
+                              "提前浸泡30分钟后放入电饭煲。",
+                              "加水煮熟焖透即可。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  true,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "荞麦面",
+        "image_url":  "https://loremflickr.com/640/480/food,buckwheat,noodles?lock=18",
+        "meal_type":  "午餐",
+        "allowed_meal_types":  [
+                                   "午餐",
+                                   "晚餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  12,
+        "portion_weight_g":  200,
+        "energy":  99,
+        "protein":  5.1,
+        "carbohydrate":  19.8,
+        "fat":  0.8,
+        "ingredients":  [
+                            "荞麦面 100g",
+                            "清水 300g"
+                        ],
+        "cooking_steps":  [
+                              "锅中烧开水。",
+                              "放入荞麦面煮至熟透。",
+                              "捞出后可直接搭配主菜食用。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+                                "麸质过敏"
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  true,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "蒸紫薯",
+        "image_url":  "https://loremflickr.com/640/480/food,steamed,purple,sweet,potato?lock=19",
+        "meal_type":  "午餐",
+        "allowed_meal_types":  [
+                                   "午餐",
+                                   "晚餐",
+                                   "加餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  25,
+        "portion_weight_g":  120,
+        "energy":  86,
+        "protein":  1.6,
+        "carbohydrate":  20.1,
+        "fat":  0.2,
+        "ingredients":  [
+                            "紫薯 100g"
+                        ],
+        "cooking_steps":  [
+                              "紫薯洗净切段。",
+                              "冷水上锅蒸20分钟左右。",
+                              "蒸熟后即可食用。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  false,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "清炒油麦菜",
+        "image_url":  "https://loremflickr.com/640/480/food,lettuce,stirfry?lock=20",
+        "meal_type":  "午餐",
+        "allowed_meal_types":  [
+                                   "午餐",
+                                   "晚餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  8,
+        "portion_weight_g":  180,
+        "energy":  29,
+        "protein":  1.4,
+        "carbohydrate":  3.7,
+        "fat":  1.0,
+        "ingredients":  [
+                            "油麦菜 100g",
+                            "蒜末 5g",
+                            "食用油 2g",
+                            "盐 1g"
+                        ],
+        "cooking_steps":  [
+                              "油麦菜洗净切段。",
+                              "热锅少油下蒜末炒香。",
+                              "放入油麦菜快速翻炒断生即可。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  true,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "清蒸鲈鱼",
+        "image_url":  "https://loremflickr.com/640/480/food,steamed,sea,bass?lock=21",
+        "meal_type":  "晚餐",
+        "allowed_meal_types":  [
+                                   "午餐",
+                                   "晚餐"
+                               ],
+        "difficulty":  "中等",
+        "cooking_time":  22,
+        "portion_weight_g":  180,
+        "energy":  106,
+        "protein":  17.9,
+        "carbohydrate":  1.2,
+        "fat":  3.4,
+        "ingredients":  [
+                            "鲈鱼 90g",
+                            "姜丝 5g",
+                            "葱丝 5g",
+                            "蒸鱼豉油 5g"
+                        ],
+        "cooking_steps":  [
+                              "鲈鱼清理干净，铺上姜丝。",
+                              "水开后上锅蒸8到10分钟。",
+                              "出锅后淋蒸鱼豉油，撒葱丝即可。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "增肌",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+                                "海鲜过敏"
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  true,
+        "is_sugar_control_friendly":  true,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "冬瓜虾仁",
+        "image_url":  "https://loremflickr.com/640/480/food,winter,melon,shrimp?lock=22",
+        "meal_type":  "晚餐",
+        "allowed_meal_types":  [
+                                   "午餐",
+                                   "晚餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  15,
+        "portion_weight_g":  200,
+        "energy":  54,
+        "protein":  8.1,
+        "carbohydrate":  2.7,
+        "fat":  1.3,
+        "ingredients":  [
+                            "冬瓜 55g",
+                            "虾仁 45g",
+                            "姜丝 3g",
+                            "食用油 2g",
+                            "盐 1g"
+                        ],
+        "cooking_steps":  [
+                              "冬瓜切片，虾仁洗净备用。",
+                              "锅中少油下姜丝和虾仁炒香。",
+                              "加入冬瓜翻炒并焖熟即可。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+                                "海鲜过敏"
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  true,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "木耳炒鸡蛋",
+        "image_url":  "https://loremflickr.com/640/480/food,black,fungus,egg,stirfry?lock=23",
+        "meal_type":  "晚餐",
+        "allowed_meal_types":  [
+                                   "午餐",
+                                   "晚餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  12,
+        "portion_weight_g":  160,
+        "energy":  103,
+        "protein":  7.2,
+        "carbohydrate":  3.6,
+        "fat":  6.5,
+        "ingredients":  [
+                            "鸡蛋 60g",
+                            "泡发木耳 30g",
+                            "小葱 5g",
+                            "食用油 3g"
+                        ],
+        "cooking_steps":  [
+                              "鸡蛋打散，木耳洗净切小块。",
+                              "先将鸡蛋炒至凝固盛出。",
+                              "锅中下木耳翻炒，再回锅鸡蛋拌匀即可。"
+                          ],
+        "target_users":  [
+                             "大众"
+                         ],
+        "forbidden_users":  [
+                                "蛋类过敏"
+                            ],
+        "is_weight_loss_friendly":  false,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  true,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "家常豆腐",
+        "image_url":  "https://loremflickr.com/640/480/food,tofu,home,style?lock=24",
+        "meal_type":  "晚餐",
+        "allowed_meal_types":  [
+                                   "午餐",
+                                   "晚餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  18,
+        "portion_weight_g":  180,
+        "energy":  86,
+        "protein":  7.1,
+        "carbohydrate":  3.4,
+        "fat":  4.7,
+        "ingredients":  [
+                            "北豆腐 80g",
+                            "青椒 10g",
+                            "木耳 10g",
+                            "生抽 5g",
+                            "食用油 3g"
+                        ],
+        "cooking_steps":  [
+                              "豆腐切块，青椒和木耳处理好。",
+                              "豆腐下锅煎至两面微黄。",
+                              "加入配菜和调味料翻炒均匀即可。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+                                "大豆过敏"
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  true,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "蒜蓉西兰花",
+        "image_url":  "https://loremflickr.com/640/480/food,garlic,broccoli?lock=25",
+        "meal_type":  "晚餐",
+        "allowed_meal_types":  [
+                                   "午餐",
+                                   "晚餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  10,
+        "portion_weight_g":  180,
+        "energy":  36,
+        "protein":  2.7,
+        "carbohydrate":  5.1,
+        "fat":  1.1,
+        "ingredients":  [
+                            "西兰花 100g",
+                            "蒜末 6g",
+                            "食用油 2g",
+                            "盐 1g"
+                        ],
+        "cooking_steps":  [
+                              "西兰花切小朵焯水。",
+                              "锅中少油下蒜末炒香。",
+                              "放入西兰花快速翻炒后调味即可。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  true,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "米饭",
+        "image_url":  "https://loremflickr.com/640/480/food,white,rice?lock=26",
+        "meal_type":  "晚餐",
+        "allowed_meal_types":  [
+                                   "午餐",
+                                   "晚餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  30,
+        "portion_weight_g":  130,
+        "energy":  116,
+        "protein":  2.6,
+        "carbohydrate":  25.9,
+        "fat":  0.3,
+        "ingredients":  [
+                            "大米 35g",
+                            "清水 65g"
+                        ],
+        "cooking_steps":  [
+                              "大米淘洗干净。",
+                              "放入电饭煲按正常比例加水煮熟。",
+                              "焖几分钟后翻松即可。"
+                          ],
+        "target_users":  [
+                             "大众"
+                         ],
+        "forbidden_users":  [
+
+                            ],
+        "is_weight_loss_friendly":  false,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  false,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "小米饭",
+        "image_url":  "https://loremflickr.com/640/480/food,millet,rice?lock=27",
+        "meal_type":  "晚餐",
+        "allowed_meal_types":  [
+                                   "午餐",
+                                   "晚餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  30,
+        "portion_weight_g":  130,
+        "energy":  107,
+        "protein":  2.9,
+        "carbohydrate":  22.4,
+        "fat":  0.8,
+        "ingredients":  [
+                            "小米 35g",
+                            "清水 75g"
+                        ],
+        "cooking_steps":  [
+                              "小米淘洗后放入锅中或电饭煲。",
+                              "加入清水煮熟。",
+                              "焖透后盛出即可。"
+                          ],
+        "target_users":  [
+                             "大众"
+                         ],
+        "forbidden_users":  [
+
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  false,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "玉米饭",
+        "image_url":  "https://loremflickr.com/640/480/food,corn,rice?lock=28",
+        "meal_type":  "晚餐",
+        "allowed_meal_types":  [
+                                   "午餐",
+                                   "晚餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  35,
+        "portion_weight_g":  130,
+        "energy":  115,
+        "protein":  2.8,
+        "carbohydrate":  24.1,
+        "fat":  0.8,
+        "ingredients":  [
+                            "大米 25g",
+                            "玉米粒 15g",
+                            "清水 70g"
+                        ],
+        "cooking_steps":  [
+                              "大米淘洗，玉米粒洗净。",
+                              "将大米和玉米粒一起放入电饭煲。",
+                              "加水煮熟后焖透即可。"
+                          ],
+        "target_users":  [
+                             "大众"
+                         ],
+        "forbidden_users":  [
+
+                            ],
+        "is_weight_loss_friendly":  false,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  false,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "蒸南瓜",
+        "image_url":  "https://loremflickr.com/640/480/food,steamed,pumpkin?lock=29",
+        "meal_type":  "晚餐",
+        "allowed_meal_types":  [
+                                   "午餐",
+                                   "晚餐",
+                                   "加餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  18,
+        "portion_weight_g":  180,
+        "energy":  38,
+        "protein":  1.0,
+        "carbohydrate":  8.5,
+        "fat":  0.1,
+        "ingredients":  [
+                            "南瓜 100g"
+                        ],
+        "cooking_steps":  [
+                              "南瓜去皮切块。",
+                              "冷水上锅蒸12到15分钟。",
+                              "蒸至软糯后即可食用。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  false,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "蒸红薯",
+        "image_url":  "https://loremflickr.com/640/480/food,steamed,sweet,potato?lock=30",
+        "meal_type":  "晚餐",
+        "allowed_meal_types":  [
+                                   "午餐",
+                                   "晚餐",
+                                   "加餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  25,
+        "portion_weight_g":  120,
+        "energy":  86,
+        "protein":  1.3,
+        "carbohydrate":  20.1,
+        "fat":  0.2,
+        "ingredients":  [
+                            "红薯 100g"
+                        ],
+        "cooking_steps":  [
+                              "红薯洗净切段。",
+                              "放入蒸锅蒸20分钟左右。",
+                              "蒸熟后取出即可。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  false,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "苹果",
+        "image_url":  "https://loremflickr.com/640/480/food,apple?lock=31",
+        "meal_type":  "加餐",
+        "allowed_meal_types":  [
+                                   "加餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  2,
+        "portion_weight_g":  180,
+        "energy":  53,
+        "protein":  0.3,
+        "carbohydrate":  13.7,
+        "fat":  0.2,
+        "ingredients":  [
+                            "苹果 100g"
+                        ],
+        "cooking_steps":  [
+                              "苹果洗净。",
+                              "可直接食用或切块装盘。"
+                          ],
+        "target_users":  [
+                             "大众"
+                         ],
+        "forbidden_users":  [
+
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  false,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "梨",
+        "image_url":  "https://loremflickr.com/640/480/food,pear?lock=32",
+        "meal_type":  "加餐",
+        "allowed_meal_types":  [
+                                   "加餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  2,
+        "portion_weight_g":  180,
+        "energy":  51,
+        "protein":  0.3,
+        "carbohydrate":  13.3,
+        "fat":  0.1,
+        "ingredients":  [
+                            "梨 100g"
+                        ],
+        "cooking_steps":  [
+                              "梨洗净。",
+                              "去皮切块后即可食用。"
+                          ],
+        "target_users":  [
+                             "大众"
+                         ],
+        "forbidden_users":  [
+
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  false,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "橙子",
+        "image_url":  "https://loremflickr.com/640/480/food,orange,fruit?lock=33",
+        "meal_type":  "加餐",
+        "allowed_meal_types":  [
+                                   "加餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  2,
+        "portion_weight_g":  180,
+        "energy":  47,
+        "protein":  0.8,
+        "carbohydrate":  11.1,
+        "fat":  0.2,
+        "ingredients":  [
+                            "橙子 100g"
+                        ],
+        "cooking_steps":  [
+                              "橙子洗净。",
+                              "去皮分瓣后即可食用。"
+                          ],
+        "target_users":  [
+                             "大众"
+                         ],
+        "forbidden_users":  [
+
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  false,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "圣女果",
+        "image_url":  "https://loremflickr.com/640/480/food,cherry,tomatoes?lock=34",
+        "meal_type":  "加餐",
+        "allowed_meal_types":  [
+                                   "加餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  2,
+        "portion_weight_g":  200,
+        "energy":  25,
+        "protein":  1.0,
+        "carbohydrate":  5.8,
+        "fat":  0.2,
+        "ingredients":  [
+                            "圣女果 100g"
+                        ],
+        "cooking_steps":  [
+                              "圣女果洗净。",
+                              "沥干水分后直接食用。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  true,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "黄瓜条",
+        "image_url":  "https://loremflickr.com/640/480/food,cucumber,sticks?lock=35",
+        "meal_type":  "加餐",
+        "allowed_meal_types":  [
+                                   "加餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  3,
+        "portion_weight_g":  200,
+        "energy":  16,
+        "protein":  0.8,
+        "carbohydrate":  2.9,
+        "fat":  0.2,
+        "ingredients":  [
+                            "黄瓜 100g"
+                        ],
+        "cooking_steps":  [
+                              "黄瓜洗净。",
+                              "切成长条即可直接食用。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  true,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "原味坚果",
+        "image_url":  "https://loremflickr.com/640/480/food,mixed,nuts?lock=36",
+        "meal_type":  "加餐",
+        "allowed_meal_types":  [
+                                   "加餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  2,
+        "portion_weight_g":  20,
+        "energy":  607,
+        "protein":  20.0,
+        "carbohydrate":  18.0,
+        "fat":  54.0,
+        "ingredients":  [
+                            "混合坚果 100g"
+                        ],
+        "cooking_steps":  [
+                              "准备无盐无糖混合坚果。",
+                              "按需分装后即可食用。"
+                          ],
+        "target_users":  [
+                             "大众"
+                         ],
+        "forbidden_users":  [
+                                "坚果过敏"
+                            ],
+        "is_weight_loss_friendly":  false,
+        "is_muscle_gain_friendly":  true,
+        "is_sugar_control_friendly":  false,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "低糖酸奶杯",
+        "image_url":  "https://loremflickr.com/640/480/food,yogurt,cup?lock=37",
+        "meal_type":  "加餐",
+        "allowed_meal_types":  [
+                                   "加餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  3,
+        "portion_weight_g":  150,
+        "energy":  78,
+        "protein":  4.1,
+        "carbohydrate":  7.2,
+        "fat":  3.6,
+        "ingredients":  [
+                            "低糖酸奶 100g"
+                        ],
+        "cooking_steps":  [
+                              "将低糖酸奶从冷藏取出。",
+                              "装杯后即可直接食用。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+                                "乳糖不耐受",
+                                "奶制品过敏"
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  true,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "水煮毛豆",
+        "image_url":  "https://loremflickr.com/640/480/food,boiled,edamame?lock=38",
+        "meal_type":  "加餐",
+        "allowed_meal_types":  [
+                                   "加餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  15,
+        "portion_weight_g":  80,
+        "energy":  131,
+        "protein":  13.1,
+        "carbohydrate":  10.5,
+        "fat":  5.0,
+        "ingredients":  [
+                            "毛豆 100g",
+                            "盐 1g",
+                            "八角 1g"
+                        ],
+        "cooking_steps":  [
+                              "毛豆洗净后剪掉两端。",
+                              "锅中加水和八角，放入毛豆煮熟。",
+                              "捞出后稍微放凉即可食用。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "增肌",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+                                "大豆过敏"
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  true,
+        "is_sugar_control_friendly":  true,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "即食鸡胸肉",
+        "image_url":  "https://loremflickr.com/640/480/food,chicken,breast?lock=39",
+        "meal_type":  "加餐",
+        "allowed_meal_types":  [
+                                   "加餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  5,
+        "portion_weight_g":  80,
+        "energy":  133,
+        "protein":  24.0,
+        "carbohydrate":  2.0,
+        "fat":  3.0,
+        "ingredients":  [
+                            "即食鸡胸肉 100g"
+                        ],
+        "cooking_steps":  [
+                              "打开包装。",
+                              "切片或直接食用即可。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "增肌"
+                         ],
+        "forbidden_users":  [
+
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  true,
+        "is_sugar_control_friendly":  true,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "低糖奶酪棒",
+        "image_url":  "https://loremflickr.com/640/480/food,cheese,stick?lock=40",
+        "meal_type":  "加餐",
+        "allowed_meal_types":  [
+                                   "加餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  2,
+        "portion_weight_g":  25,
+        "energy":  182,
+        "protein":  11.0,
+        "carbohydrate":  6.0,
+        "fat":  12.0,
+        "ingredients":  [
+                            "低糖奶酪棒 100g"
+                        ],
+        "cooking_steps":  [
+                              "从冷藏取出奶酪棒。",
+                              "拆开包装即可食用。"
+                          ],
+        "target_users":  [
+                             "大众"
+                         ],
+        "forbidden_users":  [
+                                "乳糖不耐受",
+                                "奶制品过敏"
+                            ],
+        "is_weight_loss_friendly":  false,
+        "is_muscle_gain_friendly":  true,
+        "is_sugar_control_friendly":  false,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "白煮鹌鹑蛋",
+        "image_url":  "https://loremflickr.com/640/480/food,boiled,quail,eggs?lock=41",
+        "meal_type":  "早餐",
+        "allowed_meal_types":  [
+                                   "早餐",
+                                   "加餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  10,
+        "portion_weight_g":  60,
+        "energy":  158,
+        "protein":  13.0,
+        "carbohydrate":  1.4,
+        "fat":  11.0,
+        "ingredients":  [
+                            "鹌鹑蛋 100g",
+                            "清水 300g"
+                        ],
+        "cooking_steps":  [
+                              "鹌鹑蛋洗净后冷水下锅。",
+                              "水开后煮4到5分钟。",
+                              "捞出过凉水后剥壳即可。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "增肌",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+                                "蛋类过敏"
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  true,
+        "is_sugar_control_friendly":  true,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "玉米面发糕",
+        "image_url":  "https://loremflickr.com/640/480/food,cornmeal,steamed,cake?lock=42",
+        "meal_type":  "早餐",
+        "allowed_meal_types":  [
+                                   "早餐"
+                               ],
+        "difficulty":  "中等",
+        "cooking_time":  50,
+        "portion_weight_g":  80,
+        "energy":  180,
+        "protein":  4.8,
+        "carbohydrate":  37.0,
+        "fat":  1.5,
+        "ingredients":  [
+                            "玉米面 50g",
+                            "面粉 20g",
+                            "酵母 1g",
+                            "清水 45g"
+                        ],
+        "cooking_steps":  [
+                              "玉米面、面粉和酵母混合，加清水调成面糊。",
+                              "发酵至明显膨胀后倒入模具。",
+                              "上锅蒸20分钟，焖3分钟后取出。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+                                "麸质过敏"
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  false,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "荞麦馒头",
+        "image_url":  "https://loremflickr.com/640/480/food,buckwheat,mantou?lock=43",
+        "meal_type":  "早餐",
+        "allowed_meal_types":  [
+                                   "早餐"
+                               ],
+        "difficulty":  "中等",
+        "cooking_time":  70,
+        "portion_weight_g":  70,
+        "energy":  215,
+        "protein":  7.4,
+        "carbohydrate":  43.5,
+        "fat":  1.1,
+        "ingredients":  [
+                            "荞麦粉 30g",
+                            "面粉 50g",
+                            "酵母 1g",
+                            "清水 40g"
+                        ],
+        "cooking_steps":  [
+                              "荞麦粉和面粉混合，加酵母和清水揉成面团。",
+                              "发酵后整形成馒头，二次醒发。",
+                              "上锅蒸15分钟后焖3分钟即可。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+                                "麸质过敏"
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  false,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "紫薯燕麦粥",
+        "image_url":  "https://loremflickr.com/640/480/food,purple,sweet,potato,oatmeal,porridge?lock=44",
+        "meal_type":  "早餐",
+        "allowed_meal_types":  [
+                                   "早餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  20,
+        "portion_weight_g":  280,
+        "energy":  52,
+        "protein":  1.7,
+        "carbohydrate":  11.2,
+        "fat":  0.6,
+        "ingredients":  [
+                            "紫薯 30g",
+                            "燕麦片 10g",
+                            "清水 160g"
+                        ],
+        "cooking_steps":  [
+                              "紫薯去皮切小块。",
+                              "锅中加水煮开后放入紫薯和燕麦。",
+                              "小火煮至软糯略浓稠即可。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  false,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "山药小米粥",
+        "image_url":  "https://loremflickr.com/640/480/food,yam,millet,porridge?lock=45",
+        "meal_type":  "早餐",
+        "allowed_meal_types":  [
+                                   "早餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  25,
+        "portion_weight_g":  280,
+        "energy":  43,
+        "protein":  1.3,
+        "carbohydrate":  9.1,
+        "fat":  0.3,
+        "ingredients":  [
+                            "山药 30g",
+                            "小米 12g",
+                            "清水 170g"
+                        ],
+        "cooking_steps":  [
+                              "山药去皮切小块，小米淘洗干净。",
+                              "锅中加水煮开后放入山药和小米。",
+                              "煮至山药软烂、小米开花即可。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  false,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "香菇鸡丝粥",
+        "image_url":  "https://loremflickr.com/640/480/food,mushroom,chicken,porridge?lock=46",
+        "meal_type":  "早餐",
+        "allowed_meal_types":  [
+                                   "早餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  35,
+        "portion_weight_g":  280,
+        "energy":  62,
+        "protein":  4.4,
+        "carbohydrate":  8.1,
+        "fat":  1.8,
+        "ingredients":  [
+                            "大米 15g",
+                            "鸡胸肉 20g",
+                            "香菇 10g",
+                            "清水 180g"
+                        ],
+        "cooking_steps":  [
+                              "大米淘洗后先煮成粥底。",
+                              "鸡胸肉煮熟撕丝，香菇切丁。",
+                              "粥快好时加入鸡丝和香菇再煮几分钟即可。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  true,
+        "is_sugar_control_friendly":  false,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "全麦花卷",
+        "image_url":  "https://loremflickr.com/640/480/food,whole,wheat,roll?lock=47",
+        "meal_type":  "早餐",
+        "allowed_meal_types":  [
+                                   "早餐"
+                               ],
+        "difficulty":  "中等",
+        "cooking_time":  75,
+        "portion_weight_g":  70,
+        "energy":  228,
+        "protein":  7.6,
+        "carbohydrate":  46.0,
+        "fat":  1.8,
+        "ingredients":  [
+                            "全麦面粉 75g",
+                            "酵母 1g",
+                            "清水 40g",
+                            "小葱 5g"
+                        ],
+        "cooking_steps":  [
+                              "全麦面粉加酵母和清水揉匀发酵。",
+                              "排气后擀开，撒少量葱花卷起切段。",
+                              "二次醒发后上锅蒸熟即可。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+                                "麸质过敏"
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  false,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "原味豆腐脑",
+        "image_url":  "https://loremflickr.com/640/480/food,tofu,pudding?lock=48",
+        "meal_type":  "早餐",
+        "allowed_meal_types":  [
+                                   "早餐",
+                                   "加餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  10,
+        "portion_weight_g":  250,
+        "energy":  32,
+        "protein":  3.1,
+        "carbohydrate":  1.8,
+        "fat":  1.4,
+        "ingredients":  [
+                            "内酯豆腐 100g",
+                            "生抽 3g",
+                            "紫菜 1g",
+                            "虾皮 1g"
+                        ],
+        "cooking_steps":  [
+                              "内酯豆腐盛入碗中。",
+                              "加热后淋少量生抽。",
+                              "撒紫菜和虾皮即可食用。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+                                "大豆过敏"
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  true,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "鸡蛋羹",
+        "image_url":  "https://loremflickr.com/640/480/food,steamed,egg,custard?lock=49",
+        "meal_type":  "早餐",
+        "allowed_meal_types":  [
+                                   "早餐",
+                                   "晚餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  15,
+        "portion_weight_g":  140,
+        "energy":  78,
+        "protein":  6.5,
+        "carbohydrate":  2.2,
+        "fat":  4.7,
+        "ingredients":  [
+                            "鸡蛋 60g",
+                            "温水 90g",
+                            "生抽 2g"
+                        ],
+        "cooking_steps":  [
+                              "鸡蛋打散，加入温水搅匀后过筛。",
+                              "盖上保鲜膜或盘子上锅蒸。",
+                              "蒸熟后淋少量生抽即可。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+                                "蛋类过敏"
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  true,
+        "is_sugar_control_friendly":  true,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "蒸山药",
+        "image_url":  "https://loremflickr.com/640/480/food,steamed,yam?lock=50",
+        "meal_type":  "早餐",
+        "allowed_meal_types":  [
+                                   "早餐",
+                                   "加餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  18,
+        "portion_weight_g":  120,
+        "energy":  57,
+        "protein":  1.5,
+        "carbohydrate":  12.4,
+        "fat":  0.2,
+        "ingredients":  [
+                            "山药 100g"
+                        ],
+        "cooking_steps":  [
+                              "山药去皮切段。",
+                              "放入蒸锅蒸12到15分钟。",
+                              "蒸熟后直接食用即可。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  false,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "全麦吐司",
+        "image_url":  "https://loremflickr.com/640/480/food,whole,wheat,toast?lock=51",
+        "meal_type":  "早餐",
+        "allowed_meal_types":  [
+                                   "早餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  5,
+        "portion_weight_g":  60,
+        "energy":  254,
+        "protein":  9.5,
+        "carbohydrate":  44.0,
+        "fat":  4.2,
+        "ingredients":  [
+                            "全麦吐司 100g"
+                        ],
+        "cooking_steps":  [
+                              "全麦吐司从包装中取出。",
+                              "可直接食用或稍微加热后食用。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+                                "麸质过敏"
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  false,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "纯牛奶",
+        "image_url":  "https://loremflickr.com/640/480/food,milk,glass?lock=52",
+        "meal_type":  "早餐",
+        "allowed_meal_types":  [
+                                   "早餐",
+                                   "加餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  2,
+        "portion_weight_g":  250,
+        "energy":  62,
+        "protein":  3.2,
+        "carbohydrate":  4.8,
+        "fat":  3.3,
+        "ingredients":  [
+                            "纯牛奶 100g"
+                        ],
+        "cooking_steps":  [
+                              "纯牛奶从冷藏或常温状态取出。",
+                              "可直接饮用或稍微加热后饮用。"
+                          ],
+        "target_users":  [
+                             "大众"
+                         ],
+        "forbidden_users":  [
+                                "乳糖不耐受",
+                                "奶制品过敏"
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  true,
+        "is_sugar_control_friendly":  true,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "素菜包子",
+        "image_url":  "https://loremflickr.com/640/480/food,vegetable,bao?lock=53",
+        "meal_type":  "早餐",
+        "allowed_meal_types":  [
+                                   "早餐"
+                               ],
+        "difficulty":  "中等",
+        "cooking_time":  70,
+        "portion_weight_g":  90,
+        "energy":  165,
+        "protein":  5.6,
+        "carbohydrate":  29.0,
+        "fat":  2.8,
+        "ingredients":  [
+                            "面粉 60g",
+                            "白菜 40g",
+                            "粉丝 10g",
+                            "酵母 1g"
+                        ],
+        "cooking_steps":  [
+                              "面粉加酵母和水揉面发酵。",
+                              "白菜和粉丝切碎调成素馅。",
+                              "包好后醒发，上锅蒸熟即可。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+                                "麸质过敏"
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  false,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "黑米粥",
+        "image_url":  "https://loremflickr.com/640/480/food,black,rice,porridge?lock=54",
+        "meal_type":  "早餐",
+        "allowed_meal_types":  [
+                                   "早餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  35,
+        "portion_weight_g":  280,
+        "energy":  46,
+        "protein":  1.4,
+        "carbohydrate":  9.8,
+        "fat":  0.5,
+        "ingredients":  [
+                            "黑米 15g",
+                            "清水 180g"
+                        ],
+        "cooking_steps":  [
+                              "黑米提前浸泡30分钟。",
+                              "锅中加水煮开后放入黑米。",
+                              "小火煮至米粒软烂即可。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  false,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "黄瓜鸡蛋卷",
+        "image_url":  "https://loremflickr.com/640/480/food,cucumber,egg,roll?lock=55",
+        "meal_type":  "早餐",
+        "allowed_meal_types":  [
+                                   "早餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  12,
+        "portion_weight_g":  140,
+        "energy":  92,
+        "protein":  7.2,
+        "carbohydrate":  3.4,
+        "fat":  5.6,
+        "ingredients":  [
+                            "鸡蛋 70g",
+                            "黄瓜 20g",
+                            "胡萝卜 10g",
+                            "食用油 2g"
+                        ],
+        "cooking_steps":  [
+                              "鸡蛋打散，黄瓜和胡萝卜切细丝。",
+                              "平底锅摊成蛋皮后放入配菜。",
+                              "卷起定型后切段即可。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+                                "蛋类过敏"
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  true,
+        "is_sugar_control_friendly":  true,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "西红柿牛肉",
+        "image_url":  "https://loremflickr.com/640/480/food,tomato,beef?lock=56",
+        "meal_type":  "午餐",
+        "allowed_meal_types":  [
+                                   "午餐",
+                                   "晚餐"
+                               ],
+        "difficulty":  "中等",
+        "cooking_time":  30,
+        "portion_weight_g":  180,
+        "energy":  116,
+        "protein":  15.8,
+        "carbohydrate":  3.9,
+        "fat":  4.4,
+        "ingredients":  [
+                            "瘦牛肉 70g",
+                            "西红柿 60g",
+                            "洋葱 10g",
+                            "食用油 3g"
+                        ],
+        "cooking_steps":  [
+                              "牛肉切片，西红柿切块。",
+                              "先炒牛肉至变色盛出。",
+                              "炒西红柿出汁后回锅牛肉翻炒收汁。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "增肌",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+                                "牛肉忌口"
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  true,
+        "is_sugar_control_friendly":  true,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "黄瓜木耳鸡片",
+        "image_url":  "https://loremflickr.com/640/480/food,cucumber,black,fungus,chicken?lock=57",
+        "meal_type":  "午餐",
+        "allowed_meal_types":  [
+                                   "午餐",
+                                   "晚餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  18,
+        "portion_weight_g":  180,
+        "energy":  88,
+        "protein":  12.6,
+        "carbohydrate":  3.7,
+        "fat":  2.5,
+        "ingredients":  [
+                            "鸡胸肉 65g",
+                            "黄瓜 35g",
+                            "木耳 15g",
+                            "食用油 2g"
+                        ],
+        "cooking_steps":  [
+                              "鸡胸肉切片，黄瓜切片，木耳泡发。",
+                              "先炒鸡片至发白。",
+                              "加入黄瓜和木耳快速翻炒均匀即可。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  true,
+        "is_sugar_control_friendly":  true,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "荷兰豆炒鸡胸肉",
+        "image_url":  "https://loremflickr.com/640/480/food,snow,pea,chicken,stirfry?lock=58",
+        "meal_type":  "午餐",
+        "allowed_meal_types":  [
+                                   "午餐",
+                                   "晚餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  15,
+        "portion_weight_g":  180,
+        "energy":  104,
+        "protein":  14.9,
+        "carbohydrate":  5.2,
+        "fat":  2.7,
+        "ingredients":  [
+                            "鸡胸肉 65g",
+                            "荷兰豆 35g",
+                            "蒜末 5g",
+                            "食用油 2g"
+                        ],
+        "cooking_steps":  [
+                              "鸡胸肉切片，荷兰豆去筋洗净。",
+                              "锅中少油先炒鸡胸肉。",
+                              "加入荷兰豆和蒜末翻炒断生即可。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "增肌",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  true,
+        "is_sugar_control_friendly":  true,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "青笋肉丝",
+        "image_url":  "https://loremflickr.com/640/480/food,pork,stirfry?lock=59",
+        "meal_type":  "午餐",
+        "allowed_meal_types":  [
+                                   "午餐",
+                                   "晚餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  16,
+        "portion_weight_g":  180,
+        "energy":  112,
+        "protein":  13.2,
+        "carbohydrate":  4.6,
+        "fat":  4.1,
+        "ingredients":  [
+                            "瘦猪肉 60g",
+                            "青笋 40g",
+                            "红椒 10g",
+                            "食用油 3g"
+                        ],
+        "cooking_steps":  [
+                              "瘦肉切丝，青笋切丝。",
+                              "锅中先炒肉丝至变色。",
+                              "加入青笋和红椒翻炒熟即可。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+                                "猪肉忌口"
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  true,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "香干芹菜肉丝",
+        "image_url":  "https://loremflickr.com/640/480/food,celery,tofu,pork,stirfry?lock=60",
+        "meal_type":  "午餐",
+        "allowed_meal_types":  [
+                                   "午餐",
+                                   "晚餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  18,
+        "portion_weight_g":  180,
+        "energy":  126,
+        "protein":  11.8,
+        "carbohydrate":  5.4,
+        "fat":  6.0,
+        "ingredients":  [
+                            "香干 30g",
+                            "瘦猪肉 45g",
+                            "芹菜 35g",
+                            "食用油 3g"
+                        ],
+        "cooking_steps":  [
+                              "香干切丝，瘦肉和芹菜切丝。",
+                              "先炒肉丝，再下香干和芹菜。",
+                              "快速翻炒均匀即可。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+                                "猪肉忌口",
+                                "大豆过敏"
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  true,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "西葫芦炒鸡蛋",
+        "image_url":  "https://loremflickr.com/640/480/food,zucchini,egg,stirfry?lock=61",
+        "meal_type":  "午餐",
+        "allowed_meal_types":  [
+                                   "午餐",
+                                   "晚餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  12,
+        "portion_weight_g":  180,
+        "energy":  72,
+        "protein":  4.8,
+        "carbohydrate":  3.9,
+        "fat":  4.1,
+        "ingredients":  [
+                            "西葫芦 70g",
+                            "鸡蛋 50g",
+                            "食用油 2g"
+                        ],
+        "cooking_steps":  [
+                              "西葫芦切片，鸡蛋打散。",
+                              "先炒鸡蛋盛出。",
+                              "再炒西葫芦，回锅鸡蛋炒匀即可。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+                                "蛋类过敏"
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  true,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "清炒菜花",
+        "image_url":  "https://loremflickr.com/640/480/food,cauliflower,stirfry?lock=62",
+        "meal_type":  "午餐",
+        "allowed_meal_types":  [
+                                   "午餐",
+                                   "晚餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  10,
+        "portion_weight_g":  180,
+        "energy":  32,
+        "protein":  2.2,
+        "carbohydrate":  5.6,
+        "fat":  0.8,
+        "ingredients":  [
+                            "菜花 100g",
+                            "蒜末 5g",
+                            "食用油 2g"
+                        ],
+        "cooking_steps":  [
+                              "菜花掰小朵洗净。",
+                              "热锅少油下蒜末炒香。",
+                              "放入菜花翻炒至熟即可。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  true,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "蒜蓉生菜",
+        "image_url":  "https://loremflickr.com/640/480/food,garlic,lettuce?lock=63",
+        "meal_type":  "午餐",
+        "allowed_meal_types":  [
+                                   "午餐",
+                                   "晚餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  8,
+        "portion_weight_g":  180,
+        "energy":  24,
+        "protein":  1.1,
+        "carbohydrate":  3.2,
+        "fat":  0.9,
+        "ingredients":  [
+                            "生菜 100g",
+                            "蒜末 6g",
+                            "食用油 2g"
+                        ],
+        "cooking_steps":  [
+                              "生菜洗净沥水。",
+                              "热锅少油下蒜末炒香。",
+                              "放入生菜快速翻炒断生即可。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  true,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "凉拌黄瓜木耳",
+        "image_url":  "https://loremflickr.com/640/480/food,cucumber,black,fungus,salad?lock=64",
+        "meal_type":  "午餐",
+        "allowed_meal_types":  [
+                                   "午餐",
+                                   "晚餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  10,
+        "portion_weight_g":  180,
+        "energy":  28,
+        "protein":  1.3,
+        "carbohydrate":  4.7,
+        "fat":  0.6,
+        "ingredients":  [
+                            "黄瓜 60g",
+                            "木耳 20g",
+                            "蒜末 4g",
+                            "生抽 3g"
+                        ],
+        "cooking_steps":  [
+                              "黄瓜拍块，木耳焯熟。",
+                              "将黄瓜和木耳放入碗中。",
+                              "加入蒜末和调味料拌匀即可。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  true,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "焯拌菠菜",
+        "image_url":  "https://loremflickr.com/640/480/food,spinach,salad?lock=65",
+        "meal_type":  "午餐",
+        "allowed_meal_types":  [
+                                   "午餐",
+                                   "晚餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  8,
+        "portion_weight_g":  180,
+        "energy":  26,
+        "protein":  2.4,
+        "carbohydrate":  2.9,
+        "fat":  0.6,
+        "ingredients":  [
+                            "菠菜 100g",
+                            "蒜末 4g",
+                            "生抽 3g"
+                        ],
+        "cooking_steps":  [
+                              "菠菜洗净后焯水。",
+                              "捞出挤干水分切段。",
+                              "加入蒜末和调味料拌匀即可。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  true,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "黑米饭",
+        "image_url":  "https://loremflickr.com/640/480/food,black,rice?lock=66",
+        "meal_type":  "午餐",
+        "allowed_meal_types":  [
+                                   "午餐",
+                                   "晚餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  40,
+        "portion_weight_g":  130,
+        "energy":  115,
+        "protein":  2.8,
+        "carbohydrate":  24.5,
+        "fat":  0.8,
+        "ingredients":  [
+                            "黑米 15g",
+                            "大米 20g",
+                            "清水 70g"
+                        ],
+        "cooking_steps":  [
+                              "黑米和大米淘洗干净。",
+                              "提前浸泡后放入电饭煲加水煮熟。",
+                              "焖透后盛出即可。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  true,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "燕麦饭",
+        "image_url":  "https://loremflickr.com/640/480/food,oat,rice?lock=67",
+        "meal_type":  "午餐",
+        "allowed_meal_types":  [
+                                   "午餐",
+                                   "晚餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  35,
+        "portion_weight_g":  130,
+        "energy":  112,
+        "protein":  3.1,
+        "carbohydrate":  23.2,
+        "fat":  1.0,
+        "ingredients":  [
+                            "大米 25g",
+                            "燕麦米 10g",
+                            "清水 70g"
+                        ],
+        "cooking_steps":  [
+                              "大米和燕麦米淘洗干净。",
+                              "放入电饭煲加适量清水煮熟。",
+                              "焖几分钟后即可食用。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  true,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "红豆饭",
+        "image_url":  "https://loremflickr.com/640/480/food,red,bean,rice?lock=68",
+        "meal_type":  "午餐",
+        "allowed_meal_types":  [
+                                   "午餐",
+                                   "晚餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  45,
+        "portion_weight_g":  130,
+        "energy":  118,
+        "protein":  3.7,
+        "carbohydrate":  24.6,
+        "fat":  0.7,
+        "ingredients":  [
+                            "大米 20g",
+                            "红豆 10g",
+                            "糙米 8g",
+                            "清水 75g"
+                        ],
+        "cooking_steps":  [
+                              "红豆提前浸泡，和大米一起淘洗。",
+                              "放入电饭煲加水煮熟。",
+                              "焖透后翻松即可。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  false,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "南瓜饭",
+        "image_url":  "https://loremflickr.com/640/480/food,pumpkin,rice?lock=69",
+        "meal_type":  "午餐",
+        "allowed_meal_types":  [
+                                   "午餐",
+                                   "晚餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  35,
+        "portion_weight_g":  130,
+        "energy":  102,
+        "protein":  2.0,
+        "carbohydrate":  22.1,
+        "fat":  0.4,
+        "ingredients":  [
+                            "大米 25g",
+                            "南瓜 20g",
+                            "清水 70g"
+                        ],
+        "cooking_steps":  [
+                              "南瓜切小丁，大米淘洗。",
+                              "将南瓜和大米一同放入电饭煲。",
+                              "煮熟焖透即可。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  false,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "玉米面窝头",
+        "image_url":  "https://loremflickr.com/640/480/food,cornmeal,steamed,bun?lock=70",
+        "meal_type":  "午餐",
+        "allowed_meal_types":  [
+                                   "午餐",
+                                   "晚餐"
+                               ],
+        "difficulty":  "中等",
+        "cooking_time":  45,
+        "portion_weight_g":  70,
+        "energy":  194,
+        "protein":  5.5,
+        "carbohydrate":  41.2,
+        "fat":  1.0,
+        "ingredients":  [
+                            "玉米面 60g",
+                            "黄豆面 10g",
+                            "清水 45g"
+                        ],
+        "cooking_steps":  [
+                              "玉米面和黄豆面加水拌匀。",
+                              "揉成团后分成小份捏成窝头形状。",
+                              "上锅蒸20分钟即可。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  false,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "清炖白萝卜牛肉",
+        "image_url":  "https://loremflickr.com/640/480/food,radish,beef,stew?lock=71",
+        "meal_type":  "晚餐",
+        "allowed_meal_types":  [
+                                   "午餐",
+                                   "晚餐"
+                               ],
+        "difficulty":  "中等",
+        "cooking_time":  45,
+        "portion_weight_g":  200,
+        "energy":  92,
+        "protein":  12.5,
+        "carbohydrate":  3.8,
+        "fat":  3.1,
+        "ingredients":  [
+                            "瘦牛肉 60g",
+                            "白萝卜 60g",
+                            "姜片 5g",
+                            "清水 120g"
+                        ],
+        "cooking_steps":  [
+                              "牛肉焯水后切块，白萝卜切块。",
+                              "锅中加水和姜片炖牛肉。",
+                              "加入白萝卜继续炖熟即可。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+                                "牛肉忌口"
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  true,
+        "is_sugar_control_friendly":  true,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "香菇蒸鸡腿",
+        "image_url":  "https://loremflickr.com/640/480/food,mushroom,steamed,chicken,leg?lock=72",
+        "meal_type":  "晚餐",
+        "allowed_meal_types":  [
+                                   "午餐",
+                                   "晚餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  25,
+        "portion_weight_g":  180,
+        "energy":  128,
+        "protein":  15.1,
+        "carbohydrate":  2.7,
+        "fat":  5.9,
+        "ingredients":  [
+                            "去皮鸡腿肉 70g",
+                            "香菇 20g",
+                            "生抽 4g",
+                            "姜丝 3g"
+                        ],
+        "cooking_steps":  [
+                              "鸡腿肉切块加生抽腌制。",
+                              "香菇切片铺在盘底。",
+                              "将鸡肉放上面蒸熟即可。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  true,
+        "is_sugar_control_friendly":  true,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "虾仁蒸豆腐",
+        "image_url":  "https://loremflickr.com/640/480/food,shrimp,steamed,tofu?lock=73",
+        "meal_type":  "晚餐",
+        "allowed_meal_types":  [
+                                   "午餐",
+                                   "晚餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  15,
+        "portion_weight_g":  180,
+        "energy":  74,
+        "protein":  8.9,
+        "carbohydrate":  2.6,
+        "fat":  3.0,
+        "ingredients":  [
+                            "嫩豆腐 80g",
+                            "虾仁 30g",
+                            "生抽 3g",
+                            "葱花 3g"
+                        ],
+        "cooking_steps":  [
+                              "豆腐切块摆盘，虾仁放在上面。",
+                              "水开后上锅蒸8分钟左右。",
+                              "出锅后淋少量生抽撒葱花即可。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+                                "大豆过敏",
+                                "海鲜过敏"
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  true,
+        "is_sugar_control_friendly":  true,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "西红柿炖菜花",
+        "image_url":  "https://loremflickr.com/640/480/food,tomato,cauliflower,stew?lock=74",
+        "meal_type":  "晚餐",
+        "allowed_meal_types":  [
+                                   "午餐",
+                                   "晚餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  15,
+        "portion_weight_g":  180,
+        "energy":  38,
+        "protein":  2.3,
+        "carbohydrate":  6.5,
+        "fat":  0.9,
+        "ingredients":  [
+                            "菜花 80g",
+                            "西红柿 50g",
+                            "蒜末 4g",
+                            "食用油 2g"
+                        ],
+        "cooking_steps":  [
+                              "菜花焯水，西红柿切块。",
+                              "炒西红柿出汁后加入菜花。",
+                              "稍微焖煮入味即可。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  true,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "黄瓜炒鸡蛋",
+        "image_url":  "https://loremflickr.com/640/480/food,cucumber,egg,stirfry?lock=75",
+        "meal_type":  "晚餐",
+        "allowed_meal_types":  [
+                                   "午餐",
+                                   "晚餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  10,
+        "portion_weight_g":  180,
+        "energy":  76,
+        "protein":  5.2,
+        "carbohydrate":  2.8,
+        "fat":  4.8,
+        "ingredients":  [
+                            "黄瓜 60g",
+                            "鸡蛋 50g",
+                            "食用油 2g"
+                        ],
+        "cooking_steps":  [
+                              "黄瓜切片，鸡蛋打散。",
+                              "先炒鸡蛋再加入黄瓜。",
+                              "翻炒均匀至黄瓜断生即可。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+                                "蛋类过敏"
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  true,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "清炒菠菜",
+        "image_url":  "https://loremflickr.com/640/480/food,spinach,stirfry?lock=76",
+        "meal_type":  "晚餐",
+        "allowed_meal_types":  [
+                                   "午餐",
+                                   "晚餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  8,
+        "portion_weight_g":  180,
+        "energy":  24,
+        "protein":  2.6,
+        "carbohydrate":  2.7,
+        "fat":  0.8,
+        "ingredients":  [
+                            "菠菜 100g",
+                            "蒜末 4g",
+                            "食用油 2g"
+                        ],
+        "cooking_steps":  [
+                              "菠菜洗净切段。",
+                              "锅中少油下蒜末。",
+                              "放入菠菜炒至断生即可。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  true,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "清炒菜心",
+        "image_url":  "https://loremflickr.com/640/480/food,choy,sum,stirfry?lock=77",
+        "meal_type":  "晚餐",
+        "allowed_meal_types":  [
+                                   "午餐",
+                                   "晚餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  8,
+        "portion_weight_g":  180,
+        "energy":  26,
+        "protein":  1.8,
+        "carbohydrate":  3.9,
+        "fat":  0.9,
+        "ingredients":  [
+                            "菜心 100g",
+                            "蒜末 4g",
+                            "食用油 2g"
+                        ],
+        "cooking_steps":  [
+                              "菜心洗净切段。",
+                              "蒜末入锅炒香。",
+                              "下菜心大火快炒至熟即可。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  true,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "蒜蓉娃娃菜",
+        "image_url":  "https://loremflickr.com/640/480/food,garlic,napa,cabbage?lock=78",
+        "meal_type":  "晚餐",
+        "allowed_meal_types":  [
+                                   "午餐",
+                                   "晚餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  10,
+        "portion_weight_g":  180,
+        "energy":  23,
+        "protein":  1.3,
+        "carbohydrate":  3.6,
+        "fat":  0.7,
+        "ingredients":  [
+                            "娃娃菜 100g",
+                            "蒜末 5g",
+                            "食用油 2g"
+                        ],
+        "cooking_steps":  [
+                              "娃娃菜洗净切长段。",
+                              "锅中少油下蒜末炒香。",
+                              "放入娃娃菜翻炒熟即可。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  true,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "红豆糙米饭",
+        "image_url":  "https://loremflickr.com/640/480/food,red,bean,brown,rice?lock=79",
+        "meal_type":  "晚餐",
+        "allowed_meal_types":  [
+                                   "午餐",
+                                   "晚餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  45,
+        "portion_weight_g":  130,
+        "energy":  117,
+        "protein":  3.5,
+        "carbohydrate":  24.8,
+        "fat":  0.7,
+        "ingredients":  [
+                            "糙米 20g",
+                            "红豆 10g",
+                            "大米 10g",
+                            "清水 75g"
+                        ],
+        "cooking_steps":  [
+                              "红豆提前浸泡，和米类一起淘洗。",
+                              "放入电饭煲按正常模式煮熟。",
+                              "焖透后盛出即可。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  false,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "山药饭",
+        "image_url":  "https://loremflickr.com/640/480/food,yam,rice?lock=80",
+        "meal_type":  "晚餐",
+        "allowed_meal_types":  [
+                                   "午餐",
+                                   "晚餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  35,
+        "portion_weight_g":  130,
+        "energy":  108,
+        "protein":  2.2,
+        "carbohydrate":  23.0,
+        "fat":  0.4,
+        "ingredients":  [
+                            "大米 25g",
+                            "山药 15g",
+                            "清水 70g"
+                        ],
+        "cooking_steps":  [
+                              "山药切小丁，大米淘洗干净。",
+                              "放入电饭煲加水煮熟。",
+                              "焖几分钟后翻松即可。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  false,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "小米南瓜饭",
+        "image_url":  "https://loremflickr.com/640/480/food,millet,pumpkin,rice?lock=81",
+        "meal_type":  "晚餐",
+        "allowed_meal_types":  [
+                                   "午餐",
+                                   "晚餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  35,
+        "portion_weight_g":  130,
+        "energy":  104,
+        "protein":  2.4,
+        "carbohydrate":  22.1,
+        "fat":  0.5,
+        "ingredients":  [
+                            "小米 15g",
+                            "大米 15g",
+                            "南瓜 20g",
+                            "清水 70g"
+                        ],
+        "cooking_steps":  [
+                              "小米和大米淘洗，南瓜切丁。",
+                              "将原料放入电饭煲加水煮熟。",
+                              "焖透后即可盛出。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  false,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "清汤挂面",
+        "image_url":  "https://loremflickr.com/640/480/food,clear,soup,noodles?lock=82",
+        "meal_type":  "晚餐",
+        "allowed_meal_types":  [
+                                   "午餐",
+                                   "晚餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  10,
+        "portion_weight_g":  220,
+        "energy":  86,
+        "protein":  3.1,
+        "carbohydrate":  17.5,
+        "fat":  0.4,
+        "ingredients":  [
+                            "挂面 35g",
+                            "小白菜 20g",
+                            "清水 180g"
+                        ],
+        "cooking_steps":  [
+                              "锅中烧开水下面条。",
+                              "面条快熟时加入小白菜。",
+                              "煮熟后简单调味即可。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+                                "麸质过敏"
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  false,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "冬瓜鸡肉丸汤",
+        "image_url":  "https://loremflickr.com/640/480/food,winter,melon,chicken,meatball,soup?lock=83",
+        "meal_type":  "晚餐",
+        "allowed_meal_types":  [
+                                   "晚餐"
+                               ],
+        "difficulty":  "中等",
+        "cooking_time":  25,
+        "portion_weight_g":  220,
+        "energy":  61,
+        "protein":  8.3,
+        "carbohydrate":  2.9,
+        "fat":  1.9,
+        "ingredients":  [
+                            "鸡胸肉 45g",
+                            "冬瓜 50g",
+                            "蛋清 10g",
+                            "清水 150g"
+                        ],
+        "cooking_steps":  [
+                              "鸡胸肉剁成泥，加蛋清搅拌上劲。",
+                              "锅中加水和冬瓜煮开，下入鸡肉丸。",
+                              "煮至丸子浮起熟透即可。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+                                "蛋类过敏"
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  true,
+        "is_sugar_control_friendly":  true,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "海带豆腐汤",
+        "image_url":  "https://loremflickr.com/640/480/food,seaweed,tofu,soup?lock=84",
+        "meal_type":  "晚餐",
+        "allowed_meal_types":  [
+                                   "晚餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  15,
+        "portion_weight_g":  220,
+        "energy":  32,
+        "protein":  2.8,
+        "carbohydrate":  2.4,
+        "fat":  1.4,
+        "ingredients":  [
+                            "海带 20g",
+                            "豆腐 40g",
+                            "清水 160g"
+                        ],
+        "cooking_steps":  [
+                              "海带泡发切段，豆腐切块。",
+                              "锅中加水煮开后放入海带和豆腐。",
+                              "煮几分钟后调味即可。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+                                "大豆过敏"
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  true,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "香菇青菜面",
+        "image_url":  "https://loremflickr.com/640/480/food,mushroom,vegetable,noodles?lock=85",
+        "meal_type":  "晚餐",
+        "allowed_meal_types":  [
+                                   "午餐",
+                                   "晚餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  15,
+        "portion_weight_g":  260,
+        "energy":  92,
+        "protein":  3.7,
+        "carbohydrate":  16.8,
+        "fat":  1.1,
+        "ingredients":  [
+                            "鲜面条 40g",
+                            "香菇 20g",
+                            "青菜 20g",
+                            "清水 180g"
+                        ],
+        "cooking_steps":  [
+                              "香菇切片，青菜洗净。",
+                              "锅中水开后下面条和香菇。",
+                              "快熟时加入青菜煮熟即可。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+                                "麸质过敏"
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  false,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "香蕉",
+        "image_url":  "https://loremflickr.com/640/480/food,banana?lock=86",
+        "meal_type":  "加餐",
+        "allowed_meal_types":  [
+                                   "加餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  2,
+        "portion_weight_g":  110,
+        "energy":  89,
+        "protein":  1.1,
+        "carbohydrate":  22.8,
+        "fat":  0.3,
+        "ingredients":  [
+                            "香蕉 100g"
+                        ],
+        "cooking_steps":  [
+                              "香蕉剥皮。",
+                              "直接食用即可。"
+                          ],
+        "target_users":  [
+                             "大众"
+                         ],
+        "forbidden_users":  [
+
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  false,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "柚子",
+        "image_url":  "https://loremflickr.com/640/480/food,pomelo?lock=87",
+        "meal_type":  "加餐",
+        "allowed_meal_types":  [
+                                   "加餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  3,
+        "portion_weight_g":  180,
+        "energy":  42,
+        "protein":  0.7,
+        "carbohydrate":  10.2,
+        "fat":  0.1,
+        "ingredients":  [
+                            "柚子 100g"
+                        ],
+        "cooking_steps":  [
+                              "柚子去皮分瓣。",
+                              "装盘后即可食用。"
+                          ],
+        "target_users":  [
+                             "大众"
+                         ],
+        "forbidden_users":  [
+
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  true,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "猕猴桃",
+        "image_url":  "https://loremflickr.com/640/480/food,kiwi?lock=88",
+        "meal_type":  "加餐",
+        "allowed_meal_types":  [
+                                   "加餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  3,
+        "portion_weight_g":  90,
+        "energy":  61,
+        "protein":  1.1,
+        "carbohydrate":  14.5,
+        "fat":  0.5,
+        "ingredients":  [
+                            "猕猴桃 100g"
+                        ],
+        "cooking_steps":  [
+                              "猕猴桃洗净去皮。",
+                              "切片后即可食用。"
+                          ],
+        "target_users":  [
+                             "大众"
+                         ],
+        "forbidden_users":  [
+
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  false,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "桃子",
+        "image_url":  "https://loremflickr.com/640/480/food,peach?lock=89",
+        "meal_type":  "加餐",
+        "allowed_meal_types":  [
+                                   "加餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  3,
+        "portion_weight_g":  150,
+        "energy":  45,
+        "protein":  0.9,
+        "carbohydrate":  10.8,
+        "fat":  0.2,
+        "ingredients":  [
+                            "桃子 100g"
+                        ],
+        "cooking_steps":  [
+                              "桃子洗净。",
+                              "切块或直接食用即可。"
+                          ],
+        "target_users":  [
+                             "大众"
+                         ],
+        "forbidden_users":  [
+
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  false,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "低脂纯牛奶",
+        "image_url":  "https://loremflickr.com/640/480/food,low,fat,milk?lock=90",
+        "meal_type":  "加餐",
+        "allowed_meal_types":  [
+                                   "加餐",
+                                   "早餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  2,
+        "portion_weight_g":  250,
+        "energy":  52,
+        "protein":  3.4,
+        "carbohydrate":  5.0,
+        "fat":  1.8,
+        "ingredients":  [
+                            "低脂纯牛奶 100g"
+                        ],
+        "cooking_steps":  [
+                              "低脂纯牛奶从冷藏或常温状态取出。",
+                              "可直接饮用。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+                                "乳糖不耐受",
+                                "奶制品过敏"
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  true,
+        "is_sugar_control_friendly":  true,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "无糖豆腐脑",
+        "image_url":  "https://loremflickr.com/640/480/food,tofu,pudding?lock=91",
+        "meal_type":  "加餐",
+        "allowed_meal_types":  [
+                                   "加餐",
+                                   "早餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  5,
+        "portion_weight_g":  200,
+        "energy":  30,
+        "protein":  2.8,
+        "carbohydrate":  1.6,
+        "fat":  1.3,
+        "ingredients":  [
+                            "内酯豆腐 100g",
+                            "生抽 2g"
+                        ],
+        "cooking_steps":  [
+                              "内酯豆腐装入碗中。",
+                              "稍微加热后淋少量生抽即可。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+                                "大豆过敏"
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  true,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "无糖豆干",
+        "image_url":  "https://loremflickr.com/640/480/food,dried,tofu?lock=92",
+        "meal_type":  "加餐",
+        "allowed_meal_types":  [
+                                   "加餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  2,
+        "portion_weight_g":  40,
+        "energy":  140,
+        "protein":  18.0,
+        "carbohydrate":  4.0,
+        "fat":  5.0,
+        "ingredients":  [
+                            "无糖豆干 100g"
+                        ],
+        "cooking_steps":  [
+                              "豆干拆开包装。",
+                              "切块后即可食用。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "增肌"
+                         ],
+        "forbidden_users":  [
+                                "大豆过敏"
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  true,
+        "is_sugar_control_friendly":  true,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "卤牛肉",
+        "image_url":  "https://loremflickr.com/640/480/food,braised,beef?lock=93",
+        "meal_type":  "加餐",
+        "allowed_meal_types":  [
+                                   "加餐"
+                               ],
+        "difficulty":  "中等",
+        "cooking_time":  60,
+        "portion_weight_g":  40,
+        "energy":  190,
+        "protein":  26.0,
+        "carbohydrate":  3.0,
+        "fat":  8.0,
+        "ingredients":  [
+                            "瘦牛肉 100g",
+                            "生抽 5g",
+                            "八角 1g",
+                            "姜片 3g"
+                        ],
+        "cooking_steps":  [
+                              "牛肉焯水后放入卤汁中。",
+                              "小火煮熟并浸泡入味。",
+                              "切片后即可食用。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "增肌"
+                         ],
+        "forbidden_users":  [
+                                "牛肉忌口"
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  true,
+        "is_sugar_control_friendly":  true,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "原味鸡胸肉肠",
+        "image_url":  "https://loremflickr.com/640/480/food,chicken,sausage?lock=94",
+        "meal_type":  "加餐",
+        "allowed_meal_types":  [
+                                   "加餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  3,
+        "portion_weight_g":  50,
+        "energy":  125,
+        "protein":  14.0,
+        "carbohydrate":  6.0,
+        "fat":  4.0,
+        "ingredients":  [
+                            "鸡胸肉肠 100g"
+                        ],
+        "cooking_steps":  [
+                              "打开包装。",
+                              "可直接食用或加热后食用。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "增肌"
+                         ],
+        "forbidden_users":  [
+
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  true,
+        "is_sugar_control_friendly":  true,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "橘子",
+        "image_url":  "https://loremflickr.com/640/480/food,tangerine?lock=95",
+        "meal_type":  "加餐",
+        "allowed_meal_types":  [
+                                   "加餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  2,
+        "portion_weight_g":  150,
+        "energy":  44,
+        "protein":  0.8,
+        "carbohydrate":  10.1,
+        "fat":  0.2,
+        "ingredients":  [
+                            "橘子 100g"
+                        ],
+        "cooking_steps":  [
+                              "橘子剥皮。",
+                              "分瓣后即可食用。"
+                          ],
+        "target_users":  [
+                             "大众"
+                         ],
+        "forbidden_users":  [
+
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  false,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "李子",
+        "image_url":  "https://loremflickr.com/640/480/food,plum?lock=96",
+        "meal_type":  "加餐",
+        "allowed_meal_types":  [
+                                   "加餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  2,
+        "portion_weight_g":  150,
+        "energy":  42,
+        "protein":  0.7,
+        "carbohydrate":  10.2,
+        "fat":  0.2,
+        "ingredients":  [
+                            "李子 100g"
+                        ],
+        "cooking_steps":  [
+                              "李子洗净。",
+                              "可直接食用。"
+                          ],
+        "target_users":  [
+                             "大众"
+                         ],
+        "forbidden_users":  [
+
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  false,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "草莓",
+        "image_url":  "https://loremflickr.com/640/480/food,strawberries?lock=97",
+        "meal_type":  "加餐",
+        "allowed_meal_types":  [
+                                   "加餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  3,
+        "portion_weight_g":  180,
+        "energy":  32,
+        "protein":  0.8,
+        "carbohydrate":  7.1,
+        "fat":  0.3,
+        "ingredients":  [
+                            "草莓 100g"
+                        ],
+        "cooking_steps":  [
+                              "草莓洗净去蒂。",
+                              "装盘后即可食用。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  true,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "蓝莓",
+        "image_url":  "https://loremflickr.com/640/480/food,blueberries?lock=98",
+        "meal_type":  "加餐",
+        "allowed_meal_types":  [
+                                   "加餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  2,
+        "portion_weight_g":  80,
+        "energy":  57,
+        "protein":  0.7,
+        "carbohydrate":  14.5,
+        "fat":  0.3,
+        "ingredients":  [
+                            "蓝莓 100g"
+                        ],
+        "cooking_steps":  [
+                              "蓝莓洗净沥干水分。",
+                              "装入小碗后即可食用。"
+                          ],
+        "target_users":  [
+                             "大众"
+                         ],
+        "forbidden_users":  [
+
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  false,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "哈密瓜",
+        "image_url":  "https://loremflickr.com/640/480/food,cantaloupe?lock=99",
+        "meal_type":  "加餐",
+        "allowed_meal_types":  [
+                                   "加餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  3,
+        "portion_weight_g":  180,
+        "energy":  34,
+        "protein":  0.4,
+        "carbohydrate":  8.2,
+        "fat":  0.1,
+        "ingredients":  [
+                            "哈密瓜 100g"
+                        ],
+        "cooking_steps":  [
+                              "哈密瓜去皮去籽。",
+                              "切块后即可食用。"
+                          ],
+        "target_users":  [
+                             "大众"
+                         ],
+        "forbidden_users":  [
+
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  true,
+        "is_general_friendly":  true
+    },
+    {
+        "name":  "火龙果",
+        "image_url":  "https://loremflickr.com/640/480/food,dragon,fruit?lock=100",
+        "meal_type":  "加餐",
+        "allowed_meal_types":  [
+                                   "加餐"
+                               ],
+        "difficulty":  "简单",
+        "cooking_time":  3,
+        "portion_weight_g":  180,
+        "energy":  51,
+        "protein":  1.1,
+        "carbohydrate":  13.3,
+        "fat":  0.2,
+        "ingredients":  [
+                            "火龙果 100g"
+                        ],
+        "cooking_steps":  [
+                              "火龙果去皮。",
+                              "切块后直接食用即可。"
+                          ],
+        "target_users":  [
+                             "减脂",
+                             "大众"
+                         ],
+        "forbidden_users":  [
+
+                            ],
+        "is_weight_loss_friendly":  true,
+        "is_muscle_gain_friendly":  false,
+        "is_sugar_control_friendly":  false,
+        "is_general_friendly":  true
+    }
+]

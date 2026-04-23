@@ -214,6 +214,139 @@ func TestCheckPlanDiversity_RejectsDuplicateLunchDinnerCombos(t *testing.T) {
 	}
 }
 
+func TestGenerateRankedPlans_ReturnsPlansForSmallManualPools(t *testing.T) {
+	svc := &RecipeServiceImpl{rng: rand.New(rand.NewSource(31))}
+
+	breakfast := []models.Recipe{
+		{Model: gorm.Model{ID: 100}, Name: "测试-水煮蛋", MealType: models.MealTypeBreakfast, Energy: 78, Protein: 6.5, Carbohydrate: 0.6, Fat: 5.3, Ingredients: []string{"鸡蛋"}},
+		{Model: gorm.Model{ID: 101}, Name: "测试-无糖豆浆", MealType: models.MealTypeBreakfast, Energy: 31, Protein: 3.0, Carbohydrate: 1.8, Fat: 1.6, Ingredients: []string{"黄豆"}},
+		{Model: gorm.Model{ID: 102}, Name: "测试-蒸玉米", MealType: models.MealTypeBreakfast, Energy: 112, Protein: 3.2, Carbohydrate: 22.8, Fat: 1.2, Ingredients: []string{"玉米"}},
+	}
+
+	lunch := []models.Recipe{
+		{Model: gorm.Model{ID: 110}, Name: "测试-番茄鸡胸肉", MealType: models.MealTypeLunch, Energy: 118, Protein: 18.6, Carbohydrate: 4.2, Fat: 3.1, Ingredients: []string{"鸡胸肉", "番茄"}},
+		{Model: gorm.Model{ID: 111}, Name: "测试-糙米饭", MealType: models.MealTypeLunch, Energy: 116, Protein: 2.6, Carbohydrate: 25.1, Fat: 0.9, Ingredients: []string{"糙米"}},
+		{Model: gorm.Model{ID: 112}, Name: "测试-清炒油麦菜", MealType: models.MealTypeLunch, Energy: 29, Protein: 1.4, Carbohydrate: 3.7, Fat: 1.0, Ingredients: []string{"油麦菜"}},
+	}
+
+	dinner := []models.Recipe{
+		{Model: gorm.Model{ID: 120}, Name: "测试-清蒸鲈鱼", MealType: models.MealTypeDinner, Energy: 106, Protein: 17.9, Carbohydrate: 1.2, Fat: 3.4, Ingredients: []string{"鲈鱼"}},
+		{Model: gorm.Model{ID: 121}, Name: "测试-荞麦面", MealType: models.MealTypeDinner, Energy: 99, Protein: 5.1, Carbohydrate: 19.8, Fat: 0.8, Ingredients: []string{"荞麦面"}},
+		{Model: gorm.Model{ID: 122}, Name: "测试-蒜蓉西兰花", MealType: models.MealTypeDinner, Energy: 36, Protein: 2.7, Carbohydrate: 5.1, Fat: 1.1, Ingredients: []string{"西兰花"}},
+	}
+
+	snack := []models.Recipe{
+		{Model: gorm.Model{ID: 130}, Name: "测试-苹果", MealType: models.MealTypeSnack, Energy: 53, Protein: 0.3, Carbohydrate: 13.7, Fat: 0.2, Ingredients: []string{"苹果"}},
+		{Model: gorm.Model{ID: 131}, Name: "测试-无糖酸奶", MealType: models.MealTypeSnack, Energy: 72, Protein: 3.8, Carbohydrate: 6.2, Fat: 3.4, Ingredients: []string{"酸奶"}},
+	}
+
+	target := NutritionTarget{
+		Energy:       1600,
+		Protein:      110,
+		Carbohydrate: 160,
+		Fat:          45,
+	}
+
+	plans := svc.generateRankedPlans(1, breakfast, lunch, dinner, snack, target, models.GoalWeightLoss)
+	if len(plans) == 0 {
+		t.Fatalf("expected non-empty plans for small manual recipe pools")
+	}
+}
+
+func TestBuildRecommendedPlansWithFallback_UsesRelaxedStageWhenStrictStageIsEmpty(t *testing.T) {
+	svc := &RecipeServiceImpl{rng: rand.New(rand.NewSource(37))}
+
+	breakfast := []models.Recipe{
+		{Model: gorm.Model{ID: 200}, Name: "测试-水煮蛋", MealType: models.MealTypeBreakfast, Energy: 78, Protein: 6.5, Carbohydrate: 0.6, Fat: 5.3, Ingredients: []string{"鸡蛋"}},
+		{Model: gorm.Model{ID: 201}, Name: "测试-无糖豆浆", MealType: models.MealTypeBreakfast, Energy: 31, Protein: 3.0, Carbohydrate: 1.8, Fat: 1.6, Ingredients: []string{"黄豆"}},
+		{Model: gorm.Model{ID: 202}, Name: "测试-蒸玉米", MealType: models.MealTypeBreakfast, Energy: 112, Protein: 3.2, Carbohydrate: 22.8, Fat: 1.2, Ingredients: []string{"玉米"}},
+	}
+	lunch := []models.Recipe{
+		{Model: gorm.Model{ID: 210}, Name: "测试-番茄鸡胸肉", MealType: models.MealTypeLunch, Energy: 118, Protein: 18.6, Carbohydrate: 4.2, Fat: 3.1, Ingredients: []string{"鸡胸肉", "番茄"}},
+		{Model: gorm.Model{ID: 211}, Name: "测试-糙米饭", MealType: models.MealTypeLunch, Energy: 116, Protein: 2.6, Carbohydrate: 25.1, Fat: 0.9, Ingredients: []string{"糙米"}},
+		{Model: gorm.Model{ID: 212}, Name: "测试-清炒油麦菜", MealType: models.MealTypeLunch, Energy: 29, Protein: 1.4, Carbohydrate: 3.7, Fat: 1.0, Ingredients: []string{"油麦菜"}},
+	}
+	dinner := []models.Recipe{
+		{Model: gorm.Model{ID: 220}, Name: "测试-清蒸鲈鱼", MealType: models.MealTypeDinner, Energy: 106, Protein: 17.9, Carbohydrate: 1.2, Fat: 3.4, Ingredients: []string{"鲈鱼"}},
+		{Model: gorm.Model{ID: 221}, Name: "测试-荞麦面", MealType: models.MealTypeDinner, Energy: 99, Protein: 5.1, Carbohydrate: 19.8, Fat: 0.8, Ingredients: []string{"荞麦面"}},
+		{Model: gorm.Model{ID: 222}, Name: "测试-蒜蓉西兰花", MealType: models.MealTypeDinner, Energy: 36, Protein: 2.7, Carbohydrate: 5.1, Fat: 1.1, Ingredients: []string{"西兰花"}},
+	}
+	snack := []models.Recipe{
+		{Model: gorm.Model{ID: 230}, Name: "测试-苹果", MealType: models.MealTypeSnack, Energy: 53, Protein: 0.3, Carbohydrate: 13.7, Fat: 0.2, Ingredients: []string{"苹果"}},
+	}
+
+	target := NutritionTarget{
+		Energy:       1600,
+		Protein:      110,
+		Carbohydrate: 160,
+		Fat:          45,
+	}
+
+	stages := []recommendationStage{
+		{
+			label: "strict",
+			pools: mealRecipePools{
+				breakfast: nil,
+				lunch:     lunch,
+				dinner:    dinner,
+				snack:     snack,
+			},
+		},
+		{
+			label: "relaxed",
+			pools: mealRecipePools{
+				breakfast: breakfast,
+				lunch:     lunch,
+				dinner:    dinner,
+				snack:     snack,
+			},
+		},
+	}
+
+	plans, stage := svc.buildRecommendedPlansWithFallback(1, stages, target, models.GoalWeightLoss, 2, svc.checkDiversity)
+	if len(plans) == 0 {
+		t.Fatalf("expected fallback stage to produce plans")
+	}
+	if stage != "relaxed" {
+		t.Fatalf("expected fallback to use relaxed stage, got %s", stage)
+	}
+}
+
+func TestGenerateRankedPlans_FallsBackWhenStrictMealAssemblyProducesNoPlans(t *testing.T) {
+	svc := &RecipeServiceImpl{rng: rand.New(rand.NewSource(41))}
+
+	breakfast := []models.Recipe{
+		{Model: gorm.Model{ID: 300}, Name: "测试-水煮蛋", MealType: models.MealTypeBreakfast, Energy: 78, Protein: 6.5, Carbohydrate: 0.6, Fat: 5.3, Ingredients: []string{"鸡蛋"}},
+		{Model: gorm.Model{ID: 301}, Name: "测试-无糖豆浆", MealType: models.MealTypeBreakfast, Energy: 31, Protein: 3.0, Carbohydrate: 1.8, Fat: 1.6, Ingredients: []string{"黄豆"}},
+		{Model: gorm.Model{ID: 302}, Name: "测试-蒸玉米", MealType: models.MealTypeBreakfast, Energy: 112, Protein: 3.2, Carbohydrate: 22.8, Fat: 1.2, Ingredients: []string{"玉米"}},
+	}
+	lunch := []models.Recipe{
+		{Model: gorm.Model{ID: 310}, Name: "测试-番茄鸡胸肉", MealType: models.MealTypeLunch, Energy: 118, Protein: 18.6, Carbohydrate: 4.2, Fat: 3.1, Ingredients: []string{"鸡胸肉", "番茄"}},
+		{Model: gorm.Model{ID: 311}, Name: "测试-糙米饭", MealType: models.MealTypeLunch, Energy: 116, Protein: 2.6, Carbohydrate: 25.1, Fat: 0.9, Ingredients: []string{"糙米"}},
+		{Model: gorm.Model{ID: 312}, Name: "测试-清炒油麦菜", MealType: models.MealTypeLunch, Energy: 29, Protein: 1.4, Carbohydrate: 3.7, Fat: 1.0, Ingredients: []string{"油麦菜"}},
+	}
+	dinner := []models.Recipe{
+		{Model: gorm.Model{ID: 320}, Name: "测试-清蒸鲈鱼", MealType: models.MealTypeDinner, Energy: 106, Protein: 17.9, Carbohydrate: 1.2, Fat: 3.4, Ingredients: []string{"鲈鱼"}},
+		{Model: gorm.Model{ID: 311}, Name: "测试-糙米饭", MealType: models.MealTypeDinner, Energy: 116, Protein: 2.6, Carbohydrate: 25.1, Fat: 0.9, Ingredients: []string{"糙米"}},
+		{Model: gorm.Model{ID: 322}, Name: "测试-蒜蓉西兰花", MealType: models.MealTypeDinner, Energy: 36, Protein: 2.7, Carbohydrate: 5.1, Fat: 1.1, Ingredients: []string{"西兰花"}},
+	}
+	snack := []models.Recipe{
+		{Model: gorm.Model{ID: 330}, Name: "测试-苹果", MealType: models.MealTypeSnack, Energy: 53, Protein: 0.3, Carbohydrate: 13.7, Fat: 0.2, Ingredients: []string{"苹果"}},
+	}
+
+	target := NutritionTarget{
+		Energy:       1600,
+		Protein:      110,
+		Carbohydrate: 160,
+		Fat:          45,
+	}
+
+	plans := svc.generateRankedPlans(1, breakfast, lunch, dinner, snack, target, models.GoalWeightLoss)
+	if len(plans) == 0 {
+		t.Fatalf("expected fallback plans when strict meal assembly is empty")
+	}
+}
+
 func TestIngredientDiversityPenalty_WithOverlap(t *testing.T) {
 	svc := &RecipeServiceImpl{}
 

@@ -396,13 +396,13 @@ function initCompareChart() {
         type: 'bar',
         data: targetData.map(v => Math.round(v)),
         itemStyle: { 
-          color: '#e5e7eb', // 灰色作为目标背景
+          color: '#cfe8db',
           borderRadius: [4, 4, 0, 0]
         },
         label: {
           show: true,
           position: 'top',
-          color: '#9ca3af',
+          color: '#5f8f78',
           formatter: function(params) {
              return Math.round(targetRawData[params.dataIndex])
           }

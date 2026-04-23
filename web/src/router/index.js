@@ -65,11 +65,6 @@ const routes = [
         component: () => import("@/views/IntakeRecord.vue"),
       },
       {
-        path: "weekly-planner",
-        name: "WeeklyPlanner",
-        component: () => import("@/views/WeeklyPlanner.vue"),
-      },
-      {
         path: "weekly",
         name: "WeeklyReport",
         component: () => import("@/views/WeeklyReport.vue"),

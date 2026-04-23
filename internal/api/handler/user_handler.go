@@ -5,6 +5,7 @@ import (
 	"NutriPlan/internal/service"
 	"NutriPlan/pkg/jwt"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -81,9 +82,11 @@ func (h *UserHandler) Register(c *gin.Context) {
 	user := &models.User{
 		Username: req.Username,
 		Password: req.Password,
-		Email:    req.Email,
 		// 设置默认值，避免数据库约束问题
 		MealTimesPerDay: 3,
+	}
+	if email := strings.TrimSpace(req.Email); email != "" {
+		user.Email = &email
 	}
 
 	// 调用服务层注册用户

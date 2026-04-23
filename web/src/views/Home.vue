@@ -120,11 +120,16 @@
                       :key="`${meal.type}-preview-${index}-${item.name}`"
                       class="food-preview-item"
                     >
-                      <div class="food-image-card">
-                        <img v-if="item.image" :src="item.image" :alt="item.name || '餐次缩略图'" />
-                        <span v-else class="food-image-fallback">{{ meal.icon }}</span>
+                      <div class="food-image-card" :class="{ 'is-link': !!item.recipeId }" @click.stop="打开菜谱详情(item)">
+                        <RecipeImage
+                          class="food-preview-image"
+                          :src="item.image"
+                          :name="item.name"
+                          :meal-type="meal.type"
+                          :alt="item.name || '餐次缩略图'"
+                        />
                       </div>
-                      <p class="food-preview-name">{{ item.name }}</p>
+                      <p class="food-preview-name" :class="{ 'is-link': !!item.recipeId }" @click.stop="打开菜谱详情(item)">{{ item.name }}</p>
                     </div>
                   </div>
                 </div>
@@ -149,7 +154,6 @@
 
       <section class="right-panel">
         <div class="overview-card glass-card">
-          <span class="floating-red top-right"><n-icon><SparklesOutline /></n-icon></span>
           <div class="ring-wrap">
             <div class="calorie-ring" :style="ringStyle">
               <div class="ring-center">
@@ -211,17 +215,6 @@
                 </div>
               </div>
 
-              <div v-if="!当前详情食物.length" class="meal-empty-guide" @click="打开记录悬浮栏(当前详情餐次?.type || 'breakfast')">
-                <div class="plate-illustration" aria-hidden="true">
-                  <span class="plate-ring"></span>
-                  <span class="plate-dot"></span>
-                </div>
-                <div>
-                  <h4>当前餐段还未记录</h4>
-                  <p>点击添加今日{{ 当前详情餐次?.name || '餐次' }}，让营养数据更完整</p>
-                </div>
-              </div>
-
               <div class="food-table">
                 <div class="table-head">
                   <span class="check-col"></span>
@@ -239,18 +232,29 @@
                     <input
                       type="checkbox"
                       class="food-check-input"
-                      :checked="!food.sample || 本地勾选食物.some(f => f.id === food.id)"
-                      :disabled="!food.sample"
+                      :checked="是否食物已勾选(food)"
+                      :disabled="!是否可切换食物勾选(food)"
                       @change="切换食物状态(food)"
                     />
                   </label>
-                  <div class="food-name">
-                    <span class="thumb" :style="{ background: food.image ? 'transparent' : food.bg }">
-                      <img v-if="food.image" :src="food.image" alt="食物图" />
-                      <span v-else>{{ food.emoji }}</span>
+                  <button
+                    type="button"
+                    class="food-name"
+                    :class="{ 'is-link': 可打开菜谱详情(food) }"
+                    :disabled="!可打开菜谱详情(food)"
+                    @click="打开菜谱详情(food)"
+                  >
+                    <span class="thumb" :class="{ 'is-link': 可打开菜谱详情(food) }">
+                      <RecipeImage
+                        class="thumb-image"
+                        :src="food.image"
+                        :name="food.name"
+                        :meal-type="当前详情餐次?.type"
+                        alt="食物图"
+                      />
                     </span>
                     <span>{{ food.name }}</span>
-                  </div>
+                  </button>
                   <span class="sub-text">{{ food.weight }}</span>
                   <span class="sub-text">{{ food.kcal }}</span>
                   <span class="sub-text">{{ food.protein }}</span>
@@ -523,6 +527,7 @@ import {
 } from '@/api/recipeApi'
 import { recognizeFood, analyzeFoodText } from '@/api/foodRecognitionApi'
 import { useAuthStore } from '@/store/auth'
+import RecipeImage from '@/components/RecipeImage.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -764,6 +769,38 @@ const 安全数值 = (value) => {
   return Number.isFinite(number) ? number : 0
 }
 
+const 规范化食物名 = (value) => String(value || '').trim().toLowerCase()
+
+const 提取数字 = (value) => {
+  const matched = String(value ?? '').match(/-?\d+(\.\d+)?/)
+  return matched ? Number(matched[0]) : 0
+}
+
+const 解析菜谱ID = (item, options = {}) => {
+  const { allowEntityId = false } = options
+  const directId = Number(item?.recipeId || item?.recipe_id || item?.RecipeID)
+  if (Number.isFinite(directId) && directId > 0) return directId
+
+  const foodSource = Number(item?.foodSource ?? item?.food_source ?? item?.FoodSource)
+  const sourceId = Number(item?.sourceId ?? item?.source_id ?? item?.SourceID)
+  if (foodSource === 1 && Number.isFinite(sourceId) && sourceId > 0) return sourceId
+
+  if (allowEntityId) {
+    const entityId = Number(item?.id || item?.ID)
+    if (Number.isFinite(entityId) && entityId > 0) return entityId
+  }
+
+  return null
+}
+
+const 可打开菜谱详情 = (food) => !!解析菜谱ID(food)
+
+const 打开菜谱详情 = (food) => {
+  const recipeId = 解析菜谱ID(food)
+  if (!recipeId) return
+  router.push({ name: 'RecipeDetail', params: { id: recipeId } })
+}
+
 const 转日期参数 = (date) => {
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, '0')
@@ -807,6 +844,85 @@ const 获取计划餐次食谱列表 = (plan, mealType) => {
 
   return []
 }
+
+const 获取餐次卡片预览项 = (config, records = [], planItems = []) => {
+  const actualPreview = records.map((item, recordIndex) => {
+    const foodName = item.foodName || item.food_name || `${config.name}食物${recordIndex + 1}`
+    return {
+      name: foodName,
+      image: item.imageUrl || item.image_url || '',
+      recipeId: 解析菜谱ID(item)
+    }
+  })
+
+  const fallbackPreview = planItems.length > 0
+    ? planItems.map((item, planIndex) => ({
+        name: item.name || `${config.name}推荐${planIndex + 1}`,
+        image: item.imageUrl || item.image_url || '',
+        recipeId: 解析菜谱ID(item, { allowEntityId: true })
+      }))
+    : (示例食谱映射[config.type] || []).map((item) => ({
+        name: item.name,
+        image: item.image || '',
+        recipeId: item.recipeId || null
+      }))
+
+  const existingNames = new Set(
+    actualPreview
+      .map((item) => 规范化食物名(item.name))
+      .filter(Boolean)
+  )
+
+  const mergedPreview = [
+    ...actualPreview,
+    ...fallbackPreview.filter((item) => {
+      const normalizedName = 规范化食物名(item.name)
+      if (!normalizedName) return true
+      return !existingNames.has(normalizedName)
+    })
+  ].slice(0, 3)
+
+  if (mergedPreview.length > 0) {
+    return mergedPreview
+  }
+
+  return [{
+    name: `${config.name}待添加`,
+    image: '',
+    emoji: config.icon
+  }]
+}
+
+const 今日方案菜谱索引 = computed(() => {
+  const byId = new Map()
+  const byName = new Map()
+
+  if (!今日方案.value) {
+    return { byId, byName }
+  }
+
+  默认餐次顺序.forEach((mealType) => {
+    const planItems = 获取计划餐次食谱列表(今日方案.value, mealType)
+    planItems.forEach((recipe) => {
+      const recipeId = 解析菜谱ID(recipe, { allowEntityId: true })
+      if (!Number.isFinite(recipeId) || recipeId <= 0) return
+
+      const meta = {
+        recipeId,
+        image: recipe.imageUrl || recipe.image_url || recipe.image || ''
+      }
+
+      byId.set(recipeId, meta)
+
+      const normalizedName = 规范化食物名(recipe.name)
+      if (normalizedName && !byName.has(normalizedName)) {
+        byName.set(normalizedName, meta)
+      }
+    })
+  })
+
+  return { byId, byName }
+})
 
 const 加载餐次时间配置 = () => {
   try {
@@ -1021,26 +1137,146 @@ const 格式化模式日期 = (value) => {
 }
 
 const 本地勾选食物 = ref([])
-const 切换食物状态 = (food) => {
-  if (!food.sample) return
+const 勾选同步中食物ID = ref([])
+
+const 查找匹配推荐食谱 = (food) => {
+  if (!food) return null
+
+  const recipeId = 解析菜谱ID(food, { allowEntityId: true })
+  const normalizedName = 规范化食物名(food.name)
+
+  return (示例详情食物.value || []).find((item) => {
+    const sampleRecipeId = 解析菜谱ID(item, { allowEntityId: true })
+    if (recipeId && sampleRecipeId && recipeId === sampleRecipeId) {
+      return true
+    }
+    return normalizedName && normalizedName === 规范化食物名(item.name)
+  }) || null
+}
+
+const 查找已保存推荐食谱记录 = (food) => {
+  const matchedSample = food?.sample ? food : 查找匹配推荐食谱(food)
+  if (!matchedSample) return null
+
+  const recipeId = 解析菜谱ID(matchedSample, { allowEntityId: true })
+  const normalizedName = 规范化食物名(matchedSample.name)
+
+  return 当前详情食物.value.find((item) => {
+    const actualRecipeId = 解析菜谱ID(item)
+    if (recipeId && actualRecipeId && recipeId === actualRecipeId) {
+      return true
+    }
+    return normalizedName && normalizedName === 规范化食物名(item.name)
+  }) || null
+}
+
+const 是否可切换食物勾选 = (food) => {
+  if (!是否今天.value || !food || 勾选同步中食物ID.value.includes(food.id)) {
+    return false
+  }
+  if (food.sample) {
+    return true
+  }
+  return !!food.realId && !!查找匹配推荐食谱(food)
+}
+
+const 是否食物已勾选 = (food) => {
+  if (!food) return false
+  if (!food.sample) return true
+  if (查找已保存推荐食谱记录(food)) return true
+  return 本地勾选食物.value.some((item) => item.id === food.id)
+}
+
+const 添加本地勾选食物 = (food, mealType) => {
   const parsedKcal = parseFloat(food.kcal) || 0
   const parsedProtein = parseFloat(food.protein) || 0
   const parsedCarbs = parseFloat(food.carbs) || 0
   const parsedFat = parseFloat(food.fat) || 0
-  const mealType = 当前详情餐次.value?.type || 'breakfast'
-  const idx = 本地勾选食物.value.findIndex(f => f.id === food.id)
+  const exists = 本地勾选食物.value.some((item) => item.id === food.id)
+  if (exists) return
+
+  本地勾选食物.value.push({
+    id: food.id,
+    mealType,
+    kcal: parsedKcal,
+    protein: parsedProtein,
+    carbs: parsedCarbs,
+    fat: parsedFat
+  })
+}
+
+const 移除本地勾选食物 = (foodId) => {
+  const idx = 本地勾选食物.value.findIndex((item) => item.id === foodId)
   if (idx !== -1) {
     本地勾选食物.value.splice(idx, 1)
-  } else {
-    本地勾选食物.value.push({
-      id: food.id,
-      mealType,
-      kcal: parsedKcal,
-      protein: parsedProtein,
-      carbs: parsedCarbs,
-      fat: parsedFat
-    })
   }
+}
+
+const 构建推荐食谱记录 = (food, mealType) => {
+  const recipeId = 解析菜谱ID(food, { allowEntityId: true })
+  return {
+    meal_type: mealType,
+    food_source: recipeId ? 1 : 2,
+    source_id: recipeId || 0,
+    food_name: food.name || '推荐食谱',
+    intake_amount: Math.max(1, 提取数字(food.weight) || 100),
+    calculated_energy: Math.max(0, 提取数字(food.kcal)),
+    calculated_protein: Math.max(0, 提取数字(food.protein)),
+    calculated_carb: Math.max(0, 提取数字(food.carbs)),
+    calculated_fat: Math.max(0, 提取数字(food.fat))
+  }
+}
+
+const 完成推荐食谱 = async (food, mealType) => {
+  添加本地勾选食物(food, mealType)
+  勾选同步中食物ID.value.push(food.id)
+
+  try {
+    await addIntakeRecord(构建推荐食谱记录(food, mealType))
+    message.success(`已完成今日${当前详情餐次.value?.name || '饮食'}计划：${food.name}`)
+    await 同步看板数据()
+  } catch (error) {
+    console.error('保存推荐食谱勾选失败', error)
+    移除本地勾选食物(food.id)
+    message.error('更新饮食计划状态失败，请稍后重试')
+  } finally {
+    勾选同步中食物ID.value = 勾选同步中食物ID.value.filter((id) => id !== food.id)
+  }
+}
+
+const 取消完成推荐食谱 = async (food) => {
+  const savedRecord = food?.realId ? food : 查找已保存推荐食谱记录(food)
+  if (!savedRecord?.realId) return
+
+  勾选同步中食物ID.value.push(food.id)
+
+  try {
+    await deleteIntakeRecord(savedRecord.realId)
+    message.success(`已取消今日${当前详情餐次.value?.name || '饮食'}计划：${savedRecord.name || food.name}`)
+    await 同步看板数据()
+  } catch (error) {
+    console.error('取消推荐食谱完成状态失败', error)
+    message.error('更新饮食计划状态失败，请稍后重试')
+  } finally {
+    勾选同步中食物ID.value = 勾选同步中食物ID.value.filter((id) => id !== food.id)
+  }
+}
+
+const 切换食物状态 = async (food) => {
+  if (!是否可切换食物勾选(food)) return
+  if (!是否今天.value) {
+    message.warning('仅支持在今天将推荐食谱加入饮食记录')
+    return
+  }
+
+  const mealType = 当前详情餐次.value?.type || 'breakfast'
+  const savedRecord = 查找已保存推荐食谱记录(food)
+  if (savedRecord) {
+    await 取消完成推荐食谱(food)
+    return
+  }
+
+  await 完成推荐食谱(food, mealType)
 }
 
 const 本地勾选摄入总量 = computed(() => {
@@ -1165,31 +1401,7 @@ const 时间线餐次 = computed(() => {
       phase = 'past'
     }
 
-    const previewItems = records.length > 0
-      ? records.slice(0, 3).map((item, recordIndex) => {
-          const foodName = item.foodName || item.food_name || `${config.name}食物${recordIndex + 1}`
-          return {
-            name: foodName,
-            image: item.imageUrl || item.image_url || 食物图片映射[foodName] || defaultFoodThumb
-          }
-        })
-      : planItems.length > 0
-        ? planItems.slice(0, 3).map((item, planIndex) => ({
-            name: item.name || `${config.name}推荐${planIndex + 1}`,
-            image: item.imageUrl || item.image_url || 食物图片映射[item.name] || defaultFoodThumb
-          }))
-        : (示例食谱映射[config.type] || []).slice(0, 3).map((item) => ({
-            name: item.name,
-            image: item.image || 食物图片映射[item.name] || defaultFoodThumb
-          }))
-
-    const normalizedPreviewItems = previewItems.length
-      ? previewItems
-      : [{
-          name: `${config.name}待添加`,
-          image: '',
-          emoji: config.icon
-        }]
+    const normalizedPreviewItems = 获取餐次卡片预览项(config, records, planItems)
 
     return {
       ...config,
@@ -1203,7 +1415,7 @@ const 时间线餐次 = computed(() => {
       progress,
       display_energy: Math.max(0, displayEnergy),
       display_protein: Math.max(0, displayProtein),
-      thumb: records[0]?.imageUrl || records[0]?.image_url || planItems[0]?.imageUrl || planItems[0]?.image_url || 食物图片映射[hints[0]] || '',
+      thumb: records[0]?.imageUrl || records[0]?.image_url || planItems[0]?.imageUrl || planItems[0]?.image_url || '',
       previewItems: normalizedPreviewItems,
       variant: consumed > 0 ? (config.type === 'lunch' ? 'logged' : 'filled') : 'empty',
       phase
@@ -1300,12 +1512,16 @@ const 详情营养条 = computed(() => {
 const 当前详情食物 = computed(() => {
   const meal = 当前详情餐次.value
   const fallback = { emoji: meal?.emoji || '🍽️', bg: meal?.bg || 'linear-gradient(135deg, #7aa694, #4f7a69)' }
+  const { byId, byName } = 今日方案菜谱索引.value
   return (meal?.records || []).map((item, index) => {
     const foodName = item.foodName || item.food_name || '未知食物'
+    const explicitRecipeId = 解析菜谱ID(item)
+    const matchedMeta = (explicitRecipeId && byId.get(explicitRecipeId)) || byName.get(规范化食物名(foodName))
     return {
       id: item.id || item.ID || `${meal.type}-${index}`,
       realId: item.id || item.ID, // 提取真实 ID
       name: foodName,
+      recipeId: explicitRecipeId || matchedMeta?.recipeId || null,
       weight: `${Math.round(安全数值(item.intakeAmount || item.intake_amount))}g`,
       kcal: `${Math.round(安全数值(item.calculatedEnergy || item.calculated_energy))} 千卡`,
       protein: `${Math.round(安全数值(item.calculatedProtein || item.calculated_protein))}g`,
@@ -1313,23 +1529,11 @@ const 当前详情食物 = computed(() => {
       fat: `${Math.round(安全数值(item.calculatedFat || item.calculated_fat))}g`,
       emoji: fallback.emoji,
       bg: fallback.bg,
-      image: item.imageUrl || item.image_url || 食物图片映射[foodName] || defaultFoodThumb,
+      image: item.imageUrl || item.image_url || matchedMeta?.image || '',
       sample: false
     }
   })
 })
-
-const 食物图片映射 = {
-  '牛油果全麦吐司': 'https://images.unsplash.com/photo-1588137378633-dea1336ce1e2?auto=format&fit=crop&w=150&q=80',
-  '蓝莓酸奶碗': 'https://images.unsplash.com/photo-1493770348161-369560ae357d?auto=format&fit=crop&w=150&q=80',
-  '鸡胸肉藜麦沙拉': 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=150&q=80',
-  '南瓜浓汤': 'https://images.unsplash.com/photo-1476718406336-bb5a9690ee2a?auto=format&fit=crop&w=150&q=80',
-  '混合坚果': 'https://images.unsplash.com/photo-1536591375315-e2343b67bf96?auto=format&fit=crop&w=150&q=80',
-  '苹果切片': 'https://images.unsplash.com/photo-1568702846914-9661f04d9c73?auto=format&fit=crop&w=150&q=80',
-  '香煎三文鱼配芦笋': 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&w=150&q=80',
-  '黑椒菌菇意面': 'https://images.unsplash.com/photo-1473093295043-cdd812d0e601?auto=format&fit=crop&w=150&q=80'
-}
-const defaultFoodThumb = 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&w=150&q=80'
 
 const 示例食谱映射 = {
   breakfast: [
@@ -1359,13 +1563,14 @@ const 示例详情食物 = computed(() => {
     if (planItems.length > 0) {
       list = planItems.map((recipe) => ({
         name: recipe.name,
+        recipeId: 解析菜谱ID(recipe, { allowEntityId: true }),
         weight: `${Math.round(Number(recipe.portion_weight_g || recipe.portionWeightG || 100))}g`,
         kcal: `${Math.round(recipe.energy || 0)} 千卡`,
         protein: `${Math.round(recipe.protein || 0)}g`,
         carbs: `${Math.round(recipe.carbohydrate || 0)}g`,
         fat: `${Math.round(recipe.fat || 0)}g`,
         emoji: meal?.emoji || '🍽️',
-        image: recipe.imageUrl || recipe.image_url || defaultFoodThumb
+        image: recipe.imageUrl || recipe.image_url || ''
       }))
     }
   }
@@ -1377,6 +1582,7 @@ const 示例详情食物 = computed(() => {
   return list.map((item, index) => ({
     id: `sample-${meal?.type || 'meal'}-${index}`,
     name: item.name,
+    recipeId: item.recipeId,
     weight: item.weight || item.portion || '100g',
     kcal: item.kcal,
     protein: item.protein,
@@ -1384,7 +1590,7 @@ const 示例详情食物 = computed(() => {
     fat: item.fat,
     emoji: item.emoji || meal?.emoji || '🍽️',
     bg: meal?.bg || 'linear-gradient(135deg, #7aa694, #4f7a69)',
-    image: item.image || 食物图片映射[item.name] || defaultFoodThumb,
+    image: item.image || '',
     sample: true
   }))
 })
@@ -1394,8 +1600,12 @@ const 展示详情食物 = computed(() => {
   const samples = 示例详情食物.value || []
   
   // 保留原有的示例食谱样貌，每次添加的食物追加/叠加在前面，保持 UI 不会空洞
-  const actualNames = new Set(actual.map(item => item.name))
-  const filteredSamples = samples.filter(item => !actualNames.has(item.name))
+  const actualNames = new Set(actual.map((item) => 规范化食物名(item.name)).filter(Boolean))
+  const filteredSamples = samples.filter((item) => {
+    const normalizedName = 规范化食物名(item.name)
+    if (!normalizedName) return true
+    return !actualNames.has(normalizedName)
+  })
 
   return [...actual, ...filteredSamples]
 })
@@ -2430,8 +2640,8 @@ onMounted(async () => {
 
 .food-image-card {
   width: 100%;
-  max-width: 148px;
-  height: 96px;
+  max-width: 168px;
+  height: 112px;
   border-radius: 20px;
   border: 1px solid rgba(214, 230, 218, 0.88);
   background: #f8fbf8;
@@ -2448,6 +2658,15 @@ onMounted(async () => {
   opacity: 0.96;
 }
 
+.food-image-card.is-link {
+  cursor: pointer;
+}
+
+.food-image-card.is-link:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 24px rgba(58, 90, 72, 0.14);
+}
+
 .food-image-card img {
   width: auto;
   height: auto;
@@ -2455,6 +2674,21 @@ onMounted(async () => {
   max-height: 100%;
   object-fit: contain;
   object-position: center;
+  background: #f8fbf8;
+}
+
+.food-preview-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.food-preview-image.recipe-image--placeholder {
+  object-fit: contain;
+  object-position: center;
+  padding: 6px;
+  box-sizing: border-box;
   background: #f8fbf8;
 }
 
@@ -2474,6 +2708,14 @@ onMounted(async () => {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+.food-preview-name.is-link {
+  cursor: pointer;
+}
+
+.food-preview-name.is-link:hover {
+  color: #2f7a59;
 }
 
 .meal-side {
@@ -2578,28 +2820,6 @@ onMounted(async () => {
   grid-template-columns: 1fr 1fr;
   gap: 14px;
   position: relative;
-}
-
-.floating-red {
-  position: absolute;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  color: white;
-  background: linear-gradient(145deg, #f14652, #e12f3c);
-  box-shadow: 0 8px 16px rgba(241, 70, 82, 0.35);
-}
-
-.floating-red.top-right {
-  right: 14px;
-  top: -10px;
-}
-
-.floating-red.lower-right {
-  right: 16px;
-  bottom: -12px;
 }
 
 .ring-wrap {
@@ -2973,24 +3193,71 @@ onMounted(async () => {
   gap: 12px;
   font-weight: 600;
   font-size: 1.05rem;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  text-align: left;
+  color: #2c3e35;
+  font-family: inherit;
+  line-height: inherit;
+}
+
+.food-name.is-link {
+  cursor: pointer;
+}
+
+.food-name:disabled {
+  cursor: default;
+  opacity: 1;
+  color: #2c3e35;
+}
+
+.food-name.is-link:hover {
+  color: #2f7a59;
+}
+
+.food-name.is-link:hover .thumb {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(47, 122, 89, 0.18);
 }
 
 .thumb {
-  width: 56px;
-  height: 56px;
-  border-radius: 12px;
+  width: 68px;
+  height: 68px;
+  border-radius: 14px;
   display: grid;
   place-items: center;
   color: #f4fffb;
   overflow: hidden;
   flex-shrink: 0;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.thumb.is-link {
+  cursor: pointer;
 }
 
 .thumb img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.thumb-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.thumb-image.recipe-image--placeholder {
+  object-fit: contain;
+  object-position: center;
+  padding: 6px;
+  box-sizing: border-box;
+  background: #f8fbf8;
 }
 
 .sub-text {

@@ -177,7 +177,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { NButton, NIcon, NCard, NSpin, NResult, useMessage } from 'naive-ui';
 import { 
@@ -199,15 +199,15 @@ const router = useRouter();
 const message = useMessage();
 const authStore = useAuthStore();
 
-const id = route.params.id;
 const recipe = ref(null);
 const loading = ref(true);
 const isFavorite = ref(false);
+const recipeId = computed(() => route.params.id);
 
 const load = async () => {
   loading.value = true;
   try {
-    const res = await getRecipeDetail(id);
+    const res = await getRecipeDetail(recipeId.value);
     recipe.value = res || {};
     isFavorite.value = !!recipe.value.is_favorite;
   } catch (e) {
@@ -225,11 +225,11 @@ const toggleFavorite = async () => {
   }
   try {
     if (isFavorite.value) {
-      await removeFavorite(id);
+      await removeFavorite(recipeId.value);
       isFavorite.value = false;
       message.success('已取消收藏');
     } else {
-      await addFavorite(id);
+      await addFavorite(recipeId.value);
       isFavorite.value = true;
       message.success('已加入收藏');
     }
@@ -308,9 +308,13 @@ const getHeroBackground = (name) => {
   return colors[index];
 };
 
-onMounted(() => {
-  load();
-});
+watch(
+  () => recipeId.value,
+  () => {
+    load();
+  },
+  { immediate: true }
+);
 </script>
 
 <style scoped>

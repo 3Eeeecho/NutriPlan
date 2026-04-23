@@ -1,0 +1,3720 @@
+[
+  {
+    "name": "蔬菜鸡蛋饼",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Chive%20egg%20pancake.jpg",
+    "meal_type": "早餐",
+    "allowed_meal_types": [
+      "早餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 15,
+    "portion_weight_g": 182.0,
+    "energy": 335.1,
+    "protein": 14.0,
+    "carbohydrate": 47.2,
+    "fat": 10.5,
+    "ingredients": [
+      "面粉 58g",
+      "鸡蛋 55g",
+      "菠菜 35g",
+      "胡萝卜 30g",
+      "食用油 4g"
+    ],
+    "cooking_steps": [
+      "把主料和蔬菜切碎，和面粉、鸡蛋一起拌成面糊。",
+      "平底锅刷少量油，倒入面糊摊平。",
+      "小火煎到两面熟透后出锅切块。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "麸质过敏",
+      "蛋类过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "鸡丝荞麦面",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Chicken%20Noodle%20Soup.jpg",
+    "meal_type": "早餐",
+    "allowed_meal_types": [
+      "早餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 16,
+    "portion_weight_g": 468.0,
+    "energy": 423.4,
+    "protein": 36.0,
+    "carbohydrate": 50.1,
+    "fat": 7.7,
+    "ingredients": [
+      "荞麦面(干) 70g",
+      "鸡胸肉 85g",
+      "黄瓜 50g",
+      "香菇 40g",
+      "清水 220g",
+      "食用油 3g"
+    ],
+    "cooking_steps": [
+      "锅中加水烧开，先把面或米粉煮至八成熟。",
+      "另起锅把主料和蔬菜煮熟或炒香，再倒回面中。",
+      "调到咸淡合适，煮透后即可出锅。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "麸质过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "南瓜小米粥",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Congee.JPG",
+    "meal_type": "早餐",
+    "allowed_meal_types": [
+      "早餐",
+      "加餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 22,
+    "portion_weight_g": 428.0,
+    "energy": 227.3,
+    "protein": 5.5,
+    "carbohydrate": 48.0,
+    "fat": 1.6,
+    "ingredients": [
+      "小米(干) 48g",
+      "南瓜 120g",
+      "清水 260g"
+    ],
+    "cooking_steps": [
+      "将谷物或主食洗净后入锅，加清水煮开。",
+      "转小火煮到软烂，再加入其他食材继续煮熟。",
+      "收至喜欢的稠度后盛出即可。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "金枪鱼饭团",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Japanese%20rice%20balls%20%28onigiri%29.jpg",
+    "meal_type": "早餐",
+    "allowed_meal_types": [
+      "早餐",
+      "加餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 12,
+    "portion_weight_g": 275.0,
+    "energy": 291.7,
+    "protein": 24.9,
+    "carbohydrate": 43.9,
+    "fat": 1.4,
+    "ingredients": [
+      "白米饭 160g",
+      "金枪鱼罐头 75g",
+      "黄瓜 35g",
+      "海苔 5g"
+    ],
+    "cooking_steps": [
+      "把主料提前做熟切碎，和米饭拌匀。",
+      "加入海苔碎后分成两份。",
+      "戴手套捏成饭团，压实后即可食用。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "海鲜过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "虾仁蒸蛋",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Chawanmushi.JPG",
+    "meal_type": "早餐",
+    "allowed_meal_types": [
+      "早餐",
+      "加餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 18,
+    "portion_weight_g": 315.0,
+    "energy": 242.6,
+    "protein": 34.3,
+    "carbohydrate": 1.4,
+    "fat": 11.1,
+    "ingredients": [
+      "鸡蛋 110g",
+      "虾仁 85g",
+      "清水 120g"
+    ],
+    "cooking_steps": [
+      "鸡蛋打散后加入温水，搅匀过筛。",
+      "放入配料后盖上保鲜膜或盘子。",
+      "上锅蒸到蛋液凝固熟透即可。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "海鲜过敏",
+      "蛋类过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "牛肉馅饼",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Curry%20beef%20pie%20%28cropped%29.jpg",
+    "meal_type": "早餐",
+    "allowed_meal_types": [
+      "早餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 15,
+    "portion_weight_g": 204.0,
+    "energy": 417.1,
+    "protein": 26.8,
+    "carbohydrate": 51.5,
+    "fat": 11.3,
+    "ingredients": [
+      "面粉 65g",
+      "牛里脊 90g",
+      "洋葱 45g",
+      "食用油 4g"
+    ],
+    "cooking_steps": [
+      "把主料和蔬菜切碎，和面粉、鸡蛋一起拌成面糊。",
+      "平底锅刷少量油，倒入面糊摊平。",
+      "小火煎到两面熟透后出锅切块。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "麸质过敏",
+      "牛肉忌口"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "菠菜鸡蛋卷",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Chive%20egg%20pancake.jpg",
+    "meal_type": "早餐",
+    "allowed_meal_types": [
+      "早餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 15,
+    "portion_weight_g": 216.0,
+    "energy": 340.6,
+    "protein": 18.8,
+    "carbohydrate": 34.3,
+    "fat": 14.8,
+    "ingredients": [
+      "面粉 42g",
+      "鸡蛋 100g",
+      "菠菜 70g",
+      "食用油 4g"
+    ],
+    "cooking_steps": [
+      "把主料和蔬菜切碎，和面粉、鸡蛋一起拌成面糊。",
+      "平底锅刷少量油，倒入面糊摊平。",
+      "小火煎到两面熟透后出锅切块。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "麸质过敏",
+      "蛋类过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "玉米发糕",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Steamed%20Buns%20%284650154698%29.jpg",
+    "meal_type": "早餐",
+    "allowed_meal_types": [
+      "早餐"
+    ],
+    "difficulty": "中等",
+    "cooking_time": 25,
+    "portion_weight_g": 297.0,
+    "energy": 419.8,
+    "protein": 17.8,
+    "carbohydrate": 70.2,
+    "fat": 8.0,
+    "ingredients": [
+      "面粉 62g",
+      "玉米 100g",
+      "无糖豆浆 90g",
+      "鸡蛋 45g"
+    ],
+    "cooking_steps": [
+      "把粉类和液体食材拌成细腻面糊，再加入主料拌匀。",
+      "面糊倒入模具或耐热碗中，静置片刻。",
+      "上锅蒸到完全定型熟透，放温后切块食用。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "大豆过敏",
+      "麸质过敏",
+      "蛋类过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "家常番茄鸡蛋面",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Chicken%20Noodle%20Soup.jpg",
+    "meal_type": "早餐",
+    "allowed_meal_types": [
+      "早餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 16,
+    "portion_weight_g": 470.0,
+    "energy": 372.6,
+    "protein": 15.2,
+    "carbohydrate": 55.7,
+    "fat": 9.4,
+    "ingredients": [
+      "挂面(干) 72g",
+      "鸡蛋 55g",
+      "番茄 120g",
+      "清水 220g",
+      "食用油 3g"
+    ],
+    "cooking_steps": [
+      "锅中加水烧开，先把面或米粉煮至八成熟。",
+      "另起锅把主料和蔬菜煮熟或炒香，再倒回面中。",
+      "调到咸淡合适，煮透后即可出锅。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "麸质过敏",
+      "蛋类过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "鸡肉蔬菜粥",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Congee.JPG",
+    "meal_type": "早餐",
+    "allowed_meal_types": [
+      "早餐",
+      "加餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 22,
+    "portion_weight_g": 555.0,
+    "energy": 317.9,
+    "protein": 29.9,
+    "carbohydrate": 40.9,
+    "fat": 3.5,
+    "ingredients": [
+      "白米饭 140g",
+      "鸡胸肉 80g",
+      "胡萝卜 35g",
+      "菠菜 40g",
+      "清水 260g"
+    ],
+    "cooking_steps": [
+      "将谷物或主食洗净后入锅，加清水煮开。",
+      "转小火煮到软烂，再加入其他食材继续煮熟。",
+      "收至喜欢的稠度后盛出即可。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "紫薯豆浆燕麦粥",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Cooked%20oatmeal%20in%20bowl.jpg",
+    "meal_type": "早餐",
+    "allowed_meal_types": [
+      "早餐",
+      "加餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 22,
+    "portion_weight_g": 592.0,
+    "energy": 307.5,
+    "protein": 12.5,
+    "carbohydrate": 52.3,
+    "fat": 5.9,
+    "ingredients": [
+      "燕麦 42g",
+      "紫薯 110g",
+      "无糖豆浆 180g",
+      "清水 260g"
+    ],
+    "cooking_steps": [
+      "将谷物或主食洗净后入锅，加清水煮开。",
+      "转小火煮到软烂，再加入其他食材继续煮熟。",
+      "收至喜欢的稠度后盛出即可。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "大豆过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "香菇鸡肉包",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Steamed%20Buns%20%284650154698%29.jpg",
+    "meal_type": "早餐",
+    "allowed_meal_types": [
+      "早餐"
+    ],
+    "difficulty": "中等",
+    "cooking_time": 28,
+    "portion_weight_g": 280.0,
+    "energy": 482.4,
+    "protein": 36.8,
+    "carbohydrate": 72.5,
+    "fat": 4.7,
+    "ingredients": [
+      "面粉 95g",
+      "清水 55g",
+      "鸡胸肉 85g",
+      "香菇 45g"
+    ],
+    "cooking_steps": [
+      "把面团材料揉匀后静置，馅料切碎拌好备用。",
+      "将面团分剂子包入馅料，收口后略微醒发。",
+      "上锅蒸到外皮熟透松软即可。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "麸质过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "山药鸡蛋饼",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Chive%20egg%20pancake.jpg",
+    "meal_type": "早餐",
+    "allowed_meal_types": [
+      "早餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 15,
+    "portion_weight_g": 244.0,
+    "energy": 374.6,
+    "protein": 18.1,
+    "carbohydrate": 43.3,
+    "fat": 14.6,
+    "ingredients": [
+      "面粉 40g",
+      "鸡蛋 100g",
+      "山药 100g",
+      "食用油 4g"
+    ],
+    "cooking_steps": [
+      "把主料和蔬菜切碎，和面粉、鸡蛋一起拌成面糊。",
+      "平底锅刷少量油，倒入面糊摊平。",
+      "小火煎到两面熟透后出锅切块。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "麸质过敏",
+      "蛋类过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "虾仁豆腐羹",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Shrimp%20soup%20at%20home.jpg",
+    "meal_type": "早餐",
+    "allowed_meal_types": [
+      "午餐",
+      "晚餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 16,
+    "portion_weight_g": 600.0,
+    "energy": 198.9,
+    "protein": 32.4,
+    "carbohydrate": 6.5,
+    "fat": 6.2,
+    "ingredients": [
+      "虾仁 90g",
+      "北豆腐 120g",
+      "番茄 70g",
+      "清水 320g"
+    ],
+    "cooking_steps": [
+      "锅中加水烧开，先下比较耐煮的食材。",
+      "再放入主料和易熟配料，小火煮到食材成熟。",
+      "最后调味，保持汤体清爽即可。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "海鲜过敏",
+      "大豆过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "葱香牛肉卷饼",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Egg%20Tortilla%20Wrap%20%288728191788%29.jpg",
+    "meal_type": "早餐",
+    "allowed_meal_types": [
+      "早餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 14,
+    "portion_weight_g": 248.0,
+    "energy": 428.9,
+    "protein": 27.1,
+    "carbohydrate": 47.9,
+    "fat": 14.2,
+    "ingredients": [
+      "全麦卷饼 85g",
+      "牛里脊 85g",
+      "洋葱 40g",
+      "青椒 35g",
+      "食用油 3g"
+    ],
+    "cooking_steps": [
+      "把夹馅食材提前处理熟透，切成小块或细丝。",
+      "将饼皮加热到柔软后铺开，放入馅料。",
+      "卷紧后切段，趁热食用口感更好。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "麸质过敏",
+      "牛肉忌口"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "南瓜鸡蛋羹",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Chawanmushi.JPG",
+    "meal_type": "早餐",
+    "allowed_meal_types": [
+      "早餐",
+      "加餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 18,
+    "portion_weight_g": 340.0,
+    "energy": 207.9,
+    "protein": 15.0,
+    "carbohydrate": 12.2,
+    "fat": 11.0,
+    "ingredients": [
+      "鸡蛋 110g",
+      "南瓜 110g",
+      "清水 120g"
+    ],
+    "cooking_steps": [
+      "鸡蛋打散后加入温水，搅匀过筛。",
+      "放入配料后盖上保鲜膜或盘子。",
+      "上锅蒸到蛋液凝固熟透即可。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "蛋类过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "鸡蛋灌饼",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Chive%20egg%20pancake.jpg",
+    "meal_type": "早餐",
+    "allowed_meal_types": [
+      "早餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 15,
+    "portion_weight_g": 236.0,
+    "energy": 450.7,
+    "protein": 35.5,
+    "carbohydrate": 47.2,
+    "fat": 13.0,
+    "ingredients": [
+      "面粉 62g",
+      "鸡蛋 55g",
+      "鸡胸肉 70g",
+      "生菜 45g",
+      "食用油 4g"
+    ],
+    "cooking_steps": [
+      "把主料和蔬菜切碎，和面粉、鸡蛋一起拌成面糊。",
+      "平底锅刷少量油，倒入面糊摊平。",
+      "小火煎到两面熟透后出锅切块。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "麸质过敏",
+      "蛋类过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "鸡丝米粉",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Chicken%20Noodle%20Soup.jpg",
+    "meal_type": "早餐",
+    "allowed_meal_types": [
+      "早餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 16,
+    "portion_weight_g": 466.0,
+    "energy": 434.4,
+    "protein": 33.4,
+    "carbohydrate": 58.3,
+    "fat": 7.1,
+    "ingredients": [
+      "米粉(干) 68g",
+      "鸡胸肉 85g",
+      "菠菜 50g",
+      "香菇 40g",
+      "清水 220g",
+      "食用油 3g"
+    ],
+    "cooking_steps": [
+      "锅中加水烧开，先把面或米粉煮至八成熟。",
+      "另起锅把主料和蔬菜煮熟或炒香，再倒回面中。",
+      "调到咸淡合适，煮透后即可出锅。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "麸质过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "虾仁馄饨",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Wonton%20Soup.jpg",
+    "meal_type": "早餐",
+    "allowed_meal_types": [
+      "早餐"
+    ],
+    "difficulty": "中等",
+    "cooking_time": 22,
+    "portion_weight_g": 335.0,
+    "energy": 349.2,
+    "protein": 29.8,
+    "carbohydrate": 53.6,
+    "fat": 2.2,
+    "ingredients": [
+      "馄饨皮 90g",
+      "虾仁 90g",
+      "菠菜 35g",
+      "清水 120g"
+    ],
+    "cooking_steps": [
+      "把馅料切碎后拌匀，包入皮中。",
+      "锅中水开后下锅煮到浮起，再煮2到3分钟。",
+      "捞出后即可直接食用或配少量汤汁。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "海鲜过敏",
+      "麸质过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "牛肉烧麦",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Shanxi%20Shumai.jpg",
+    "meal_type": "早餐",
+    "allowed_meal_types": [
+      "早餐"
+    ],
+    "difficulty": "中等",
+    "cooking_time": 22,
+    "portion_weight_g": 345.0,
+    "energy": 429.9,
+    "protein": 29.7,
+    "carbohydrate": 58.5,
+    "fat": 8.7,
+    "ingredients": [
+      "烧麦皮 95g",
+      "牛里脊 95g",
+      "香菇 35g",
+      "清水 120g"
+    ],
+    "cooking_steps": [
+      "把馅料切碎后拌匀，包入皮中。",
+      "锅中水开后下锅煮到浮起，再煮2到3分钟。",
+      "捞出后即可直接食用或配少量汤汁。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "麸质过敏",
+      "牛肉忌口"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "豆腐蔬菜饼",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Chive%20egg%20pancake.jpg",
+    "meal_type": "早餐",
+    "allowed_meal_types": [
+      "早餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 15,
+    "portion_weight_g": 267.0,
+    "energy": 349.3,
+    "protein": 20.6,
+    "carbohydrate": 36.1,
+    "fat": 15.0,
+    "ingredients": [
+      "面粉 38g",
+      "鸡蛋 55g",
+      "北豆腐 100g",
+      "胡萝卜 35g",
+      "菠菜 35g",
+      "食用油 4g"
+    ],
+    "cooking_steps": [
+      "把主料和蔬菜切碎，和面粉、鸡蛋一起拌成面糊。",
+      "平底锅刷少量油，倒入面糊摊平。",
+      "小火煎到两面熟透后出锅切块。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "大豆过敏",
+      "麸质过敏",
+      "蛋类过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "海苔鸡蛋饭团",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Japanese%20rice%20balls%20%28onigiri%29.jpg",
+    "meal_type": "早餐",
+    "allowed_meal_types": [
+      "早餐",
+      "加餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 12,
+    "portion_weight_g": 255.0,
+    "energy": 290.3,
+    "protein": 13.7,
+    "carbohydrate": 44.4,
+    "fat": 6.5,
+    "ingredients": [
+      "白米饭 160g",
+      "鸡蛋 60g",
+      "黄瓜 30g",
+      "海苔 5g"
+    ],
+    "cooking_steps": [
+      "把主料提前做熟切碎，和米饭拌匀。",
+      "加入海苔碎后分成两份。",
+      "戴手套捏成饭团，压实后即可食用。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "蛋类过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "蓝莓燕麦酸奶杯",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Yogurt%20fruit%20bowl.jpg",
+    "meal_type": "早餐",
+    "allowed_meal_types": [
+      "加餐",
+      "早餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 4,
+    "portion_weight_g": 268.0,
+    "energy": 247.5,
+    "protein": 11.3,
+    "carbohydrate": 36.5,
+    "fat": 7.5,
+    "ingredients": [
+      "无糖酸奶 180g",
+      "燕麦 28g",
+      "蓝莓 60g"
+    ],
+    "cooking_steps": [
+      "把需要蒸熟的食材提前处理好并放凉。",
+      "将食材按层次放入杯中。",
+      "吃前轻轻拌匀即可。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "乳制品过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "玉米鸡蛋饼",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Chive%20egg%20pancake.jpg",
+    "meal_type": "早餐",
+    "allowed_meal_types": [
+      "早餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 15,
+    "portion_weight_g": 225.0,
+    "energy": 419.0,
+    "protein": 18.7,
+    "carbohydrate": 54.0,
+    "fat": 14.6,
+    "ingredients": [
+      "面粉 46g",
+      "鸡蛋 90g",
+      "玉米 85g",
+      "食用油 4g"
+    ],
+    "cooking_steps": [
+      "把主料和蔬菜切碎，和面粉、鸡蛋一起拌成面糊。",
+      "平底锅刷少量油，倒入面糊摊平。",
+      "小火煎到两面熟透后出锅切块。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "麸质过敏",
+      "蛋类过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "鸡肉饭团",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Japanese%20rice%20balls%20%28onigiri%29.jpg",
+    "meal_type": "早餐",
+    "allowed_meal_types": [
+      "早餐",
+      "加餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 12,
+    "portion_weight_g": 290.0,
+    "energy": 384.2,
+    "protein": 33.5,
+    "carbohydrate": 51.7,
+    "fat": 4.1,
+    "ingredients": [
+      "白米饭 160g",
+      "鸡胸肉 85g",
+      "玉米 40g",
+      "海苔 5g"
+    ],
+    "cooking_steps": [
+      "把主料提前做熟切碎，和米饭拌匀。",
+      "加入海苔碎后分成两份。",
+      "戴手套捏成饭团，压实后即可食用。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "番茄牛肉",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Beef%20with%20broccoli.JPG",
+    "meal_type": "午餐",
+    "allowed_meal_types": [
+      "午餐",
+      "晚餐"
+    ],
+    "difficulty": "中等",
+    "cooking_time": 22,
+    "portion_weight_g": 509.0,
+    "energy": 301.9,
+    "protein": 33.6,
+    "carbohydrate": 9.1,
+    "fat": 14.5,
+    "ingredients": [
+      "牛里脊 145g",
+      "番茄 140g",
+      "洋葱 40g",
+      "清水 180g",
+      "食用油 4g"
+    ],
+    "cooking_steps": [
+      "先把主料煎香或焯水，蔬菜切块备用。",
+      "所有食材入锅后加少量清水焖煮到入味。",
+      "收汁或保留少量汤汁后即可出锅。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "牛肉忌口"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "鲜香香菇滑鸡",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Chicken%20stir%20fry%20%281126047571%29.jpg",
+    "meal_type": "午餐",
+    "allowed_meal_types": [
+      "午餐",
+      "晚餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 15,
+    "portion_weight_g": 230.0,
+    "energy": 325.9,
+    "protein": 36.6,
+    "carbohydrate": 5.5,
+    "fat": 17.0,
+    "ingredients": [
+      "鸡腿肉(去皮) 145g",
+      "香菇 80g",
+      "食用油 5g"
+    ],
+    "cooking_steps": [
+      "把主料切片或切丝，蔬菜洗净切好。",
+      "热锅少油先下肉类或海鲜炒到变色，再下蔬菜翻炒。",
+      "炒到断生入味即可出锅。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "西兰花炒虾仁",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Shrimp%20and%20broccoli%20stir%20fry%20%288374790146%29.jpg",
+    "meal_type": "午餐",
+    "allowed_meal_types": [
+      "午餐",
+      "晚餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 15,
+    "portion_weight_g": 285.0,
+    "energy": 237.7,
+    "protein": 39.6,
+    "carbohydrate": 9.4,
+    "fat": 6.0,
+    "ingredients": [
+      "虾仁 150g",
+      "西兰花 130g",
+      "食用油 5g"
+    ],
+    "cooking_steps": [
+      "把主料切片或切丝，蔬菜洗净切好。",
+      "热锅少油先下肉类或海鲜炒到变色，再下蔬菜翻炒。",
+      "炒到断生入味即可出锅。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "海鲜过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "葱丝清蒸鲈鱼",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Steamed%20rice%20with%20fish.jpg",
+    "meal_type": "午餐",
+    "allowed_meal_types": [
+      "午餐",
+      "晚餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 18,
+    "portion_weight_g": 220.0,
+    "energy": 223.2,
+    "protein": 36.4,
+    "carbohydrate": 1.6,
+    "fat": 7.3,
+    "ingredients": [
+      "鲈鱼 180g",
+      "番茄 40g"
+    ],
+    "cooking_steps": [
+      "把主料和配料处理干净后装盘。",
+      "水开后上锅蒸到完全熟透。",
+      "出锅后根据口味少量调味即可。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "海鲜过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "家常青椒鸡丁",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Chicken%20stir%20fry%20%281126047571%29.jpg",
+    "meal_type": "午餐",
+    "allowed_meal_types": [
+      "午餐",
+      "晚餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 15,
+    "portion_weight_g": 280.0,
+    "energy": 320.1,
+    "protein": 46.3,
+    "carbohydrate": 8.1,
+    "fat": 10.4,
+    "ingredients": [
+      "鸡胸肉 145g",
+      "青椒 90g",
+      "洋葱 40g",
+      "食用油 5g"
+    ],
+    "cooking_steps": [
+      "把主料切片或切丝，蔬菜洗净切好。",
+      "热锅少油先下肉类或海鲜炒到变色，再下蔬菜翻炒。",
+      "炒到断生入味即可出锅。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "木耳炒里脊",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Teriyaki%20Pork%20Stir%20Fry.jpg",
+    "meal_type": "午餐",
+    "allowed_meal_types": [
+      "午餐",
+      "晚餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 15,
+    "portion_weight_g": 265.0,
+    "energy": 279.8,
+    "protein": 31.9,
+    "carbohydrate": 6.5,
+    "fat": 13.9,
+    "ingredients": [
+      "瘦猪里脊 145g",
+      "木耳 70g",
+      "青椒 45g",
+      "食用油 5g"
+    ],
+    "cooking_steps": [
+      "把主料切片或切丝，蔬菜洗净切好。",
+      "热锅少油先下肉类或海鲜炒到变色，再下蔬菜翻炒。",
+      "炒到断生入味即可出锅。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "猪肉忌口"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "小炒芹菜牛肉丝",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Beef%20with%20broccoli.JPG",
+    "meal_type": "午餐",
+    "allowed_meal_types": [
+      "午餐",
+      "晚餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 15,
+    "portion_weight_g": 290.0,
+    "energy": 293.9,
+    "protein": 32.0,
+    "carbohydrate": 7.3,
+    "fat": 15.1,
+    "ingredients": [
+      "牛里脊 140g",
+      "芹菜 110g",
+      "胡萝卜 35g",
+      "食用油 5g"
+    ],
+    "cooking_steps": [
+      "把主料切片或切丝，蔬菜洗净切好。",
+      "热锅少油先下肉类或海鲜炒到变色，再下蔬菜翻炒。",
+      "炒到断生入味即可出锅。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "牛肉忌口"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "番茄豆腐",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Dubu%20Jorim%20%28Braised%20tofu%29.jpg",
+    "meal_type": "午餐",
+    "allowed_meal_types": [
+      "午餐",
+      "晚餐"
+    ],
+    "difficulty": "中等",
+    "cooking_time": 22,
+    "portion_weight_g": 564.0,
+    "energy": 225.8,
+    "protein": 17.8,
+    "carbohydrate": 14.7,
+    "fat": 13.2,
+    "ingredients": [
+      "北豆腐 180g",
+      "番茄 150g",
+      "香菇 50g",
+      "清水 180g",
+      "食用油 4g"
+    ],
+    "cooking_steps": [
+      "先把主料煎香或焯水，蔬菜切块备用。",
+      "所有食材入锅后加少量清水焖煮到入味。",
+      "收汁或保留少量汤汁后即可出锅。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "大豆过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "黄瓜鸡丝",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Chicken%20stir%20fry%20%281126047571%29.jpg",
+    "meal_type": "午餐",
+    "allowed_meal_types": [
+      "午餐",
+      "晚餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 15,
+    "portion_weight_g": 295.0,
+    "energy": 307.5,
+    "protein": 44.5,
+    "carbohydrate": 7.3,
+    "fat": 10.2,
+    "ingredients": [
+      "鸡胸肉 140g",
+      "黄瓜 120g",
+      "胡萝卜 30g",
+      "食用油 5g"
+    ],
+    "cooking_steps": [
+      "把主料切片或切丝，蔬菜洗净切好。",
+      "热锅少油先下肉类或海鲜炒到变色，再下蔬菜翻炒。",
+      "炒到断生入味即可出锅。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "虾仁豆腐煲",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Tofu%20stew%2C%20pork.jpg",
+    "meal_type": "午餐",
+    "allowed_meal_types": [
+      "午餐",
+      "晚餐"
+    ],
+    "difficulty": "中等",
+    "cooking_time": 22,
+    "portion_weight_g": 554.0,
+    "energy": 302.4,
+    "protein": 44.8,
+    "carbohydrate": 8.3,
+    "fat": 11.8,
+    "ingredients": [
+      "虾仁 130g",
+      "北豆腐 150g",
+      "番茄 90g",
+      "清水 180g",
+      "食用油 4g"
+    ],
+    "cooking_steps": [
+      "先把主料煎香或焯水，蔬菜切块备用。",
+      "所有食材入锅后加少量清水焖煮到入味。",
+      "收汁或保留少量汤汁后即可出锅。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "海鲜过敏",
+      "大豆过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "洋葱炒牛肉",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Beef%20with%20broccoli.JPG",
+    "meal_type": "午餐",
+    "allowed_meal_types": [
+      "午餐",
+      "晚餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 15,
+    "portion_weight_g": 315.0,
+    "energy": 327.6,
+    "protein": 33.7,
+    "carbohydrate": 13.1,
+    "fat": 15.4,
+    "ingredients": [
+      "牛里脊 145g",
+      "洋葱 120g",
+      "青椒 45g",
+      "食用油 5g"
+    ],
+    "cooking_steps": [
+      "把主料切片或切丝，蔬菜洗净切好。",
+      "热锅少油先下肉类或海鲜炒到变色，再下蔬菜翻炒。",
+      "炒到断生入味即可出锅。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "牛肉忌口"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "香干炒肉丝",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Teriyaki%20Pork%20Stir%20Fry.jpg",
+    "meal_type": "午餐",
+    "allowed_meal_types": [
+      "午餐",
+      "晚餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 15,
+    "portion_weight_g": 270.0,
+    "energy": 356.9,
+    "protein": 39.6,
+    "carbohydrate": 6.2,
+    "fat": 19.0,
+    "ingredients": [
+      "瘦猪里脊 125g",
+      "香干 80g",
+      "青椒 60g",
+      "食用油 5g"
+    ],
+    "cooking_steps": [
+      "把主料切片或切丝，蔬菜洗净切好。",
+      "热锅少油先下肉类或海鲜炒到变色，再下蔬菜翻炒。",
+      "炒到断生入味即可出锅。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "大豆过敏",
+      "猪肉忌口"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "毛豆鸡丁",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Chicken%20stir%20fry%20%281126047571%29.jpg",
+    "meal_type": "午餐",
+    "allowed_meal_types": [
+      "午餐",
+      "晚餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 15,
+    "portion_weight_g": 245.0,
+    "energy": 373.8,
+    "protein": 51.3,
+    "carbohydrate": 11.2,
+    "fat": 14.1,
+    "ingredients": [
+      "鸡胸肉 135g",
+      "毛豆 70g",
+      "胡萝卜 35g",
+      "食用油 5g"
+    ],
+    "cooking_steps": [
+      "把主料切片或切丝，蔬菜洗净切好。",
+      "热锅少油先下肉类或海鲜炒到变色，再下蔬菜翻炒。",
+      "炒到断生入味即可出锅。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "大豆过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "清鲜冬瓜虾仁",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Winter%20melon%20soup.jpg",
+    "meal_type": "午餐",
+    "allowed_meal_types": [
+      "午餐",
+      "晚餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 20,
+    "portion_weight_g": 675.0,
+    "energy": 173.9,
+    "protein": 35.1,
+    "carbohydrate": 7.4,
+    "fat": 1.0,
+    "ingredients": [
+      "虾仁 140g",
+      "冬瓜 180g",
+      "香菇 35g",
+      "清水 320g"
+    ],
+    "cooking_steps": [
+      "锅中加水烧开，先下比较耐煮的食材。",
+      "再放入主料和易熟配料，小火煮到食材成熟。",
+      "最后调味，保持汤体清爽即可。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "海鲜过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "番茄鱼片",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Fish%20soup.jpg",
+    "meal_type": "午餐",
+    "allowed_meal_types": [
+      "午餐",
+      "晚餐"
+    ],
+    "difficulty": "中等",
+    "cooking_time": 22,
+    "portion_weight_g": 564.0,
+    "energy": 292.8,
+    "protein": 39.6,
+    "carbohydrate": 8.2,
+    "fat": 11.1,
+    "ingredients": [
+      "鱼片 150g",
+      "番茄 150g",
+      "北豆腐 80g",
+      "清水 180g",
+      "食用油 4g"
+    ],
+    "cooking_steps": [
+      "先把主料煎香或焯水，蔬菜切块备用。",
+      "所有食材入锅后加少量清水焖煮到入味。",
+      "收汁或保留少量汤汁后即可出锅。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "海鲜过敏",
+      "大豆过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "香菇蒸鸡",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Chicken%20stir%20fry%20%281126047571%29.jpg",
+    "meal_type": "午餐",
+    "allowed_meal_types": [
+      "午餐",
+      "晚餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 20,
+    "portion_weight_g": 240.0,
+    "energy": 293.1,
+    "protein": 38.0,
+    "carbohydrate": 6.2,
+    "fat": 12.4,
+    "ingredients": [
+      "鸡腿肉(去皮) 150g",
+      "香菇 90g"
+    ],
+    "cooking_steps": [
+      "把主料和配料处理干净后装盘。",
+      "水开后上锅蒸到完全熟透。",
+      "出锅后根据口味少量调味即可。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "西葫芦炒牛肉",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Beef%20with%20broccoli.JPG",
+    "meal_type": "午餐",
+    "allowed_meal_types": [
+      "午餐",
+      "晚餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 15,
+    "portion_weight_g": 300.0,
+    "energy": 299.1,
+    "protein": 32.6,
+    "carbohydrate": 8.1,
+    "fat": 15.1,
+    "ingredients": [
+      "牛里脊 140g",
+      "西葫芦 120g",
+      "胡萝卜 35g",
+      "食用油 5g"
+    ],
+    "cooking_steps": [
+      "把主料切片或切丝，蔬菜洗净切好。",
+      "热锅少油先下肉类或海鲜炒到变色，再下蔬菜翻炒。",
+      "炒到断生入味即可出锅。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "牛肉忌口"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "芦笋鸡丁",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Chicken%20stir%20fry%20%281126047571%29.jpg",
+    "meal_type": "午餐",
+    "allowed_meal_types": [
+      "午餐",
+      "晚餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 15,
+    "portion_weight_g": 295.0,
+    "energy": 312.3,
+    "protein": 46.3,
+    "carbohydrate": 7.4,
+    "fat": 10.2,
+    "ingredients": [
+      "鸡胸肉 140g",
+      "芦笋 120g",
+      "胡萝卜 30g",
+      "食用油 5g"
+    ],
+    "cooking_steps": [
+      "把主料切片或切丝，蔬菜洗净切好。",
+      "热锅少油先下肉类或海鲜炒到变色，再下蔬菜翻炒。",
+      "炒到断生入味即可出锅。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "青椒牛柳",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Beef%20with%20broccoli.JPG",
+    "meal_type": "午餐",
+    "allowed_meal_types": [
+      "午餐",
+      "晚餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 15,
+    "portion_weight_g": 290.0,
+    "energy": 307.8,
+    "protein": 33.3,
+    "carbohydrate": 8.6,
+    "fat": 15.4,
+    "ingredients": [
+      "牛里脊 145g",
+      "青椒 100g",
+      "洋葱 40g",
+      "食用油 5g"
+    ],
+    "cooking_steps": [
+      "把主料切片或切丝，蔬菜洗净切好。",
+      "热锅少油先下肉类或海鲜炒到变色，再下蔬菜翻炒。",
+      "炒到断生入味即可出锅。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "牛肉忌口"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "嫩豆腐蒸虾仁",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Dubu%20Jorim%20%28Braised%20tofu%29.jpg",
+    "meal_type": "午餐",
+    "allowed_meal_types": [
+      "午餐",
+      "晚餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 20,
+    "portion_weight_g": 320.0,
+    "energy": 251.1,
+    "protein": 43.6,
+    "carbohydrate": 6.4,
+    "fat": 7.2,
+    "ingredients": [
+      "虾仁 130g",
+      "北豆腐 140g",
+      "番茄 50g"
+    ],
+    "cooking_steps": [
+      "把主料和配料处理干净后装盘。",
+      "水开后上锅蒸到完全熟透。",
+      "出锅后根据口味少量调味即可。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "海鲜过敏",
+      "大豆过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "肉末蒸蛋",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Chawanmushi.JPG",
+    "meal_type": "午餐",
+    "allowed_meal_types": [
+      "午餐",
+      "晚餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 18,
+    "portion_weight_g": 310.0,
+    "energy": 294.4,
+    "protein": 29.9,
+    "carbohydrate": 1.2,
+    "fat": 18.9,
+    "ingredients": [
+      "鸡蛋 110g",
+      "猪肉末 80g",
+      "清水 120g"
+    ],
+    "cooking_steps": [
+      "鸡蛋打散后加入温水，搅匀过筛。",
+      "放入配料后盖上保鲜膜或盘子。",
+      "上锅蒸到蛋液凝固熟透即可。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "蛋类过敏",
+      "猪肉忌口"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "番茄牛腩",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Beef%20with%20broccoli.JPG",
+    "meal_type": "午餐",
+    "allowed_meal_types": [
+      "午餐",
+      "晚餐"
+    ],
+    "difficulty": "中等",
+    "cooking_time": 28,
+    "portion_weight_g": 519.0,
+    "energy": 362.0,
+    "protein": 31.7,
+    "carbohydrate": 9.0,
+    "fat": 22.3,
+    "ingredients": [
+      "牛腩 150g",
+      "番茄 150g",
+      "洋葱 35g",
+      "清水 180g",
+      "食用油 4g"
+    ],
+    "cooking_steps": [
+      "先把主料煎香或焯水，蔬菜切块备用。",
+      "所有食材入锅后加少量清水焖煮到入味。",
+      "收汁或保留少量汤汁后即可出锅。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "牛肉忌口"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "胡萝卜炒鸡丝",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Chicken%20stir%20fry%20%281126047571%29.jpg",
+    "meal_type": "午餐",
+    "allowed_meal_types": [
+      "午餐",
+      "晚餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 15,
+    "portion_weight_g": 280.0,
+    "energy": 324.7,
+    "protein": 44.6,
+    "carbohydrate": 11.8,
+    "fat": 10.3,
+    "ingredients": [
+      "鸡胸肉 140g",
+      "胡萝卜 100g",
+      "青椒 35g",
+      "食用油 5g"
+    ],
+    "cooking_steps": [
+      "把主料切片或切丝，蔬菜洗净切好。",
+      "热锅少油先下肉类或海鲜炒到变色，再下蔬菜翻炒。",
+      "炒到断生入味即可出锅。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "香菇豆腐",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Dubu%20Jorim%20%28Braised%20tofu%29.jpg",
+    "meal_type": "午餐",
+    "allowed_meal_types": [
+      "午餐",
+      "晚餐"
+    ],
+    "difficulty": "中等",
+    "cooking_time": 22,
+    "portion_weight_g": 504.0,
+    "energy": 224.6,
+    "protein": 17.9,
+    "carbohydrate": 14.3,
+    "fat": 13.2,
+    "ingredients": [
+      "北豆腐 180g",
+      "香菇 100g",
+      "青椒 40g",
+      "清水 180g",
+      "食用油 4g"
+    ],
+    "cooking_steps": [
+      "先把主料煎香或焯水，蔬菜切块备用。",
+      "所有食材入锅后加少量清水焖煮到入味。",
+      "收汁或保留少量汤汁后即可出锅。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "大豆过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "洋葱里脊丝",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Teriyaki%20Pork%20Stir%20Fry.jpg",
+    "meal_type": "午餐",
+    "allowed_meal_types": [
+      "午餐",
+      "晚餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 15,
+    "portion_weight_g": 310.0,
+    "energy": 309.1,
+    "protein": 32.2,
+    "carbohydrate": 12.8,
+    "fat": 13.9,
+    "ingredients": [
+      "瘦猪里脊 145g",
+      "洋葱 120g",
+      "青椒 40g",
+      "食用油 5g"
+    ],
+    "cooking_steps": [
+      "把主料切片或切丝，蔬菜洗净切好。",
+      "热锅少油先下肉类或海鲜炒到变色，再下蔬菜翻炒。",
+      "炒到断生入味即可出锅。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "猪肉忌口"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "清蒸鳕鱼",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Steamed%20rice%20with%20fish.jpg",
+    "meal_type": "晚餐",
+    "allowed_meal_types": [
+      "午餐",
+      "晚餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 18,
+    "portion_weight_g": 225.0,
+    "energy": 197.1,
+    "protein": 41.8,
+    "carbohydrate": 1.8,
+    "fat": 1.9,
+    "ingredients": [
+      "鳕鱼 180g",
+      "番茄 45g"
+    ],
+    "cooking_steps": [
+      "把主料和配料处理干净后装盘。",
+      "水开后上锅蒸到完全熟透。",
+      "出锅后根据口味少量调味即可。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "海鲜过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "山药木耳鸡片",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Chicken%20stir%20fry%20%281126047571%29.jpg",
+    "meal_type": "晚餐",
+    "allowed_meal_types": [
+      "午餐",
+      "晚餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 15,
+    "portion_weight_g": 340.0,
+    "energy": 370.1,
+    "protein": 47.8,
+    "carbohydrate": 19.8,
+    "fat": 10.5,
+    "ingredients": [
+      "鸡胸肉 145g",
+      "山药 120g",
+      "木耳 70g",
+      "食用油 5g"
+    ],
+    "cooking_steps": [
+      "把主料切片或切丝，蔬菜洗净切好。",
+      "热锅少油先下肉类或海鲜炒到变色，再下蔬菜翻炒。",
+      "炒到断生入味即可出锅。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "番茄虾滑汤",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Shrimp%20soup%20at%20home.jpg",
+    "meal_type": "晚餐",
+    "allowed_meal_types": [
+      "午餐",
+      "晚餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 20,
+    "portion_weight_g": 685.0,
+    "energy": 233.6,
+    "protein": 42.9,
+    "carbohydrate": 8.2,
+    "fat": 4.6,
+    "ingredients": [
+      "虾仁 145g",
+      "番茄 140g",
+      "北豆腐 80g",
+      "清水 320g"
+    ],
+    "cooking_steps": [
+      "锅中加水烧开，先下比较耐煮的食材。",
+      "再放入主料和易熟配料，小火煮到食材成熟。",
+      "最后调味，保持汤体清爽即可。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "海鲜过敏",
+      "大豆过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "葱油鸡腿",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Chicken%20stir%20fry%20%281126047571%29.jpg",
+    "meal_type": "晚餐",
+    "allowed_meal_types": [
+      "午餐",
+      "晚餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 20,
+    "portion_weight_g": 200.0,
+    "energy": 288.8,
+    "protein": 38.8,
+    "carbohydrate": 2.0,
+    "fat": 12.9,
+    "ingredients": [
+      "鸡腿肉(去皮) 160g",
+      "青椒 40g"
+    ],
+    "cooking_steps": [
+      "把主料和配料处理干净后装盘。",
+      "水开后上锅蒸到完全熟透。",
+      "出锅后根据口味少量调味即可。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "西兰花牛肉",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Beef%20with%20broccoli.JPG",
+    "meal_type": "晚餐",
+    "allowed_meal_types": [
+      "午餐",
+      "晚餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 15,
+    "portion_weight_g": 280.0,
+    "energy": 313.9,
+    "protein": 35.5,
+    "carbohydrate": 9.1,
+    "fat": 15.7,
+    "ingredients": [
+      "牛里脊 145g",
+      "西兰花 130g",
+      "食用油 5g"
+    ],
+    "cooking_steps": [
+      "把主料切片或切丝，蔬菜洗净切好。",
+      "热锅少油先下肉类或海鲜炒到变色，再下蔬菜翻炒。",
+      "炒到断生入味即可出锅。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "牛肉忌口"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "虾仁蒸水蛋",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Chawanmushi.JPG",
+    "meal_type": "晚餐",
+    "allowed_meal_types": [
+      "午餐",
+      "晚餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 18,
+    "portion_weight_g": 315.0,
+    "energy": 242.6,
+    "protein": 34.3,
+    "carbohydrate": 1.4,
+    "fat": 11.1,
+    "ingredients": [
+      "鸡蛋 110g",
+      "虾仁 85g",
+      "清水 120g"
+    ],
+    "cooking_steps": [
+      "鸡蛋打散后加入温水，搅匀过筛。",
+      "放入配料后盖上保鲜膜或盘子。",
+      "上锅蒸到蛋液凝固熟透即可。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "海鲜过敏",
+      "蛋类过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "冬瓜鸡丸汤",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Winter%20melon%20soup.jpg",
+    "meal_type": "晚餐",
+    "allowed_meal_types": [
+      "午餐",
+      "晚餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 20,
+    "portion_weight_g": 655.0,
+    "energy": 233.3,
+    "protein": 38.7,
+    "carbohydrate": 7.1,
+    "fat": 4.9,
+    "ingredients": [
+      "鸡胸肉 120g",
+      "冬瓜 180g",
+      "香菇 35g",
+      "清水 320g"
+    ],
+    "cooking_steps": [
+      "锅中加水烧开，先下比较耐煮的食材。",
+      "再放入主料和易熟配料，小火煮到食材成熟。",
+      "最后调味，保持汤体清爽即可。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "蒜蓉虾仁",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Shrimp%20and%20broccoli%20stir%20fry%20%288374790146%29.jpg",
+    "meal_type": "晚餐",
+    "allowed_meal_types": [
+      "午餐",
+      "晚餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 15,
+    "portion_weight_g": 245.0,
+    "energy": 224.1,
+    "protein": 38.5,
+    "carbohydrate": 6.6,
+    "fat": 5.8,
+    "ingredients": [
+      "虾仁 150g",
+      "西兰花 90g",
+      "食用油 5g"
+    ],
+    "cooking_steps": [
+      "把主料切片或切丝，蔬菜洗净切好。",
+      "热锅少油先下肉类或海鲜炒到变色，再下蔬菜翻炒。",
+      "炒到断生入味即可出锅。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "海鲜过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "香菇鸡腿煲",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Chicken%20stir%20fry%20%281126047571%29.jpg",
+    "meal_type": "晚餐",
+    "allowed_meal_types": [
+      "午餐",
+      "晚餐"
+    ],
+    "difficulty": "中等",
+    "cooking_time": 22,
+    "portion_weight_g": 479.0,
+    "energy": 346.9,
+    "protein": 39.6,
+    "carbohydrate": 8.2,
+    "fat": 16.9,
+    "ingredients": [
+      "鸡腿肉(去皮) 155g",
+      "香菇 90g",
+      "番茄 50g",
+      "清水 180g",
+      "食用油 4g"
+    ],
+    "cooking_steps": [
+      "先把主料煎香或焯水，蔬菜切块备用。",
+      "所有食材入锅后加少量清水焖煮到入味。",
+      "收汁或保留少量汤汁后即可出锅。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "番茄鱼片汤",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Fish%20soup.jpg",
+    "meal_type": "晚餐",
+    "allowed_meal_types": [
+      "午餐",
+      "晚餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 20,
+    "portion_weight_g": 670.0,
+    "energy": 209.0,
+    "protein": 34.2,
+    "carbohydrate": 9.3,
+    "fat": 3.5,
+    "ingredients": [
+      "鱼片 150g",
+      "番茄 150g",
+      "西兰花 50g",
+      "清水 320g"
+    ],
+    "cooking_steps": [
+      "锅中加水烧开，先下比较耐煮的食材。",
+      "再放入主料和易熟配料，小火煮到食材成熟。",
+      "最后调味，保持汤体清爽即可。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "海鲜过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "木耳牛肉片",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Beef%20with%20broccoli.JPG",
+    "meal_type": "晚餐",
+    "allowed_meal_types": [
+      "午餐",
+      "晚餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 15,
+    "portion_weight_g": 270.0,
+    "energy": 298.6,
+    "protein": 33.5,
+    "carbohydrate": 6.8,
+    "fat": 15.4,
+    "ingredients": [
+      "牛里脊 145g",
+      "木耳 80g",
+      "青椒 40g",
+      "食用油 5g"
+    ],
+    "cooking_steps": [
+      "把主料切片或切丝，蔬菜洗净切好。",
+      "热锅少油先下肉类或海鲜炒到变色，再下蔬菜翻炒。",
+      "炒到断生入味即可出锅。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "牛肉忌口"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "豆腐鸡肉丸",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Tofu%20stew%2C%20pork.jpg",
+    "meal_type": "晚餐",
+    "allowed_meal_types": [
+      "午餐",
+      "晚餐"
+    ],
+    "difficulty": "中等",
+    "cooking_time": 22,
+    "portion_weight_g": 514.0,
+    "energy": 368.4,
+    "protein": 52.0,
+    "carbohydrate": 6.6,
+    "fat": 15.1,
+    "ingredients": [
+      "鸡胸肉 130g",
+      "北豆腐 130g",
+      "番茄 70g",
+      "清水 180g",
+      "食用油 4g"
+    ],
+    "cooking_steps": [
+      "先把主料煎香或焯水，蔬菜切块备用。",
+      "所有食材入锅后加少量清水焖煮到入味。",
+      "收汁或保留少量汤汁后即可出锅。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "大豆过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "青椒肉丝",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Teriyaki%20Pork%20Stir%20Fry.jpg",
+    "meal_type": "晚餐",
+    "allowed_meal_types": [
+      "午餐",
+      "晚餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 15,
+    "portion_weight_g": 285.0,
+    "energy": 288.7,
+    "protein": 31.8,
+    "carbohydrate": 8.5,
+    "fat": 14.0,
+    "ingredients": [
+      "瘦猪里脊 145g",
+      "青椒 100g",
+      "胡萝卜 35g",
+      "食用油 5g"
+    ],
+    "cooking_steps": [
+      "把主料切片或切丝，蔬菜洗净切好。",
+      "热锅少油先下肉类或海鲜炒到变色，再下蔬菜翻炒。",
+      "炒到断生入味即可出锅。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "猪肉忌口"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "山药牛肉片",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Beef%20with%20broccoli.JPG",
+    "meal_type": "晚餐",
+    "allowed_meal_types": [
+      "午餐",
+      "晚餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 15,
+    "portion_weight_g": 300.0,
+    "energy": 338.1,
+    "protein": 33.0,
+    "carbohydrate": 17.4,
+    "fat": 15.0,
+    "ingredients": [
+      "牛里脊 140g",
+      "山药 120g",
+      "青椒 35g",
+      "食用油 5g"
+    ],
+    "cooking_steps": [
+      "把主料切片或切丝，蔬菜洗净切好。",
+      "热锅少油先下肉类或海鲜炒到变色，再下蔬菜翻炒。",
+      "炒到断生入味即可出锅。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "牛肉忌口"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "家常番茄鸡胸肉",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Chicken%20stir%20fry%20%281126047571%29.jpg",
+    "meal_type": "晚餐",
+    "allowed_meal_types": [
+      "午餐",
+      "晚餐"
+    ],
+    "difficulty": "中等",
+    "cooking_time": 22,
+    "portion_weight_g": 514.0,
+    "energy": 316.2,
+    "protein": 46.7,
+    "carbohydrate": 9.0,
+    "fat": 9.6,
+    "ingredients": [
+      "鸡胸肉 145g",
+      "番茄 150g",
+      "洋葱 35g",
+      "清水 180g",
+      "食用油 4g"
+    ],
+    "cooking_steps": [
+      "先把主料煎香或焯水，蔬菜切块备用。",
+      "所有食材入锅后加少量清水焖煮到入味。",
+      "收汁或保留少量汤汁后即可出锅。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "香菇豆腐煲",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Tofu%20stew%2C%20pork.jpg",
+    "meal_type": "晚餐",
+    "allowed_meal_types": [
+      "午餐",
+      "晚餐"
+    ],
+    "difficulty": "中等",
+    "cooking_time": 22,
+    "portion_weight_g": 524.0,
+    "energy": 220.3,
+    "protein": 17.3,
+    "carbohydrate": 14.7,
+    "fat": 12.8,
+    "ingredients": [
+      "北豆腐 170g",
+      "香菇 100g",
+      "番茄 70g",
+      "清水 180g",
+      "食用油 4g"
+    ],
+    "cooking_steps": [
+      "先把主料煎香或焯水，蔬菜切块备用。",
+      "所有食材入锅后加少量清水焖煮到入味。",
+      "收汁或保留少量汤汁后即可出锅。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "大豆过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "芹菜鸡丝",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Chicken%20stir%20fry%20%281126047571%29.jpg",
+    "meal_type": "晚餐",
+    "allowed_meal_types": [
+      "午餐",
+      "晚餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 15,
+    "portion_weight_g": 300.0,
+    "energy": 309.6,
+    "protein": 44.7,
+    "carbohydrate": 7.7,
+    "fat": 10.4,
+    "ingredients": [
+      "鸡胸肉 140g",
+      "芹菜 120g",
+      "胡萝卜 35g",
+      "食用油 5g"
+    ],
+    "cooking_steps": [
+      "把主料切片或切丝，蔬菜洗净切好。",
+      "热锅少油先下肉类或海鲜炒到变色，再下蔬菜翻炒。",
+      "炒到断生入味即可出锅。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "鲈鱼豆腐汤",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Fish%20soup.jpg",
+    "meal_type": "晚餐",
+    "allowed_meal_types": [
+      "午餐",
+      "晚餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 20,
+    "portion_weight_g": 710.0,
+    "energy": 292.8,
+    "protein": 40.7,
+    "carbohydrate": 6.7,
+    "fat": 12.0,
+    "ingredients": [
+      "鲈鱼 150g",
+      "北豆腐 120g",
+      "冬瓜 120g",
+      "清水 320g"
+    ],
+    "cooking_steps": [
+      "锅中加水烧开，先下比较耐煮的食材。",
+      "再放入主料和易熟配料，小火煮到食材成熟。",
+      "最后调味，保持汤体清爽即可。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "海鲜过敏",
+      "大豆过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "西葫芦虾仁",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Shrimp%20and%20broccoli%20stir%20fry%20%288374790146%29.jpg",
+    "meal_type": "晚餐",
+    "allowed_meal_types": [
+      "午餐",
+      "晚餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 15,
+    "portion_weight_g": 305.0,
+    "energy": 225.7,
+    "protein": 36.6,
+    "carbohydrate": 8.3,
+    "fat": 5.7,
+    "ingredients": [
+      "虾仁 145g",
+      "西葫芦 120g",
+      "胡萝卜 35g",
+      "食用油 5g"
+    ],
+    "cooking_steps": [
+      "把主料切片或切丝，蔬菜洗净切好。",
+      "热锅少油先下肉类或海鲜炒到变色，再下蔬菜翻炒。",
+      "炒到断生入味即可出锅。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "海鲜过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "胡萝卜牛肉丝",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Beef%20with%20broccoli.JPG",
+    "meal_type": "晚餐",
+    "allowed_meal_types": [
+      "午餐",
+      "晚餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 15,
+    "portion_weight_g": 290.0,
+    "energy": 314.8,
+    "protein": 32.1,
+    "carbohydrate": 12.8,
+    "fat": 15.1,
+    "ingredients": [
+      "牛里脊 140g",
+      "胡萝卜 110g",
+      "青椒 35g",
+      "食用油 5g"
+    ],
+    "cooking_steps": [
+      "把主料切片或切丝，蔬菜洗净切好。",
+      "热锅少油先下肉类或海鲜炒到变色，再下蔬菜翻炒。",
+      "炒到断生入味即可出锅。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "牛肉忌口"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "虾仁冬瓜羹",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Winter%20melon%20soup.jpg",
+    "meal_type": "晚餐",
+    "allowed_meal_types": [
+      "午餐",
+      "晚餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 20,
+    "portion_weight_g": 715.0,
+    "energy": 221.9,
+    "protein": 39.9,
+    "carbohydrate": 7.3,
+    "fat": 4.6,
+    "ingredients": [
+      "虾仁 135g",
+      "冬瓜 180g",
+      "北豆腐 80g",
+      "清水 320g"
+    ],
+    "cooking_steps": [
+      "锅中加水烧开，先下比较耐煮的食材。",
+      "再放入主料和易熟配料，小火煮到食材成熟。",
+      "最后调味，保持汤体清爽即可。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "海鲜过敏",
+      "大豆过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "香菇肉末蒸蛋",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Chawanmushi.JPG",
+    "meal_type": "晚餐",
+    "allowed_meal_types": [
+      "午餐",
+      "晚餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 18,
+    "portion_weight_g": 345.0,
+    "energy": 292.7,
+    "protein": 28.8,
+    "carbohydrate": 4.3,
+    "fat": 18.1,
+    "ingredients": [
+      "鸡蛋 110g",
+      "猪肉末 70g",
+      "香菇 45g",
+      "清水 120g"
+    ],
+    "cooking_steps": [
+      "鸡蛋打散后加入温水，搅匀过筛。",
+      "放入配料后盖上保鲜膜或盘子。",
+      "上锅蒸到蛋液凝固熟透即可。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "蛋类过敏",
+      "猪肉忌口"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "洋葱牛肉片",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Beef%20with%20broccoli.JPG",
+    "meal_type": "晚餐",
+    "allowed_meal_types": [
+      "午餐",
+      "晚餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 15,
+    "portion_weight_g": 305.0,
+    "energy": 325.4,
+    "protein": 33.6,
+    "carbohydrate": 12.6,
+    "fat": 15.3,
+    "ingredients": [
+      "牛里脊 145g",
+      "洋葱 120g",
+      "青椒 35g",
+      "食用油 5g"
+    ],
+    "cooking_steps": [
+      "把主料切片或切丝，蔬菜洗净切好。",
+      "热锅少油先下肉类或海鲜炒到变色，再下蔬菜翻炒。",
+      "炒到断生入味即可出锅。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "牛肉忌口"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "丝瓜虾仁",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Shrimp%20and%20broccoli%20stir%20fry%20%288374790146%29.jpg",
+    "meal_type": "晚餐",
+    "allowed_meal_types": [
+      "午餐",
+      "晚餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 15,
+    "portion_weight_g": 320.0,
+    "energy": 221.8,
+    "protein": 36.5,
+    "carbohydrate": 7.1,
+    "fat": 5.8,
+    "ingredients": [
+      "虾仁 145g",
+      "丝瓜 130g",
+      "番茄 40g",
+      "食用油 5g"
+    ],
+    "cooking_steps": [
+      "把主料切片或切丝，蔬菜洗净切好。",
+      "热锅少油先下肉类或海鲜炒到变色，再下蔬菜翻炒。",
+      "炒到断生入味即可出锅。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "海鲜过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "番茄豆腐鸡蛋汤",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Spinach-tofu%20soup.jpg",
+    "meal_type": "晚餐",
+    "allowed_meal_types": [
+      "午餐",
+      "晚餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 20,
+    "portion_weight_g": 690.0,
+    "energy": 219.8,
+    "protein": 20.3,
+    "carbohydrate": 11.5,
+    "fat": 12.2,
+    "ingredients": [
+      "鸡蛋 60g",
+      "北豆腐 120g",
+      "番茄 150g",
+      "菠菜 40g",
+      "清水 320g"
+    ],
+    "cooking_steps": [
+      "锅中加水烧开，先下比较耐煮的食材。",
+      "再放入主料和易熟配料，小火煮到食材成熟。",
+      "最后调味，保持汤体清爽即可。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "大豆过敏",
+      "蛋类过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "白水煮蛋",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Boiled%20Eggs.jpg",
+    "meal_type": "加餐",
+    "allowed_meal_types": [
+      "加餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 8,
+    "portion_weight_g": 60.0,
+    "energy": 86.4,
+    "protein": 7.6,
+    "carbohydrate": 0.7,
+    "fat": 5.9,
+    "ingredients": [
+      "鸡蛋 60g"
+    ],
+    "cooking_steps": [
+      "把食材准备好或加热到适口状态。",
+      "装盘后即可直接食用。",
+      "适合作为训练前后的小份加餐。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "蛋类过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "五香茶叶蛋",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Boiled%20Eggs.jpg",
+    "meal_type": "加餐",
+    "allowed_meal_types": [
+      "加餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 12,
+    "portion_weight_g": 65.0,
+    "energy": 93.6,
+    "protein": 8.2,
+    "carbohydrate": 0.7,
+    "fat": 6.4,
+    "ingredients": [
+      "鸡蛋 65g"
+    ],
+    "cooking_steps": [
+      "把食材准备好或加热到适口状态。",
+      "装盘后即可直接食用。",
+      "适合作为训练前后的小份加餐。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "蛋类过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "无糖酸奶",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Yogurt%20fruit%20bowl.jpg",
+    "meal_type": "加餐",
+    "allowed_meal_types": [
+      "加餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 2,
+    "portion_weight_g": 200.0,
+    "energy": 120.0,
+    "protein": 8.0,
+    "carbohydrate": 10.0,
+    "fat": 6.0,
+    "ingredients": [
+      "无糖酸奶 200g"
+    ],
+    "cooking_steps": [
+      "把食材准备好或加热到适口状态。",
+      "装盘后即可直接食用。",
+      "适合作为训练前后的小份加餐。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "乳制品过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "现磨无糖豆浆",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Soy%20milk.jpg",
+    "meal_type": "加餐",
+    "allowed_meal_types": [
+      "加餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 3,
+    "portion_weight_g": 260.0,
+    "energy": 85.8,
+    "protein": 7.8,
+    "carbohydrate": 4.7,
+    "fat": 4.2,
+    "ingredients": [
+      "无糖豆浆 260g"
+    ],
+    "cooking_steps": [
+      "把食材准备好或加热到适口状态。",
+      "装盘后即可直接食用。",
+      "适合作为训练前后的小份加餐。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "大豆过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "蒸玉米",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Steamed%20Corn.jpg",
+    "meal_type": "加餐",
+    "allowed_meal_types": [
+      "加餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 12,
+    "portion_weight_g": 180.0,
+    "energy": 201.6,
+    "protein": 5.8,
+    "carbohydrate": 41.0,
+    "fat": 2.2,
+    "ingredients": [
+      "玉米 180g"
+    ],
+    "cooking_steps": [
+      "把食材准备好或加热到适口状态。",
+      "装盘后即可直接食用。",
+      "适合作为训练前后的小份加餐。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "烤红薯",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Steamed%20sweet%20potato.jpg",
+    "meal_type": "加餐",
+    "allowed_meal_types": [
+      "加餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 20,
+    "portion_weight_g": 180.0,
+    "energy": 154.8,
+    "protein": 2.3,
+    "carbohydrate": 36.2,
+    "fat": 0.2,
+    "ingredients": [
+      "红薯 180g"
+    ],
+    "cooking_steps": [
+      "把食材准备好或加热到适口状态。",
+      "装盘后即可直接食用。",
+      "适合作为训练前后的小份加餐。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "软糯蒸紫薯",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Steamed%20sweet%20potato.jpg",
+    "meal_type": "加餐",
+    "allowed_meal_types": [
+      "加餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 18,
+    "portion_weight_g": 170.0,
+    "energy": 139.4,
+    "protein": 2.5,
+    "carbohydrate": 32.3,
+    "fat": 0.2,
+    "ingredients": [
+      "紫薯 170g"
+    ],
+    "cooking_steps": [
+      "把食材准备好或加热到适口状态。",
+      "装盘后即可直接食用。",
+      "适合作为训练前后的小份加餐。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "海苔金枪鱼饭团",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Japanese%20rice%20balls%20%28onigiri%29.jpg",
+    "meal_type": "加餐",
+    "allowed_meal_types": [
+      "加餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 12,
+    "portion_weight_g": 270.0,
+    "energy": 285.9,
+    "protein": 23.7,
+    "carbohydrate": 43.9,
+    "fat": 1.3,
+    "ingredients": [
+      "白米饭 160g",
+      "金枪鱼罐头 70g",
+      "黄瓜 35g",
+      "海苔 5g"
+    ],
+    "cooking_steps": [
+      "把主料提前做熟切碎，和米饭拌匀。",
+      "加入海苔碎后分成两份。",
+      "戴手套捏成饭团，压实后即可食用。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "海鲜过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "香煎鸡肉饭团",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Japanese%20rice%20balls%20%28onigiri%29.jpg",
+    "meal_type": "加餐",
+    "allowed_meal_types": [
+      "加餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 12,
+    "portion_weight_g": 280.0,
+    "energy": 370.3,
+    "protein": 31.8,
+    "carbohydrate": 50.6,
+    "fat": 3.9,
+    "ingredients": [
+      "白米饭 160g",
+      "鸡胸肉 80g",
+      "玉米 35g",
+      "海苔 5g"
+    ],
+    "cooking_steps": [
+      "把主料提前做熟切碎，和米饭拌匀。",
+      "加入海苔碎后分成两份。",
+      "戴手套捏成饭团，压实后即可食用。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "燕麦酸奶杯",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Yogurt%20fruit%20bowl.jpg",
+    "meal_type": "加餐",
+    "allowed_meal_types": [
+      "加餐",
+      "早餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 4,
+    "portion_weight_g": 280.0,
+    "energy": 283.1,
+    "protein": 11.9,
+    "carbohydrate": 45.2,
+    "fat": 7.7,
+    "ingredients": [
+      "无糖酸奶 180g",
+      "燕麦 30g",
+      "香蕉 70g"
+    ],
+    "cooking_steps": [
+      "把需要蒸熟的食材提前处理好并放凉。",
+      "将食材按层次放入杯中。",
+      "吃前轻轻拌匀即可。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "乳制品过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "香蕉酸奶杯",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Yogurt%20fruit%20bowl.jpg",
+    "meal_type": "加餐",
+    "allowed_meal_types": [
+      "加餐",
+      "早餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 4,
+    "portion_weight_g": 290.0,
+    "energy": 205.9,
+    "protein": 8.4,
+    "carbohydrate": 34.3,
+    "fat": 5.7,
+    "ingredients": [
+      "无糖酸奶 180g",
+      "香蕉 110g"
+    ],
+    "cooking_steps": [
+      "把需要蒸熟的食材提前处理好并放凉。",
+      "将食材按层次放入杯中。",
+      "吃前轻轻拌匀即可。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "乳制品过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "蓝莓酸奶杯",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Yogurt%20fruit%20bowl.jpg",
+    "meal_type": "加餐",
+    "allowed_meal_types": [
+      "加餐",
+      "早餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 4,
+    "portion_weight_g": 260.0,
+    "energy": 153.6,
+    "protein": 7.8,
+    "carbohydrate": 20.6,
+    "fat": 5.6,
+    "ingredients": [
+      "无糖酸奶 180g",
+      "蓝莓 80g"
+    ],
+    "cooking_steps": [
+      "把需要蒸熟的食材提前处理好并放凉。",
+      "将食材按层次放入杯中。",
+      "吃前轻轻拌匀即可。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "乳制品过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "草莓酸奶杯",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Yogurt%20fruit%20bowl.jpg",
+    "meal_type": "加餐",
+    "allowed_meal_types": [
+      "加餐",
+      "早餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 4,
+    "portion_weight_g": 290.0,
+    "energy": 143.2,
+    "protein": 8.1,
+    "carbohydrate": 16.8,
+    "fat": 5.7,
+    "ingredients": [
+      "无糖酸奶 180g",
+      "草莓 110g"
+    ],
+    "cooking_steps": [
+      "把需要蒸熟的食材提前处理好并放凉。",
+      "将食材按层次放入杯中。",
+      "吃前轻轻拌匀即可。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "乳制品过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "毛豆杯",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Bowl%20of%20Edamame.jpg",
+    "meal_type": "加餐",
+    "allowed_meal_types": [
+      "加餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 6,
+    "portion_weight_g": 120.0,
+    "energy": 157.2,
+    "protein": 15.6,
+    "carbohydrate": 13.2,
+    "fat": 7.2,
+    "ingredients": [
+      "毛豆 120g"
+    ],
+    "cooking_steps": [
+      "把食材准备好或加热到适口状态。",
+      "装盘后即可直接食用。",
+      "适合作为训练前后的小份加餐。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "大豆过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "卤香豆干",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Dubu%20Jorim%20%28Braised%20tofu%29.jpg",
+    "meal_type": "加餐",
+    "allowed_meal_types": [
+      "加餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 4,
+    "portion_weight_g": 90.0,
+    "energy": 126.0,
+    "protein": 16.2,
+    "carbohydrate": 3.6,
+    "fat": 6.3,
+    "ingredients": [
+      "豆干 90g"
+    ],
+    "cooking_steps": [
+      "把食材准备好或加热到适口状态。",
+      "装盘后即可直接食用。",
+      "适合作为训练前后的小份加餐。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "大豆过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "玉米鸡蛋杯",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Steamed%20Corn.jpg",
+    "meal_type": "加餐",
+    "allowed_meal_types": [
+      "加餐",
+      "早餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 4,
+    "portion_weight_g": 275.0,
+    "energy": 273.6,
+    "protein": 14.8,
+    "carbohydrate": 33.0,
+    "fat": 9.9,
+    "ingredients": [
+      "玉米 120g",
+      "鸡蛋 55g",
+      "无糖酸奶 100g"
+    ],
+    "cooking_steps": [
+      "把需要蒸熟的食材提前处理好并放凉。",
+      "将食材按层次放入杯中。",
+      "吃前轻轻拌匀即可。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "乳制品过敏",
+      "蛋类过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "南瓜酸奶杯",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Yogurt%20fruit%20bowl.jpg",
+    "meal_type": "加餐",
+    "allowed_meal_types": [
+      "加餐",
+      "早餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 4,
+    "portion_weight_g": 290.0,
+    "energy": 153.0,
+    "protein": 7.4,
+    "carbohydrate": 21.5,
+    "fat": 4.6,
+    "ingredients": [
+      "南瓜 140g",
+      "无糖酸奶 150g"
+    ],
+    "cooking_steps": [
+      "把需要蒸熟的食材提前处理好并放凉。",
+      "将食材按层次放入杯中。",
+      "吃前轻轻拌匀即可。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "乳制品过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "山药泥",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Steamed%20sweet%20potato.jpg",
+    "meal_type": "加餐",
+    "allowed_meal_types": [
+      "加餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 12,
+    "portion_weight_g": 180.0,
+    "energy": 102.6,
+    "protein": 2.7,
+    "carbohydrate": 23.4,
+    "fat": 0.2,
+    "ingredients": [
+      "山药 180g"
+    ],
+    "cooking_steps": [
+      "把食材准备好或加热到适口状态。",
+      "装盘后即可直接食用。",
+      "适合作为训练前后的小份加餐。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "迷你虾仁蒸蛋",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Chawanmushi.JPG",
+    "meal_type": "加餐",
+    "allowed_meal_types": [
+      "早餐",
+      "加餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 15,
+    "portion_weight_g": 290.0,
+    "energy": 217.8,
+    "protein": 28.3,
+    "carbohydrate": 1.3,
+    "fat": 11.1,
+    "ingredients": [
+      "鸡蛋 110g",
+      "虾仁 60g",
+      "清水 120g"
+    ],
+    "cooking_steps": [
+      "鸡蛋打散后加入温水，搅匀过筛。",
+      "放入配料后盖上保鲜膜或盘子。",
+      "上锅蒸到蛋液凝固熟透即可。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "海鲜过敏",
+      "蛋类过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "牛肉饭卷",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Egg%20Tortilla%20Wrap%20%288728191788%29.jpg",
+    "meal_type": "加餐",
+    "allowed_meal_types": [
+      "加餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 12,
+    "portion_weight_g": 278.0,
+    "energy": 498.1,
+    "protein": 26.7,
+    "carbohydrate": 66.5,
+    "fat": 13.6,
+    "ingredients": [
+      "全麦卷饼 85g",
+      "牛里脊 75g",
+      "白米饭 90g",
+      "黄瓜 25g",
+      "食用油 3g"
+    ],
+    "cooking_steps": [
+      "把夹馅食材提前处理熟透，切成小块或细丝。",
+      "将饼皮加热到柔软后铺开，放入馅料。",
+      "卷紧后切段，趁热食用口感更好。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "麸质过敏",
+      "牛肉忌口"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "玉米燕麦杯",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Cooked%20oatmeal%20in%20bowl.jpg",
+    "meal_type": "加餐",
+    "allowed_meal_types": [
+      "加餐",
+      "早餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 4,
+    "portion_weight_g": 238.0,
+    "energy": 278.1,
+    "protein": 11.3,
+    "carbohydrate": 45.3,
+    "fat": 6.6,
+    "ingredients": [
+      "玉米 90g",
+      "燕麦 28g",
+      "无糖酸奶 120g"
+    ],
+    "cooking_steps": [
+      "把需要蒸熟的食材提前处理好并放凉。",
+      "将食材按层次放入杯中。",
+      "吃前轻轻拌匀即可。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "乳制品过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "鸡丝卷饼",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Egg%20Tortilla%20Wrap%20%288728191788%29.jpg",
+    "meal_type": "加餐",
+    "allowed_meal_types": [
+      "加餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 12,
+    "portion_weight_g": 223.0,
+    "energy": 406.5,
+    "protein": 31.6,
+    "carbohydrate": 44.4,
+    "fat": 10.9,
+    "ingredients": [
+      "全麦卷饼 85g",
+      "鸡胸肉 75g",
+      "生菜 35g",
+      "黄瓜 25g",
+      "食用油 3g"
+    ],
+    "cooking_steps": [
+      "把夹馅食材提前处理熟透，切成小块或细丝。",
+      "将饼皮加热到柔软后铺开，放入馅料。",
+      "卷紧后切段，趁热食用口感更好。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "麸质过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "苹果酸奶杯",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Yogurt%20fruit%20bowl.jpg",
+    "meal_type": "加餐",
+    "allowed_meal_types": [
+      "加餐",
+      "早餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 4,
+    "portion_weight_g": 280.0,
+    "energy": 158.4,
+    "protein": 6.8,
+    "carbohydrate": 24.8,
+    "fat": 5.0,
+    "ingredients": [
+      "苹果 120g",
+      "无糖酸奶 160g"
+    ],
+    "cooking_steps": [
+      "把需要蒸熟的食材提前处理好并放凉。",
+      "将食材按层次放入杯中。",
+      "吃前轻轻拌匀即可。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "乳制品过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "毛豆玉米杯",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Bowl%20of%20Edamame.jpg",
+    "meal_type": "加餐",
+    "allowed_meal_types": [
+      "加餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 6,
+    "portion_weight_g": 190.0,
+    "energy": 229.9,
+    "protein": 14.9,
+    "carbohydrate": 32.7,
+    "fat": 6.6,
+    "ingredients": [
+      "毛豆 90g",
+      "玉米 100g"
+    ],
+    "cooking_steps": [
+      "把食材准备好或加热到适口状态。",
+      "装盘后即可直接食用。",
+      "适合作为训练前后的小份加餐。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "大豆过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "香蕉燕麦杯",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Cooked%20oatmeal%20in%20bowl.jpg",
+    "meal_type": "加餐",
+    "allowed_meal_types": [
+      "加餐",
+      "早餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 4,
+    "portion_weight_g": 308.0,
+    "energy": 253.7,
+    "protein": 10.1,
+    "carbohydrate": 45.0,
+    "fat": 5.1,
+    "ingredients": [
+      "香蕉 100g",
+      "燕麦 28g",
+      "无糖豆浆 180g"
+    ],
+    "cooking_steps": [
+      "把需要蒸熟的食材提前处理好并放凉。",
+      "将食材按层次放入杯中。",
+      "吃前轻轻拌匀即可。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "大豆过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  }
+]

@@ -204,21 +204,21 @@
 
                   <!-- Meal List (Compact) -->
                   <div class="compact-meal-list">
-                    <div class="compact-meal-item">
+                    <div class="compact-meal-item" @click.stop="openMealDetail(plan, 'breakfast')">
                       <div class="cmi-icon">🌅</div>
                       <div class="cmi-content">
                         <span class="cmi-name">{{ formatMealNames(plan, 'breakfast') }}</span>
                         <span class="cmi-cal">{{ Math.floor(getMealEnergy(plan, 'breakfast')) }} kcal</span>
                       </div>
                     </div>
-                    <div class="compact-meal-item">
+                    <div class="compact-meal-item" @click.stop="openMealDetail(plan, 'lunch')">
                       <div class="cmi-icon">☀️</div>
                       <div class="cmi-content">
                         <span class="cmi-name">{{ formatMealNames(plan, 'lunch') }}</span>
                         <span class="cmi-cal">{{ Math.floor(getMealEnergy(plan, 'lunch')) }} kcal</span>
                       </div>
                     </div>
-                    <div class="compact-meal-item">
+                    <div class="compact-meal-item" @click.stop="openMealDetail(plan, 'dinner')">
                       <div class="cmi-icon">🌙</div>
                       <div class="cmi-content">
                         <span class="cmi-name">{{ formatMealNames(plan, 'dinner') }}</span>
@@ -402,6 +402,12 @@ const formatMealNames = (plan, mealType) => {
 const getMealEnergy = (plan, mealType) => {
   return getMealItems(plan, mealType)
     .reduce((sum, item) => sum + (Number(item?.energy) || 0), 0);
+};
+
+const openMealDetail = (plan, mealType) => {
+  const target = getMealItems(plan, mealType)[0];
+  if (!target?.id) return;
+  router.push({ name: 'RecipeDetail', params: { id: target.id } });
 };
 
 const fetchRecommendations = async (forceRefresh = false) => {
@@ -830,6 +836,14 @@ const adoptMealResult = async () => {
   display: flex;
   align-items: center;
   gap: 10px;
+  cursor: pointer;
+  border-radius: 10px;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.compact-meal-item:hover {
+  background-color: #f9fafb;
+  transform: translateX(2px);
 }
 
 .cmi-icon {

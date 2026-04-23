@@ -9,6 +9,7 @@ import pymysql
 import pymysql.cursors
 from openai import OpenAI
 from tqdm import tqdm
+from classify_recipe_suitability import classify_allowed_meal_types, get_recipe_columns
 
 
 DB_CONFIG = {
@@ -22,7 +23,7 @@ DB_CONFIG = {
 
 BASE_URL = os.getenv("NUTRIPLAN_LLM_BASE_URL", "https://api.siliconflow.cn/v1")
 MODEL_NAME = os.getenv("NUTRIPLAN_LLM_MODEL", "deepseek-ai/DeepSeek-V3.2")
-API_KEY = os.getenv("NUTRIPLAN_LLM_API_KEY", "")
+API_KEY = os.getenv("NUTRIPLAN_LLM_API_KEY", "sk-hvzxenbdsosgapxauxlnehlgkigyvgmhjaesvulfnwcxeqjp")
 
 DEFAULT_WORKERS = int(os.getenv("NUTRIPLAN_LLM_WORKERS", "3"))
 DEFAULT_LIMIT = int(os.getenv("NUTRIPLAN_LLM_LIMIT", "0"))
@@ -392,41 +393,62 @@ def classify_recipe(recipe, nutrition):
     }
 
 
-def update_recipe(recipe_id, nutrition, suitability):
-    sql = """
+def build_target_users(suitability):
+    target_users = []
+    if suitability["is_weight_loss_friendly"]:
+        target_users.append("减脂")
+    if suitability["is_muscle_gain_friendly"]:
+        target_users.append("增肌")
+    if suitability["is_sugar_control_friendly"]:
+        target_users.append("控糖")
+    if suitability["is_general_friendly"]:
+        target_users.append("大众")
+    return target_users
+
+
+def update_recipe(recipe_id, nutrition, suitability, target_users, allowed_meal_types=None, update_allowed_meal_types=False):
+    set_clauses = [
+        "portion_weight_g = %s",
+        "energy = %s",
+        "protein = %s",
+        "carbohydrate = %s",
+        "fat = %s",
+        "target_users = %s",
+        "is_weight_loss_friendly = %s",
+        "is_muscle_gain_friendly = %s",
+        "is_sugar_control_friendly = %s",
+        "is_general_friendly = %s",
+    ]
+    params = [
+        nutrition["portion_weight_g"],
+        nutrition["energy"],
+        nutrition["protein"],
+        nutrition["carbohydrate"],
+        nutrition["fat"],
+        json.dumps(target_users, ensure_ascii=False),
+        suitability["is_weight_loss_friendly"],
+        suitability["is_muscle_gain_friendly"],
+        suitability["is_sugar_control_friendly"],
+        suitability["is_general_friendly"],
+    ]
+
+    if update_allowed_meal_types:
+        set_clauses.append("allowed_meal_types = %s")
+        params.append(json.dumps(allowed_meal_types or [], ensure_ascii=False))
+
+    set_clauses.append("updated_at = NOW()")
+    sql = f"""
     UPDATE recipes
     SET
-        portion_weight_g = %s,
-        energy = %s,
-        protein = %s,
-        carbohydrate = %s,
-        fat = %s,
-        is_weight_loss_friendly = %s,
-        is_muscle_gain_friendly = %s,
-        is_sugar_control_friendly = %s,
-        is_general_friendly = %s,
-        updated_at = NOW()
+        {", ".join(set_clauses)}
     WHERE id = %s
     """
+    params.append(recipe_id)
 
     conn = get_db_connection()
     try:
         with conn.cursor() as cursor:
-            cursor.execute(
-                sql,
-                (
-                    nutrition["portion_weight_g"],
-                    nutrition["energy"],
-                    nutrition["protein"],
-                    nutrition["carbohydrate"],
-                    nutrition["fat"],
-                    suitability["is_weight_loss_friendly"],
-                    suitability["is_muscle_gain_friendly"],
-                    suitability["is_sugar_control_friendly"],
-                    suitability["is_general_friendly"],
-                    recipe_id,
-                ),
-            )
+            cursor.execute(sql, params)
         conn.commit()
     finally:
         conn.close()
@@ -490,8 +512,24 @@ def process_recipe(client, recipe, args):
 
             nutrition = convert_to_recipe_nutrition(recipe, estimate)
             suitability = classify_recipe(recipe, nutrition)
+            target_users = build_target_users(suitability)
+            recipe_for_slots = {
+                **recipe,
+                "energy": nutrition["energy"],
+                "protein": nutrition["protein"],
+                "carbohydrate": nutrition["carbohydrate"],
+                "fat": nutrition["fat"],
+            }
+            allowed_meal_types = classify_allowed_meal_types(recipe_for_slots)
             if not args.dry_run:
-                update_recipe(recipe["id"], nutrition, suitability)
+                update_recipe(
+                    recipe["id"],
+                    nutrition,
+                    suitability,
+                    target_users,
+                    allowed_meal_types=allowed_meal_types,
+                    update_allowed_meal_types=args.update_allowed_meal_types,
+                )
 
             return {
                 "ok": True,
@@ -500,6 +538,8 @@ def process_recipe(client, recipe, args):
                 "nutrition": nutrition,
                 "estimate": estimate,
                 "suitability": suitability,
+                "target_users": target_users,
+                "allowed_meal_types": allowed_meal_types,
             }
         except Exception as exc:
             last_error = exc
@@ -513,10 +553,74 @@ def process_recipe(client, recipe, args):
     }
 
 
+def run_main_loop(args, recipes, client):
+    print("=== AI nutrition backfill ===")
+    print(f"recipes to process: {len(recipes)}")
+    if not recipes:
+        print("no recipes need processing")
+        return
+
+    success = 0
+    skipped = 0
+
+    with tqdm(total=len(recipes)) as pbar:
+        with ThreadPoolExecutor(max_workers=max(1, args.workers)) as executor:
+            futures = [executor.submit(process_recipe, client, recipe, args) for recipe in recipes]
+
+            for future in as_completed(futures):
+                result = future.result()
+                if result["ok"]:
+                    nutrition = result["nutrition"]
+                    estimate = result["estimate"]
+                    suitability = result["suitability"]
+                    target_users = result["target_users"]
+                    allowed_meal_types = result["allowed_meal_types"]
+                    action = "estimate" if args.dry_run else "update"
+                    tqdm.write(
+                        f"[{result['recipe_id']}] {result['name']} {action} success | "
+                        f"portion={nutrition['portion_weight_g']}g | "
+                        f"per100g={nutrition['energy']}kcal P{nutrition['protein']} "
+                        f"C{nutrition['carbohydrate']} F{nutrition['fat']} | "
+                        f"WL={int(suitability['is_weight_loss_friendly'])} "
+                        f"MG={int(suitability['is_muscle_gain_friendly'])} "
+                        f"SC={int(suitability['is_sugar_control_friendly'])} "
+                        f"GEN={int(suitability['is_general_friendly'])} | "
+                        f"target={','.join(target_users) if target_users else 'none'} | "
+                        f"allowed={','.join(allowed_meal_types) if allowed_meal_types else 'none'} | "
+                        f"conf={estimate['confidence']}"
+                    )
+                    success += 1
+                else:
+                    tqdm.write(
+                        f"[{result['recipe_id']}] {result['name']} skipped: {result['reason']}"
+                    )
+                    skipped += 1
+                pbar.update(1)
+
+    deleted = 0
+    if args.keep_invalid:
+        print("\nskipped invalid recipe cleanup")
+    else:
+        deleted = delete_invalid_recipes(dry_run=args.dry_run)
+        action = "would delete" if args.dry_run else "deleted"
+        print(f"{action} recipes still missing valid nutrition: {deleted}")
+
+    print(
+        f"\nfinished: success={success}, skipped={skipped}, "
+        f"invalid_deleted={deleted}, dry_run={args.dry_run}"
+    )
+
+
 def main():
     args = parse_args()
     client = create_client()
+    columns = get_recipe_columns()
+    args.update_allowed_meal_types = "allowed_meal_types" in columns
+    if not args.update_allowed_meal_types:
+        print("allowed_meal_types column not found, meal slot backfill will be skipped")
     recipes = load_recipes(args)
+    return run_main_loop(args, recipes, client)
+    """
 
     print("=== AI 营养回填工具 ===")
     print(f"待处理 recipes: {len(recipes)}")
@@ -537,6 +641,8 @@ def main():
                     nutrition = result["nutrition"]
                     estimate = result["estimate"]
                     suitability = result["suitability"]
+                    target_users = result["target_users"]
+                    allowed_meal_types = result["allowed_meal_types"]
                     action = "估算" if args.dry_run else "回填"
                     tqdm.write(
                         f"✅ [{result['recipe_id']}] {result['name']} {action}成功 | "
@@ -547,6 +653,8 @@ def main():
                         f"MG={int(suitability['is_muscle_gain_friendly'])} "
                         f"SC={int(suitability['is_sugar_control_friendly'])} "
                         f"GEN={int(suitability['is_general_friendly'])} | "
+                        f"target={','.join(target_users) if target_users else '无'} | "
+                        f"allowed={','.join(allowed_meal_types) if allowed_meal_types else '鏃?} | "
                         f"conf={estimate['confidence']}"
                     )
                     success += 1
@@ -566,6 +674,7 @@ def main():
         print(f"{action}仍无营养数据的菜谱: {deleted}")
 
     print(f"\n完成: 成功={success}, 跳过={skipped}, 删除无效={deleted}, dry_run={args.dry_run}")
+    """
 
 
 if __name__ == "__main__":

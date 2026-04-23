@@ -91,7 +91,35 @@ func (s *UserServiceImpl) UpdateUserProfile(id uint, profile *models.User) error
 	profile.TDEE = tdee
 	profile.BMI = bmi
 
-	return s.userRepo.UpdateHealthProfile(id, profile)
+	if err := s.userRepo.UpdateHealthProfile(id, profile); err != nil {
+		return err
+	}
+
+	return resetTodayDietPlanState(id)
+}
+
+func resetTodayDietPlanState(userID uint) error {
+	if dao.DB == nil || userID == 0 {
+		return nil
+	}
+
+	now := time.Now()
+	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	tomorrow := today.Add(24 * time.Hour)
+
+	if err := dao.DB.
+		Where("user_id = ? AND plan_date >= ? AND plan_date < ?", userID, today, tomorrow).
+		Delete(&models.DailyRecipePlan{}).Error; err != nil {
+		return fmt.Errorf("重置今日推荐食谱失败: %w", err)
+	}
+
+	if err := dao.DB.
+		Where("user_id = ? AND food_source = ? AND record_date >= ? AND record_date < ?", userID, 1, today, tomorrow).
+		Delete(&models.DailyIntakeRecord{}).Error; err != nil {
+		return fmt.Errorf("清理今日推荐食谱完成记录失败: %w", err)
+	}
+
+	return nil
 }
 
 func (s *UserServiceImpl) GetUserByID(id uint) (*models.User, error) {

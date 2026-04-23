@@ -100,11 +100,12 @@ const handleLogin = async () => {
     loading.value = true
     
     await authStore.login(loginForm.username, loginForm.password)
+    const profile = await authStore.loadProfile().catch(() => null)
     message.success('登录成功')
     
-    // 获取重定向路径
     const redirect = router.currentRoute.value.query.redirect || '/home'
-    router.push(redirect)
+    const targetRoute = profile && !authStore.hasProfile ? '/profile' : redirect
+    router.push(targetRoute)
   } catch (error) {
     if (error.errors) {
       // 表单验证错误

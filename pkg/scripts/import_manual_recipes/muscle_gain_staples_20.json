@@ -1,0 +1,732 @@
+[
+  {
+    "name": "南瓜燕麦粥",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Cooked%20oatmeal%20in%20bowl.jpg",
+    "meal_type": "早餐",
+    "allowed_meal_types": [
+      "早餐",
+      "加餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 18,
+    "portion_weight_g": 410,
+    "energy": 221,
+    "protein": 5.6,
+    "carbohydrate": 44.8,
+    "fat": 3.0,
+    "ingredients": [
+      "燕麦 40g",
+      "南瓜 140g",
+      "清水 230g"
+    ],
+    "cooking_steps": [
+      "燕麦和南瓜块一起放入锅中。",
+      "加清水煮开后转小火，慢慢熬到南瓜软烂。",
+      "搅匀后焖几分钟，口感会更细腻。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [],
+    "is_weight_loss_friendly": true,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": true,
+    "is_general_friendly": true
+  },
+  {
+    "name": "红枣燕麦粥",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Cooked%20oatmeal%20in%20bowl.jpg",
+    "meal_type": "早餐",
+    "allowed_meal_types": [
+      "早餐",
+      "加餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 18,
+    "portion_weight_g": 365,
+    "energy": 226,
+    "protein": 6.1,
+    "carbohydrate": 45.8,
+    "fat": 3.3,
+    "ingredients": [
+      "燕麦 45g",
+      "红枣 18g",
+      "清水 240g"
+    ],
+    "cooking_steps": [
+      "燕麦和去核红枣一同放入锅中。",
+      "加入清水后煮开，转小火继续煮至浓稠。",
+      "粥体顺滑后盛出即可。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [],
+    "is_weight_loss_friendly": true,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "桂圆燕麦粥",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Cooked%20oatmeal%20in%20bowl.jpg",
+    "meal_type": "早餐",
+    "allowed_meal_types": [
+      "早餐",
+      "加餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 20,
+    "portion_weight_g": 355,
+    "energy": 232,
+    "protein": 5.9,
+    "carbohydrate": 46.1,
+    "fat": 3.0,
+    "ingredients": [
+      "燕麦 42g",
+      "桂圆肉 20g",
+      "清水 210g"
+    ],
+    "cooking_steps": [
+      "燕麦和桂圆肉一起放入锅中。",
+      "加入清水煮开后转小火慢煮。",
+      "煮到粥体浓稠顺滑后即可关火。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [],
+    "is_weight_loss_friendly": true,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "全麦刀切馒头",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Steamed%20Buns%20%284650154698%29.jpg",
+    "meal_type": "早餐",
+    "allowed_meal_types": [
+      "早餐",
+      "加餐"
+    ],
+    "difficulty": "中等",
+    "cooking_time": 45,
+    "portion_weight_g": 132,
+    "energy": 254,
+    "protein": 8.8,
+    "carbohydrate": 50.1,
+    "fat": 1.8,
+    "ingredients": [
+      "全麦面粉 85g",
+      "酵母 2g",
+      "清水 45g"
+    ],
+    "cooking_steps": [
+      "全麦面粉加酵母和清水揉成面团，发酵至两倍大。",
+      "排气后整理成长条，切成均匀小段。",
+      "二次醒发后上锅蒸熟即可。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "麸质过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "南瓜发糕",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Steamed%20Buns%20%284650154698%29.jpg",
+    "meal_type": "早餐",
+    "allowed_meal_types": [
+      "早餐",
+      "加餐"
+    ],
+    "difficulty": "中等",
+    "cooking_time": 35,
+    "portion_weight_g": 178,
+    "energy": 258,
+    "protein": 6.7,
+    "carbohydrate": 53.9,
+    "fat": 1.9,
+    "ingredients": [
+      "南瓜 120g",
+      "面粉 55g",
+      "玉米面 20g",
+      "酵母 2g",
+      "清水 40g"
+    ],
+    "cooking_steps": [
+      "南瓜蒸熟压泥后，和面粉、玉米面混匀。",
+      "加入酵母和清水调成稠面糊。",
+      "倒入模具后发酵至表面微鼓。",
+      "上锅蒸透，放凉后切块食用。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "麸质过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "黑芝麻花卷",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Steamed%20Buns%20%284650154698%29.jpg",
+    "meal_type": "早餐",
+    "allowed_meal_types": [
+      "早餐",
+      "加餐"
+    ],
+    "difficulty": "中等",
+    "cooking_time": 45,
+    "portion_weight_g": 145,
+    "energy": 288,
+    "protein": 8.2,
+    "carbohydrate": 49.5,
+    "fat": 6.1,
+    "ingredients": [
+      "面粉 80g",
+      "黑芝麻 10g",
+      "酵母 2g",
+      "清水 50g",
+      "食用油 3g"
+    ],
+    "cooking_steps": [
+      "面粉加酵母和清水揉匀后发酵。",
+      "黑芝麻擀碎后和少量油拌匀，抹在擀开的面片上。",
+      "卷起切段，整理成花卷形状后蒸熟。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "麸质过敏",
+      "芝麻过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "胚芽米饭",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Japanese%20rice%20balls%20%28onigiri%29.jpg",
+    "meal_type": "午餐",
+    "allowed_meal_types": [
+      "午餐",
+      "晚餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 35,
+    "portion_weight_g": 228,
+    "energy": 274,
+    "protein": 5.5,
+    "carbohydrate": 58.1,
+    "fat": 1.8,
+    "ingredients": [
+      "胚芽米 76g",
+      "清水 152g"
+    ],
+    "cooking_steps": [
+      "胚芽米淘洗后浸泡20到30分钟。",
+      "放入电饭煲，按平时煮饭水量煮熟。",
+      "焖10分钟后翻松即可。"
+    ],
+    "target_users": [
+      "增肌",
+      "减脂",
+      "大众"
+    ],
+    "forbidden_users": [],
+    "is_weight_loss_friendly": true,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": true,
+    "is_general_friendly": true
+  },
+  {
+    "name": "黑米杂粮饭",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Japanese%20rice%20balls%20%28onigiri%29.jpg",
+    "meal_type": "午餐",
+    "allowed_meal_types": [
+      "午餐",
+      "晚餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 40,
+    "portion_weight_g": 265,
+    "energy": 309,
+    "protein": 7.5,
+    "carbohydrate": 64.9,
+    "fat": 2.5,
+    "ingredients": [
+      "黑米 30g",
+      "糙米 45g",
+      "燕麦米 20g",
+      "清水 170g"
+    ],
+    "cooking_steps": [
+      "黑米、糙米和燕麦米一同淘洗后浸泡。",
+      "加入清水放入电饭煲煮熟。",
+      "焖好后用饭勺翻松。"
+    ],
+    "target_users": [
+      "增肌",
+      "减脂",
+      "大众"
+    ],
+    "forbidden_users": [],
+    "is_weight_loss_friendly": true,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": true,
+    "is_general_friendly": true
+  },
+  {
+    "name": "三色藜麦饭",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Japanese%20rice%20balls%20%28onigiri%29.jpg",
+    "meal_type": "午餐",
+    "allowed_meal_types": [
+      "午餐",
+      "晚餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 30,
+    "portion_weight_g": 270,
+    "energy": 302,
+    "protein": 10.2,
+    "carbohydrate": 58.8,
+    "fat": 4.1,
+    "ingredients": [
+      "三色藜麦 55g",
+      "糙米 35g",
+      "清水 180g"
+    ],
+    "cooking_steps": [
+      "藜麦淘洗去表面苦味，和糙米一起浸泡。",
+      "加入清水煮熟。",
+      "焖几分钟后翻松即可装碗。"
+    ],
+    "target_users": [
+      "增肌",
+      "减脂",
+      "大众"
+    ],
+    "forbidden_users": [],
+    "is_weight_loss_friendly": true,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": true,
+    "is_general_friendly": true
+  },
+  {
+    "name": "绿豆杂粮饭",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Japanese%20rice%20balls%20%28onigiri%29.jpg",
+    "meal_type": "午餐",
+    "allowed_meal_types": [
+      "午餐",
+      "晚餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 45,
+    "portion_weight_g": 282,
+    "energy": 311,
+    "protein": 8.7,
+    "carbohydrate": 63.9,
+    "fat": 1.5,
+    "ingredients": [
+      "绿豆 28g",
+      "糙米 50g",
+      "燕麦米 15g",
+      "清水 189g"
+    ],
+    "cooking_steps": [
+      "绿豆提前浸泡，和糙米、燕麦米一起淘洗。",
+      "放入电饭煲加水煮熟。",
+      "焖至米饭松软后盛出。"
+    ],
+    "target_users": [
+      "增肌",
+      "减脂",
+      "大众"
+    ],
+    "forbidden_users": [],
+    "is_weight_loss_friendly": true,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": true,
+    "is_general_friendly": true
+  },
+  {
+    "name": "南瓜杂粮饭",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Japanese%20rice%20balls%20%28onigiri%29.jpg",
+    "meal_type": "午餐",
+    "allowed_meal_types": [
+      "午餐",
+      "晚餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 35,
+    "portion_weight_g": 340,
+    "energy": 262,
+    "protein": 5.8,
+    "carbohydrate": 54.4,
+    "fat": 1.5,
+    "ingredients": [
+      "糙米 50g",
+      "小米 20g",
+      "南瓜 110g",
+      "清水 160g"
+    ],
+    "cooking_steps": [
+      "糙米和小米淘洗后放入锅中。",
+      "南瓜切小块一起下锅，加入清水煮熟。",
+      "焖至南瓜软糯、米饭颗粒分明即可。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [],
+    "is_weight_loss_friendly": true,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": true,
+    "is_general_friendly": true
+  },
+  {
+    "name": "二米饭",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Japanese%20rice%20balls%20%28onigiri%29.jpg",
+    "meal_type": "午餐",
+    "allowed_meal_types": [
+      "午餐",
+      "晚餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 30,
+    "portion_weight_g": 232,
+    "energy": 246,
+    "protein": 5.4,
+    "carbohydrate": 52.1,
+    "fat": 1.4,
+    "ingredients": [
+      "大米 42g",
+      "小米 28g",
+      "清水 162g"
+    ],
+    "cooking_steps": [
+      "大米和小米一同淘洗后加水入锅。",
+      "按煮饭模式焖熟。",
+      "出锅前稍微翻松，口感更蓬松。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [],
+    "is_weight_loss_friendly": true,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": true,
+    "is_general_friendly": true
+  },
+  {
+    "name": "荞麦汤面",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Chicken%20Noodle%20Soup.jpg",
+    "meal_type": "午餐",
+    "allowed_meal_types": [
+      "午餐",
+      "晚餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 12,
+    "portion_weight_g": 343,
+    "energy": 248,
+    "protein": 9.3,
+    "carbohydrate": 50.1,
+    "fat": 1.6,
+    "ingredients": [
+      "荞麦面 75g",
+      "小葱 8g",
+      "清水 260g"
+    ],
+    "cooking_steps": [
+      "锅中加水烧开，放入荞麦面煮熟。",
+      "加少许盐调味，撒上葱花。",
+      "连汤盛出即可。"
+    ],
+    "target_users": [
+      "增肌",
+      "减脂",
+      "大众"
+    ],
+    "forbidden_users": [
+      "麸质过敏"
+    ],
+    "is_weight_loss_friendly": true,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": true,
+    "is_general_friendly": true
+  },
+  {
+    "name": "阳春面",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Chicken%20Noodle%20Soup.jpg",
+    "meal_type": "午餐",
+    "allowed_meal_types": [
+      "午餐",
+      "晚餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 10,
+    "portion_weight_g": 377,
+    "energy": 319,
+    "protein": 8.8,
+    "carbohydrate": 61.2,
+    "fat": 5.1,
+    "ingredients": [
+      "挂面 85g",
+      "小葱 8g",
+      "香油 4g",
+      "清水 280g"
+    ],
+    "cooking_steps": [
+      "挂面入沸水中煮熟。",
+      "碗中加入葱花和少量盐，冲入面汤。",
+      "捞入面条，滴少许香油即可。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "麸质过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "玉米窝头",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Steamed%20Corn.jpg",
+    "meal_type": "早餐",
+    "allowed_meal_types": [
+      "早餐",
+      "午餐",
+      "加餐"
+    ],
+    "difficulty": "中等",
+    "cooking_time": 35,
+    "portion_weight_g": 138,
+    "energy": 281,
+    "protein": 8.7,
+    "carbohydrate": 56.0,
+    "fat": 2.8,
+    "ingredients": [
+      "玉米面 70g",
+      "黄豆面 15g",
+      "清水 45g"
+    ],
+    "cooking_steps": [
+      "玉米面和黄豆面混匀后加温水揉成团。",
+      "分成小剂子，整理成窝头形状。",
+      "上锅蒸熟后稍放凉即可。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "大豆过敏"
+    ],
+    "is_weight_loss_friendly": true,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": true,
+    "is_general_friendly": true
+  },
+  {
+    "name": "葱油花卷",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Steamed%20Buns%20%284650154698%29.jpg",
+    "meal_type": "早餐",
+    "allowed_meal_types": [
+      "早餐",
+      "午餐"
+    ],
+    "difficulty": "中等",
+    "cooking_time": 45,
+    "portion_weight_g": 152,
+    "energy": 281,
+    "protein": 8.1,
+    "carbohydrate": 50.8,
+    "fat": 4.3,
+    "ingredients": [
+      "面粉 82g",
+      "香葱 12g",
+      "酵母 2g",
+      "清水 52g",
+      "食用油 4g"
+    ],
+    "cooking_steps": [
+      "面粉加酵母和清水揉成面团并发酵。",
+      "擀开后刷油撒葱花，卷起切段后拧成花卷。",
+      "二次醒发后蒸熟。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [
+      "麸质过敏"
+    ],
+    "is_weight_loss_friendly": false,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": false,
+    "is_general_friendly": true
+  },
+  {
+    "name": "蒸红薯块",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Steamed%20sweet%20potato.jpg",
+    "meal_type": "加餐",
+    "allowed_meal_types": [
+      "加餐",
+      "早餐",
+      "晚餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 20,
+    "portion_weight_g": 185,
+    "energy": 160,
+    "protein": 2.3,
+    "carbohydrate": 37.2,
+    "fat": 0.2,
+    "ingredients": [
+      "红薯 185g"
+    ],
+    "cooking_steps": [
+      "红薯去皮后切成大块。",
+      "放入蒸锅蒸至筷子能轻松扎透。",
+      "稍放凉后直接食用。"
+    ],
+    "target_users": [
+      "增肌",
+      "减脂",
+      "大众"
+    ],
+    "forbidden_users": [],
+    "is_weight_loss_friendly": true,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": true,
+    "is_general_friendly": true
+  },
+  {
+    "name": "清蒸紫薯段",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Steamed%20sweet%20potato.jpg",
+    "meal_type": "加餐",
+    "allowed_meal_types": [
+      "加餐",
+      "早餐",
+      "晚餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 20,
+    "portion_weight_g": 172,
+    "energy": 141,
+    "protein": 2.5,
+    "carbohydrate": 32.7,
+    "fat": 0.2,
+    "ingredients": [
+      "紫薯 172g"
+    ],
+    "cooking_steps": [
+      "紫薯洗净后切段。",
+      "冷水上锅蒸至熟透。",
+      "取出稍微放凉即可食用。"
+    ],
+    "target_users": [
+      "增肌",
+      "减脂",
+      "大众"
+    ],
+    "forbidden_users": [],
+    "is_weight_loss_friendly": true,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": true,
+    "is_general_friendly": true
+  },
+  {
+    "name": "蒸南瓜块",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Steamed%20Corn.jpg",
+    "meal_type": "加餐",
+    "allowed_meal_types": [
+      "加餐",
+      "早餐",
+      "晚餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 15,
+    "portion_weight_g": 210,
+    "energy": 94,
+    "protein": 2.0,
+    "carbohydrate": 22.1,
+    "fat": 0.3,
+    "ingredients": [
+      "南瓜 210g"
+    ],
+    "cooking_steps": [
+      "南瓜去籽切大块。",
+      "上锅蒸熟至口感软糯。",
+      "装盘后可直接食用。"
+    ],
+    "target_users": [
+      "增肌",
+      "减脂",
+      "大众"
+    ],
+    "forbidden_users": [],
+    "is_weight_loss_friendly": true,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": true,
+    "is_general_friendly": true
+  },
+  {
+    "name": "蒸玉米段",
+    "image_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Steamed%20Corn.jpg",
+    "meal_type": "加餐",
+    "allowed_meal_types": [
+      "加餐",
+      "早餐",
+      "午餐"
+    ],
+    "difficulty": "简单",
+    "cooking_time": 18,
+    "portion_weight_g": 200,
+    "energy": 224,
+    "protein": 6.4,
+    "carbohydrate": 45.6,
+    "fat": 2.4,
+    "ingredients": [
+      "玉米 200g"
+    ],
+    "cooking_steps": [
+      "玉米切段后放入蒸锅。",
+      "蒸至颗粒饱满熟透。",
+      "取出稍放凉后食用。"
+    ],
+    "target_users": [
+      "增肌",
+      "大众"
+    ],
+    "forbidden_users": [],
+    "is_weight_loss_friendly": true,
+    "is_muscle_gain_friendly": true,
+    "is_sugar_control_friendly": true,
+    "is_general_friendly": true
+  }
+]
