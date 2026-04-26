@@ -492,7 +492,7 @@
     <div v-if="识别中" class="ai-loading-mask">
       <div class="ai-loading-inner">
         <n-spin size="large" stroke="#8ec662" />
-        <p style="color: #245f4d; font-weight: 600; margin-top: 16px;">AI 正在分析食物营养...</p>
+        <p style="color: #245f4d; font-weight: 600; margin-top: 16px;">正在分析食物营养...</p>
       </div>
     </div>
   </div>

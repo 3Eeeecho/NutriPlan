@@ -253,7 +253,7 @@
     <div v-if="recognizing" class="ai-loading-mask">
       <div class="ai-loading-content">
         <n-spin size="large" />
-        <p>AI 正在分析食物营养...</p>
+        <p>正在分析食物营养...</p>
       </div>
     </div>
   </div>
