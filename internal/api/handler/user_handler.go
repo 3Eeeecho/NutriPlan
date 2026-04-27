@@ -137,7 +137,7 @@ func (h *UserHandler) Login(c *gin.Context) {
 	}
 
 	// 生成JWT token
-	token, err := jwt.GenerateToken(user.ID, user.Username)
+	token, err := jwt.GenerateToken(user.ID, user.Username, user.Role)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "生成token失败: " + err.Error(),

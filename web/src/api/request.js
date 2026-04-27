@@ -45,6 +45,10 @@ request.interceptors.response.use(
           authStore.logout()
           router.push('/login')
           break
+        case 403:
+          message.error(response.data?.error || '权限不足')
+          router.push('/403')
+          break
         case 400:
           message.error(response.data?.error || '请求参数错误')
           break

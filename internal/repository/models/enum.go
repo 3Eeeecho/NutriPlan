@@ -1,5 +1,14 @@
 package models
 
+// UserRole defines coarse-grained account roles used by route authorization.
+type UserRole string
+
+const (
+	UserRoleGuest UserRole = "guest"
+	UserRoleUser  UserRole = "user"
+	UserRoleAdmin UserRole = "admin"
+)
+
 // HealthGoal 定义用户的健康目标
 type HealthGoal string
 

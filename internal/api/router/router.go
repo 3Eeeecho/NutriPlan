@@ -2,6 +2,7 @@ package router
 
 import (
 	"NutriPlan/internal/api/handler"
+	"NutriPlan/internal/repository/models"
 	"NutriPlan/internal/service"
 	"NutriPlan/pkg/jwt"
 
@@ -15,6 +16,7 @@ type RouterDeps struct {
 	IntakeService          service.IntakeService
 	ShoppingListService    service.ShoppingListService
 	FoodRecognitionService service.FoodRecognitionService
+	AdminService           service.AdminService
 }
 
 // NewRouter 初始化并配置 Gin 路由
@@ -31,6 +33,7 @@ func NewRouter(deps RouterDeps) *gin.Engine {
 	intakeHandler := handler.NewIntakeHandler(deps.IntakeService)
 	shoppingListHandler := handler.NewShoppingListHandler(deps.ShoppingListService)
 	foodRecognitionHandler := handler.NewFoodRecognitionHandler(deps.FoodRecognitionService)
+	adminHandler := handler.NewAdminHandler(deps.AdminService)
 
 	// 基础路由组
 	v1 := r.Group("/api/v1")
@@ -42,6 +45,13 @@ func NewRouter(deps RouterDeps) *gin.Engine {
 
 		// 登录接口 (POST /api/v1/login)
 		v1.POST("/login", userHandler.Login)
+
+		// 公开食谱接口：游客可访问，登录用户可附带收藏状态
+		public := v1.Group("/public")
+		public.Use(jwt.OptionalAuthMiddleware())
+		{
+			public.GET("/recipes/:id", recipeHandler.GetRecipeDetail)
+		}
 
 		// 受保护的路由：需要 JWT 认证
 		auth := v1.Group("/user")
@@ -139,6 +149,20 @@ func NewRouter(deps RouterDeps) *gin.Engine {
 
 			// 根据文本描述分析食物 (POST /api/v1/food/analyze-text)
 			food.POST("/analyze-text", foodRecognitionHandler.AnalyzeFoodText)
+		}
+
+		// --- 管理员路由 ---
+		admin := v1.Group("/admin")
+		admin.Use(jwt.AuthMiddleware(), jwt.RequireRole(models.UserRoleAdmin))
+		{
+			admin.GET("/status", adminHandler.Status)
+			admin.GET("/recipes", adminHandler.ListRecipes)
+			admin.GET("/recipes/:id", adminHandler.GetRecipe)
+			admin.POST("/recipes", adminHandler.CreateRecipe)
+			admin.PUT("/recipes/:id", adminHandler.UpdateRecipe)
+			admin.DELETE("/recipes/:id", adminHandler.DeleteRecipe)
+			admin.GET("/stats/health", adminHandler.GetHealthStats)
+			admin.GET("/stats/recipe-completion", adminHandler.GetRecipeCompletionStats)
 		}
 
 	}

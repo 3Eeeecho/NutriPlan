@@ -53,6 +53,9 @@ func (s *UserServiceImpl) RegisterUser(user *models.User) error {
 		return xerr.ErrUsernameExists
 	}
 
+	// Public registration must always create a normal user.
+	user.Role = models.UserRoleUser
+
 	return s.userRepo.CreateUser(user)
 }
 
@@ -63,6 +66,9 @@ func (s *UserServiceImpl) LoginUser(username, password string) (*models.User, er
 	}
 	if user == nil {
 		return nil, xerr.ErrUserNotFound
+	}
+	if user.Role == "" {
+		user.Role = models.UserRoleUser
 	}
 
 	// TODO 可以加密密码验证

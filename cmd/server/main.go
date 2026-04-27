@@ -42,6 +42,7 @@ func main() {
 	intakeService := service.NewIntakeService(intakeRepo, userRepo, nutriService)
 	shoppingListService := service.NewShoppingListService(shoppingListRepo, recipeRepo)
 	foodRecognitionService := service.NewFoodRecognitionService(zhipuClient)
+	adminService := service.NewAdminService(dao.DB, nutriService)
 
 	// 创建 Router 并注入依赖
 	r := router.NewRouter(router.RouterDeps{
@@ -50,6 +51,7 @@ func main() {
 		IntakeService:          intakeService,
 		ShoppingListService:    shoppingListService,
 		FoodRecognitionService: foodRecognitionService,
+		AdminService:           adminService,
 	})
 
 	// 根据环境设置 Gin 模式

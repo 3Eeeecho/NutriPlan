@@ -2,6 +2,24 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { login as loginApi, getUserProfile } from '@/api/user'
 
+const normalizeRole = (role) => {
+  if (role === 'admin' || role === 'user') return role
+  return 'guest'
+}
+
+const decodeTokenRole = (token) => {
+  if (!token) return ''
+  try {
+    const payload = token.split('.')[1]
+    if (!payload) return ''
+    const normalized = payload.replace(/-/g, '+').replace(/_/g, '/')
+    const padded = normalized.padEnd(normalized.length + ((4 - (normalized.length % 4)) % 4), '=')
+    return JSON.parse(atob(padded))?.role || ''
+  } catch {
+    return ''
+  }
+}
+
 export const useAuthStore = defineStore('auth', () => {
   // 状态
   const token = ref(localStorage.getItem('token') || '')
@@ -10,6 +28,17 @@ export const useAuthStore = defineStore('auth', () => {
 
   // 计算属性
   const isAuthenticated = computed(() => !!token.value)
+  const role = computed(() => {
+    const storedRole = normalizeRole(user.value?.role)
+    if (storedRole !== 'guest') return storedRole
+
+    const tokenRole = normalizeRole(decodeTokenRole(token.value))
+    if (tokenRole !== 'guest') return tokenRole
+
+    return token.value ? 'user' : 'guest'
+  })
+  const isAdmin = computed(() => role.value === 'admin')
+  const isUser = computed(() => role.value === 'user' || role.value === 'admin')
   const hasProfile = computed(() => {
     if (!profile.value) return false
     return !!(profile.value.age && profile.value.height && profile.value.weight)
@@ -20,9 +49,12 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       const response = await loginApi({ username, password })
       token.value = response.token
-      user.value = response.user
+      user.value = {
+        ...response.user,
+        role: response.user?.role || 'user'
+      }
       localStorage.setItem('token', response.token)
-      localStorage.setItem('user', JSON.stringify(response.user))
+      localStorage.setItem('user', JSON.stringify(user.value))
       return response
     } catch (error) {
       throw error
@@ -48,7 +80,14 @@ export const useAuthStore = defineStore('auth', () => {
         user.value = {
           id: response.user.id,
           username: response.user.username,
-          email: response.user.email
+          email: response.user.email,
+          role: response.user.role || 'user'
+        }
+        localStorage.setItem('user', JSON.stringify(user.value))
+      } else if (response.user && user.value) {
+        user.value = {
+          ...user.value,
+          role: response.user.role || user.value.role || 'user'
         }
         localStorage.setItem('user', JSON.stringify(user.value))
       }
@@ -68,6 +107,9 @@ export const useAuthStore = defineStore('auth', () => {
     user,
     profile,
     isAuthenticated,
+    role,
+    isAdmin,
+    isUser,
     hasProfile,
     login,
     logout,

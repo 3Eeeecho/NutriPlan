@@ -63,13 +63,19 @@ const 侧栏展开 = ref(false);
 const userDisplayName = computed(() => authStore.user?.username || "用户");
 const userAvatarText = computed(() => (userDisplayName.value || "用").slice(0, 1).toUpperCase());
 
-const menuItems = [
+const menuItems = computed(() => {
+  const items = [
   { key: "profile", label: "个人档案", path: "/profile/view", icon: PersonOutline },
   { key: "favorites", label: "我的收藏", path: "/favorites", icon: StarOutline },
   { key: "home", label: "饮食记录", path: "/home", icon: RestaurantOutline },
   { key: "weekly", label: "周报告", path: "/weekly", icon: BarChartOutline },
   { key: "shopping", label: "购物清单", path: "/shopping", icon: BasketOutline }
-];
+  ];
+  if (authStore.isAdmin) {
+    items.push({ key: "admin", label: "管理后台", path: "/admin", icon: LeafOutline });
+  }
+  return items;
+});
 
 const isActive = (item) => route.path === item.path || route.path.startsWith(item.path + "/");
 

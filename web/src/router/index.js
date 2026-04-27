@@ -25,9 +25,15 @@ const routes = [
     meta: { requiresAuth: false },
   },
   {
+    path: "/403",
+    name: "Forbidden",
+    component: () => import("@/views/Forbidden.vue"),
+    meta: { requiresAuth: false },
+  },
+  {
     path: "/",
     component: () => import("@/layouts/AppShell.vue"),
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, roles: ["user", "admin"] },
     children: [
       {
         path: "home",
@@ -74,6 +80,12 @@ const routes = [
         name: "ShoppingList",
         component: () => import("@/views/ShoppingList.vue"),
       },
+      {
+        path: "admin",
+        name: "AdminHome",
+        component: () => import("@/views/AdminHome.vue"),
+        meta: { requiresAuth: true, roles: ["admin"] },
+      },
     ],
   },
 ];
@@ -87,11 +99,16 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore();
   const requiresAuth = to.meta.requiresAuth;
+  const allowedRoles = to.meta.roles;
 
   // 如果路由需要认证
   if (requiresAuth) {
     // 检查是否有 token
     if (authStore.isAuthenticated) {
+      if (allowedRoles?.length && !allowedRoles.includes(authStore.role)) {
+        next({ name: "Forbidden" });
+        return;
+      }
       next();
     } else {
       // 没有 token，重定向到登录页

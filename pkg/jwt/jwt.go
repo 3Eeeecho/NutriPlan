@@ -2,8 +2,10 @@ package jwt
 
 import (
 	"NutriPlan/internal/config"
+	"NutriPlan/internal/repository/models"
 	"NutriPlan/pkg/xerr"
 	"fmt"
+	"net/http"
 	"strings"
 	"time"
 
@@ -15,18 +17,23 @@ import (
 type Claims struct {
 	UserID   uint   `json:"user_id"`
 	Username string `json:"username"`
+	Role     string `json:"role"`
 	jwt.RegisteredClaims
 }
 
 // GenerateToken 生成JWT token
-func GenerateToken(userID uint, username string) (string, error) {
+func GenerateToken(userID uint, username string, role models.UserRole) (string, error) {
 	// 设置过期时间为7天
 	expirationTime := time.Now().Add(7 * 24 * time.Hour)
+	if role == "" || role == models.UserRoleGuest {
+		role = models.UserRoleUser
+	}
 
 	// 创建Claims
 	claims := &Claims{
 		UserID:   userID,
 		Username: username,
+		Role:     string(role),
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expirationTime),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -106,8 +113,95 @@ func AuthMiddleware() gin.HandlerFunc {
 		// 将用户信息存储到上下文中，供后续处理器使用
 		c.Set("user_id", claims.UserID)
 		c.Set("username", claims.Username)
+		c.Set("role", normalizeAuthenticatedRole(claims.Role))
 
 		// 继续处理请求
 		c.Next()
 	}
+}
+
+// OptionalAuthMiddleware parses JWT when present and falls back to guest.
+func OptionalAuthMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		authHeader := c.GetHeader("Authorization")
+		if authHeader == "" {
+			c.Set("role", string(models.UserRoleGuest))
+			c.Next()
+			return
+		}
+
+		parts := strings.SplitN(authHeader, " ", 2)
+		if len(parts) != 2 || parts[0] != "Bearer" {
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"error": "Authorization format must be Bearer <token>",
+			})
+			c.Abort()
+			return
+		}
+
+		claims, err := ValidateToken(parts[1])
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"error": "token validation failed: " + err.Error(),
+			})
+			c.Abort()
+			return
+		}
+
+		c.Set("user_id", claims.UserID)
+		c.Set("username", claims.Username)
+		c.Set("role", normalizeAuthenticatedRole(claims.Role))
+		c.Next()
+	}
+}
+
+// RequireRole authorizes a route by the role written by AuthMiddleware.
+func RequireRole(roles ...models.UserRole) gin.HandlerFunc {
+	allowed := make(map[string]struct{}, len(roles))
+	for _, role := range roles {
+		allowed[string(role)] = struct{}{}
+	}
+
+	return func(c *gin.Context) {
+		rawRole, exists := c.Get("role")
+		if !exists {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "missing authentication context"})
+			c.Abort()
+			return
+		}
+
+		role, ok := rawRole.(string)
+		if !ok {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid authentication context"})
+			c.Abort()
+			return
+		}
+
+		if _, ok := allowed[normalizeRole(role)]; !ok {
+			c.JSON(http.StatusForbidden, gin.H{"error": "permission denied"})
+			c.Abort()
+			return
+		}
+
+		c.Next()
+	}
+}
+
+func normalizeRole(role string) string {
+	switch models.UserRole(role) {
+	case models.UserRoleAdmin:
+		return string(models.UserRoleAdmin)
+	case models.UserRoleUser:
+		return string(models.UserRoleUser)
+	default:
+		return string(models.UserRoleGuest)
+	}
+}
+
+func normalizeAuthenticatedRole(role string) string {
+	normalized := normalizeRole(role)
+	if normalized == string(models.UserRoleGuest) {
+		return string(models.UserRoleUser)
+	}
+	return normalized
 }
