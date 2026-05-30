@@ -54,7 +54,11 @@ func (r *GormRecipeRepository) recipeQuery() *gorm.DB {
 
 func (r *GormRecipeRepository) applyMealTypeFilter(tx *gorm.DB, mealType models.MealType) *gorm.DB {
 	allowedMealTypePattern := "%\"" + string(mealType) + "\"%"
-	return tx.Where("(meal_type = ? OR allowed_meal_types LIKE ?)", mealType, allowedMealTypePattern)
+	return tx.Where(
+		"(allowed_meal_types LIKE ? OR ((allowed_meal_types IS NULL OR allowed_meal_types = '' OR allowed_meal_types = '[]') AND meal_type = ?))",
+		allowedMealTypePattern,
+		mealType,
+	)
 }
 
 func (r *GormRecipeRepository) applyHealthGoalFilter(tx *gorm.DB, target models.HealthGoal) *gorm.DB {

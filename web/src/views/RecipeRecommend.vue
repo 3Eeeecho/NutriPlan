@@ -12,6 +12,12 @@
           <div>
             <h1 class="page-title">智能食谱推荐</h1>
             <p class="page-subtitle">基于您的营养需求，为您定制专属每日食谱</p>
+            <div v-if="recommendationAlgorithm" class="algorithm-meta">
+              <n-tag size="small" type="success" round>
+                {{ recommendationAlgorithm.label || '协同过滤混合推荐' }}
+              </n-tag>
+              <span>{{ recommendationAlgorithm.strategy || 'Item-CF 召回 + 营养约束混排' }}</span>
+            </div>
           </div>
         </div>
         
@@ -161,10 +167,10 @@
             <n-gi span="2">
               <n-card title="每日菜单" :bordered="false">
                 <div class="meal-timeline">
-                  <MealItem title="早餐" icon="🌅" :recipe="currentSelectedPlan.breakfast" :recipes="getMealItems(currentSelectedPlan, 'breakfast')" :is-synced="isMealSynced('早餐', currentSelectedPlan.breakfast)" @sync="handleSyncMeal" />
-                  <MealItem title="午餐" icon="☀️" :recipe="currentSelectedPlan.lunch" :recipes="getMealItems(currentSelectedPlan, 'lunch')" :is-synced="isMealSynced('午餐', currentSelectedPlan.lunch)" @sync="handleSyncMeal" />
-                  <MealItem title="晚餐" icon="🌙" :recipe="currentSelectedPlan.dinner" :recipes="getMealItems(currentSelectedPlan, 'dinner')" :is-synced="isMealSynced('晚餐', currentSelectedPlan.dinner)" @sync="handleSyncMeal" />
-                  <MealItem v-if="currentSelectedPlan.snack" title="加餐" icon="🍎" :recipe="currentSelectedPlan.snack" :recipes="getMealItems(currentSelectedPlan, 'snack')" :is-synced="isMealSynced('加餐', currentSelectedPlan.snack)" @sync="handleSyncMeal" />
+                  <MealItem title="早餐" icon="🌅" :recipe="currentSelectedPlan.breakfast" :recipes="getMealItems(currentSelectedPlan, 'breakfast')" :is-synced="isMealSynced('早餐', currentSelectedPlan.breakfast)" :replacing-recipe-id="replacingRecipeId" @sync="handleSyncMeal" @replace="handleReplaceMealRecipe" />
+                  <MealItem title="午餐" icon="☀️" :recipe="currentSelectedPlan.lunch" :recipes="getMealItems(currentSelectedPlan, 'lunch')" :is-synced="isMealSynced('午餐', currentSelectedPlan.lunch)" :replacing-recipe-id="replacingRecipeId" @sync="handleSyncMeal" @replace="handleReplaceMealRecipe" />
+                  <MealItem title="晚餐" icon="🌙" :recipe="currentSelectedPlan.dinner" :recipes="getMealItems(currentSelectedPlan, 'dinner')" :is-synced="isMealSynced('晚餐', currentSelectedPlan.dinner)" :replacing-recipe-id="replacingRecipeId" @sync="handleSyncMeal" @replace="handleReplaceMealRecipe" />
+                  <MealItem v-if="currentSelectedPlan.snack" title="加餐" icon="🍎" :recipe="currentSelectedPlan.snack" :recipes="getMealItems(currentSelectedPlan, 'snack')" :is-synced="isMealSynced('加餐', currentSelectedPlan.snack)" :replacing-recipe-id="replacingRecipeId" @sync="handleSyncMeal" @replace="handleReplaceMealRecipe" />
                 </div>
               </n-card>
             </n-gi>
@@ -318,7 +324,8 @@ import {
   getSelectedRecipePlan,
   recognizeMealIngredients,
   regenerateConstrainedMeal,
-  adoptRegeneratedMeal
+  adoptRegeneratedMeal,
+  replaceSelectedMealRecipe
 } from '@/api/recipeApi';
 import { addIntakeRecord, getTodayStatus } from '@/api/intakeApi';
 import { getNutritionRequirements } from '@/api/user';
@@ -334,7 +341,9 @@ const plans = ref([]);
 const selectedPlanIndex = ref(null);
 const currentSelectedPlan = ref(null);
 const targetNutrition = ref({});
+const recommendationAlgorithm = ref(null);
 const todayRecords = ref([]); // Store today's intake records
+const replacingRecipeId = ref(0);
 
 const showRegenerateModal = ref(false);
 const ingredientText = ref('');
@@ -439,6 +448,10 @@ const fetchRecommendations = async (forceRefresh = false) => {
 
     targetNutrition.value = nutritionResp;
     plans.value = recipeResp.plans || [];
+    recommendationAlgorithm.value = recipeResp.algorithm || {
+      label: '协同过滤混合推荐',
+      strategy: 'Item-CF 召回 + 营养约束混排'
+    };
 
   } catch (err) {
     console.error(err);
@@ -496,6 +509,8 @@ const handleSyncMeal = async ({ recipe, type }) => {
   try {
     await addIntakeRecord({
       meal_type: mealType,
+      food_source: recipe.id ? 1 : 2,
+      source_id: recipe.id || 0,
       food_name: recipe.name,
       intake_amount: 100, // Assuming 1 serving = 100% or similar logic. Backend expects amount in g usually, but for recipe we might not have weight. Defaulting to 100g or 1 serving context. Ideally recipe has weight.
       // If recipe doesn't have weight, we send estimated nutrition directly.
@@ -509,6 +524,33 @@ const handleSyncMeal = async ({ recipe, type }) => {
   } catch (err) {
     console.error(err);
     message.error('同步失败，请重试');
+  }
+};
+
+const handleReplaceMealRecipe = async ({ recipe, type }) => {
+  if (!recipe?.id || replacingRecipeId.value) return;
+  const typeMap = {
+    '早餐': 'breakfast',
+    '午餐': 'lunch',
+    '晚餐': 'dinner',
+    '加餐': 'snack'
+  };
+
+  try {
+    replacingRecipeId.value = recipe.id;
+    const resp = await replaceSelectedMealRecipe({
+      meal_type: typeMap[type] || 'snack',
+      recipe_id: recipe.id,
+      disliked_recipe_ids: [recipe.id]
+    });
+    if (resp?.plan) {
+      currentSelectedPlan.value = resp.plan;
+    }
+    message.success(`已替换 ${recipe.name}`);
+  } catch (err) {
+    message.error(err.response?.data?.error || '暂时没有找到合适的替换食谱');
+  } finally {
+    replacingRecipeId.value = 0;
   }
 };
 
@@ -649,6 +691,17 @@ const adoptMealResult = async () => {
   font-size: 14px;
   color: #6b7280;
   margin: 4px 0 0 0;
+}
+
+.algorithm-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.4;
+  flex-wrap: wrap;
 }
 
 /* Loading & Error */

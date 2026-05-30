@@ -20,7 +20,21 @@
       </div>
 
       <div v-if="mealRecipes.length > 1" class="meal-combo-list">
-        <span v-for="item in mealRecipes" :key="item.id || item.name" class="combo-chip">{{ item.name }}</span>
+        <span v-for="item in mealRecipes" :key="item.id || item.name" class="combo-chip">
+          <span>{{ item.name }}</span>
+          <n-button
+            v-if="item.id"
+            text
+            size="tiny"
+            class="chip-replace-btn"
+            :loading="replacingRecipeId === item.id"
+            :disabled="!!replacingRecipeId"
+            title="不喜欢，替换这个食谱"
+            @click.stop="handleReplace(item)"
+          >
+            换
+          </n-button>
+        </span>
       </div>
       
       <!-- Fallback text if no recipe -->
@@ -31,6 +45,21 @@
 
     <!-- Action -->
     <div class="meal-action">
+      <n-button
+        v-if="hasRecipes"
+        circle
+        secondary
+        type="warning"
+        class="replace-btn"
+        :loading="replacingRecipeId === mealRecipes[0]?.id"
+        :disabled="!!replacingRecipeId"
+        title="不喜欢，替换这个食谱"
+        @click.stop="handleReplace(mealRecipes[0])"
+      >
+        <template #icon>
+          <n-icon><Refresh /></n-icon>
+        </template>
+      </n-button>
       <n-button 
         v-if="hasRecipes"
         circle 
@@ -59,7 +88,7 @@
 <script setup>
 import { computed } from 'vue';
 import { NButton, NIcon } from 'naive-ui';
-import { ChevronForward, CheckmarkCircleOutline, CheckmarkCircle } from '@vicons/ionicons5';
+import { ChevronForward, CheckmarkCircleOutline, CheckmarkCircle, Refresh } from '@vicons/ionicons5';
 import { useRouter } from 'vue-router';
 
 const props = defineProps({
@@ -70,10 +99,14 @@ const props = defineProps({
     type: Array,
     default: () => []
   },
-  isSynced: Boolean // New prop
+  isSynced: Boolean, // New prop
+  replacingRecipeId: {
+    type: Number,
+    default: 0
+  }
 });
 
-const emit = defineEmits(['sync']);
+const emit = defineEmits(['sync', 'replace']);
 
 const router = useRouter();
 
@@ -109,6 +142,11 @@ const handleSync = () => {
   if (target) {
     emit('sync', { recipe: target, type: props.title });
   }
+};
+
+const handleReplace = (recipe) => {
+  if (!recipe?.id || props.replacingRecipeId) return;
+  emit('replace', { recipe, type: props.title });
 };
 
 const getIcon = (title) => {
@@ -204,6 +242,14 @@ const getIcon = (title) => {
   background-color: #eef2ff;
   padding: 3px 8px;
   border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.chip-replace-btn {
+  font-size: 11px;
+  color: #b45309;
 }
 
 .meta-tag {
@@ -234,7 +280,8 @@ const getIcon = (title) => {
   transition: all 0.2s;
 }
 
-.sync-btn:hover {
+.sync-btn:hover,
+.replace-btn:hover {
   transform: scale(1.1);
 }
 </style>

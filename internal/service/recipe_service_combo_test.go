@@ -2,11 +2,29 @@ package service
 
 import (
 	"NutriPlan/internal/repository/models"
+	"context"
 	"math/rand"
 	"testing"
 
 	"gorm.io/gorm"
 )
+
+type fakeCollaborativeFilter map[models.MealType][]RecipeScore
+
+func (f fakeCollaborativeFilter) RecommendRecipes(ctx context.Context, userID uint, mealType models.MealType, limit int) ([]RecipeScore, error) {
+	scores := f[mealType]
+	if len(scores) > limit {
+		return scores[:limit], nil
+	}
+	return scores, nil
+}
+
+func assertItemCountInRange(t *testing.T, meal string, items []models.Recipe, minItems, maxItems int) {
+	t.Helper()
+	if len(items) < minItems || len(items) > maxItems {
+		t.Fatalf("expected %s item count in [%d,%d], got %d: %+v", meal, minItems, maxItems, len(items), items)
+	}
+}
 
 func TestBuildBreakfastCombos_PreferYogurtAndEgg(t *testing.T) {
 	svc := &RecipeServiceImpl{rng: rand.New(rand.NewSource(1))}
@@ -17,7 +35,7 @@ func TestBuildBreakfastCombos_PreferYogurtAndEgg(t *testing.T) {
 		{Model: gorm.Model{ID: 3}, Name: "测试-全麦吐司片", Energy: 95, Protein: 4, Carbohydrate: 18, Fat: 1.2, Ingredients: []string{"全麦面包"}},
 	}
 
-	combos := svc.buildBreakfastCombos(recipes, 260, 20, 30, 10, models.GoalWeightLoss)
+	combos := svc.buildBreakfastCombos(recipes, 260, 20, 30, 10, models.GoalWeightLoss, nil)
 	if len(combos) == 0 {
 		t.Fatalf("expected non-empty breakfast combos")
 	}
@@ -53,7 +71,7 @@ func TestBuildMealCombos_GeneratesMultiItemCombo(t *testing.T) {
 		{Model: gorm.Model{ID: 13}, Name: "测试-南瓜", Energy: 100, Protein: 2, Carbohydrate: 22, Fat: 0.5, Ingredients: []string{"南瓜"}},
 	}
 
-	combos := svc.buildMealCombos(recipes, 520, 35, 50, 12, models.GoalWeightLoss, 10, 8, 2, 3, false)
+	combos := svc.buildMealCombos(recipes, 520, 35, 50, 12, models.GoalWeightLoss, 10, 8, 2, 3, false, nil)
 	if len(combos) == 0 {
 		t.Fatalf("expected non-empty meal combos")
 	}
@@ -75,7 +93,7 @@ func TestBuildMealCombos_RequireStapleWhenAvailable(t *testing.T) {
 		{Model: gorm.Model{ID: 23}, Name: "测试-蒸南瓜", Energy: 100, Protein: 2, Carbohydrate: 22, Fat: 0.6, Ingredients: []string{"南瓜"}},
 	}
 
-	combos := svc.buildMealCombos(recipes, 560, 35, 60, 16, models.GoalWeightLoss, 10, 8, 2, 3, true)
+	combos := svc.buildMealCombos(recipes, 560, 35, 60, 16, models.GoalWeightLoss, 10, 8, 2, 3, true, nil)
 	if len(combos) == 0 {
 		t.Fatalf("expected non-empty meal combos")
 	}
@@ -97,7 +115,7 @@ func TestBuildMealCombos_AvoidDoubleMainStaple(t *testing.T) {
 		{Model: gorm.Model{ID: 33}, Name: "测试-虾仁蒸蛋", Energy: 160, Protein: 18, Carbohydrate: 3, Fat: 8, Ingredients: []string{"鸡蛋", "虾仁"}},
 	}
 
-	combos := svc.buildMealCombos(recipes, 560, 35, 60, 16, models.GoalWeightLoss, 10, 8, 2, 3, true)
+	combos := svc.buildMealCombos(recipes, 560, 35, 60, 16, models.GoalWeightLoss, 10, 8, 2, 3, true, nil)
 	if len(combos) == 0 {
 		t.Fatalf("expected non-empty meal combos")
 	}
@@ -105,6 +123,28 @@ func TestBuildMealCombos_AvoidDoubleMainStaple(t *testing.T) {
 	for _, combo := range combos {
 		if countMainStapleRecipes(combo.Items) > 1 {
 			t.Fatalf("expected combo to avoid double main staples, got %+v", combo.Items)
+		}
+	}
+}
+
+func TestBuildMealCombos_AvoidDoubleGrainStaple(t *testing.T) {
+	svc := &RecipeServiceImpl{rng: rand.New(rand.NewSource(21))}
+
+	recipes := []models.Recipe{
+		{Model: gorm.Model{ID: 34}, Name: "测试-糙米饭", Energy: 150, Protein: 3, Carbohydrate: 32, Fat: 1, Ingredients: []string{"糙米"}},
+		{Model: gorm.Model{ID: 35}, Name: "测试-荞麦面", Energy: 160, Protein: 6, Carbohydrate: 31, Fat: 1.2, Ingredients: []string{"荞麦面"}},
+		{Model: gorm.Model{ID: 36}, Name: "测试-青椒牛柳", Energy: 180, Protein: 22, Carbohydrate: 6, Fat: 7, Ingredients: []string{"牛肉", "青椒"}},
+		{Model: gorm.Model{ID: 37}, Name: "测试-清炒菜心", Energy: 80, Protein: 3, Carbohydrate: 8, Fat: 3, Ingredients: []string{"菜心"}},
+	}
+
+	combos := svc.buildMealCombos(recipes, 560, 35, 60, 16, models.GoalWeightLoss, 10, 8, 2, 3, true, nil)
+	if len(combos) == 0 {
+		t.Fatalf("expected non-empty meal combos")
+	}
+
+	for _, combo := range combos {
+		if countGrainStapleRecipes(combo.Items) > 1 {
+			t.Fatalf("expected combo to avoid double grain staples, got %+v", combo.Items)
 		}
 	}
 }
@@ -118,7 +158,7 @@ func TestBuildBreakfastCombos_RejectMainMealStaples(t *testing.T) {
 		{Model: gorm.Model{ID: 42}, Name: "测试-水煮蛋", Energy: 78, Protein: 6.5, Carbohydrate: 0.6, Fat: 5.3, Ingredients: []string{"鸡蛋"}},
 	}
 
-	combos := svc.buildBreakfastCombos(recipes, 260, 20, 30, 10, models.GoalWeightLoss)
+	combos := svc.buildBreakfastCombos(recipes, 260, 20, 30, 10, models.GoalWeightLoss, nil)
 	if len(combos) == 0 {
 		t.Fatalf("expected non-empty breakfast combos")
 	}
@@ -162,6 +202,85 @@ func TestFilterRecipesByAllowedMealType_UsesExplicitAllowedList(t *testing.T) {
 	}
 }
 
+func TestMergeRecipesByID_PreservesBaseAndAppendsUniqueExtras(t *testing.T) {
+	base := []models.Recipe{
+		{Model: gorm.Model{ID: 1}, Name: "base 1"},
+		{Model: gorm.Model{ID: 2}, Name: "base 2"},
+	}
+	extras := []models.Recipe{
+		{Model: gorm.Model{ID: 2}, Name: "duplicate 2"},
+		{Model: gorm.Model{ID: 3}, Name: "extra 3"},
+		{Name: "missing id"},
+	}
+
+	merged := mergeRecipesByID(base, extras)
+	if len(merged) != 3 {
+		t.Fatalf("expected 3 merged recipes, got %d", len(merged))
+	}
+
+	expectedIDs := []uint{1, 2, 3}
+	for i, expectedID := range expectedIDs {
+		if merged[i].ID != expectedID {
+			t.Fatalf("expected merged[%d] id=%d, got %d", i, expectedID, merged[i].ID)
+		}
+	}
+	if merged[1].Name != "base 2" {
+		t.Fatalf("expected base recipe to win duplicate merge, got %s", merged[1].Name)
+	}
+}
+
+func TestNormalizeCollaborativeScoreBoosts_CapsAndScalesScores(t *testing.T) {
+	boosts := normalizeCollaborativeScoreBoosts([]RecipeScore{
+		{RecipeID: 1, Score: 2},
+		{RecipeID: 2, Score: 1},
+		{RecipeID: 2, Score: 0.5},
+		{RecipeID: 3, Score: -1},
+	})
+
+	if boosts[1] != maxCollaborativeCandidateBoost {
+		t.Fatalf("expected top collaborative boost %.1f, got %.1f", maxCollaborativeCandidateBoost, boosts[1])
+	}
+	if boosts[2] != maxCollaborativeCandidateBoost/2 {
+		t.Fatalf("expected scaled collaborative boost %.1f, got %.1f", maxCollaborativeCandidateBoost/2, boosts[2])
+	}
+	if _, ok := boosts[3]; ok {
+		t.Fatalf("expected non-positive collaborative score to be ignored")
+	}
+	if got := collaborativeCandidateBoost(1, map[uint]float64{1: 99}); got != maxCollaborativeCandidateBoost {
+		t.Fatalf("expected collaborative boost cap %.1f, got %.1f", maxCollaborativeCandidateBoost, got)
+	}
+}
+
+func TestLoadCollaborativeMealCandidatesGroupsByMealAndBuildsBoosts(t *testing.T) {
+	svc := &RecipeServiceImpl{
+		collaborativeFilter: fakeCollaborativeFilter{
+			models.MealTypeBreakfast: {
+				{RecipeID: 80, Recipe: models.Recipe{Model: gorm.Model{ID: 80}, Name: "cf breakfast"}, Score: 4},
+			},
+			models.MealTypeLunch: {
+				{RecipeID: 81, Recipe: models.Recipe{Model: gorm.Model{ID: 81}, Name: "cf lunch"}, Score: 2},
+			},
+		},
+	}
+
+	pools, boosts := svc.loadCollaborativeMealCandidates(context.Background(), 1, 10)
+	if len(pools.breakfast) != 1 || pools.breakfast[0].ID != 80 {
+		t.Fatalf("expected breakfast CF candidate 80, got %+v", pools.breakfast)
+	}
+	if len(pools.lunch) != 1 || pools.lunch[0].ID != 81 {
+		t.Fatalf("expected lunch CF candidate 81, got %+v", pools.lunch)
+	}
+	if len(pools.dinner) != 0 || len(pools.snack) != 0 {
+		t.Fatalf("expected empty dinner/snack CF pools, got dinner=%+v snack=%+v", pools.dinner, pools.snack)
+	}
+	if boosts[80] != maxCollaborativeCandidateBoost {
+		t.Fatalf("expected top CF boost %.1f, got %.1f", maxCollaborativeCandidateBoost, boosts[80])
+	}
+	if boosts[81] != maxCollaborativeCandidateBoost/2 {
+		t.Fatalf("expected scaled lunch CF boost %.1f, got %.1f", maxCollaborativeCandidateBoost/2, boosts[81])
+	}
+}
+
 func TestSelectDiverseCandidates_AvoidsSingleVarietyDominance(t *testing.T) {
 	svc := &RecipeServiceImpl{rng: rand.New(rand.NewSource(29))}
 
@@ -174,7 +293,7 @@ func TestSelectDiverseCandidates_AvoidsSingleVarietyDominance(t *testing.T) {
 		{Model: gorm.Model{ID: 55}, Name: "测试-豆腐蒸蛋", Energy: 140, Protein: 18, Carbohydrate: 5, Fat: 5, Ingredients: []string{"豆腐", "鸡蛋"}},
 	}
 
-	selected := svc.selectDiverseCandidates(recipes, 180, 24, 12, 8, 4, models.GoalWeightLoss)
+	selected := svc.selectDiverseCandidates(recipes, 180, 24, 12, 8, 4, models.GoalWeightLoss, nil)
 	if len(selected) != 4 {
 		t.Fatalf("expected 4 selected candidates, got %d", len(selected))
 	}
@@ -187,6 +306,25 @@ func TestSelectDiverseCandidates_AvoidsSingleVarietyDominance(t *testing.T) {
 		if count > 2 {
 			t.Fatalf("expected diversified candidates, key %s count=%d", key, count)
 		}
+	}
+}
+
+func TestSelectDiverseCandidates_AppliesCollaborativeBoost(t *testing.T) {
+	svc := &RecipeServiceImpl{rng: rand.New(rand.NewSource(43))}
+
+	recipes := []models.Recipe{
+		{Model: gorm.Model{ID: 70}, Name: "exact match", Energy: 100, Protein: 10, Carbohydrate: 10, Fat: 5, Ingredients: []string{"exact"}},
+		{Model: gorm.Model{ID: 71}, Name: "boosted near match", Energy: 110, Protein: 10, Carbohydrate: 10, Fat: 5, Ingredients: []string{"boosted"}},
+	}
+
+	selectedWithoutBoost := svc.selectDiverseCandidates(recipes, 100, 10, 10, 5, 1, models.GoalWeightLoss, nil)
+	if len(selectedWithoutBoost) != 1 || selectedWithoutBoost[0].ID != 70 {
+		t.Fatalf("expected exact nutrition match without CF boost, got %+v", selectedWithoutBoost)
+	}
+
+	selectedWithBoost := svc.selectDiverseCandidates(recipes, 100, 10, 10, 5, 1, models.GoalWeightLoss, map[uint]float64{71: maxCollaborativeCandidateBoost})
+	if len(selectedWithBoost) != 1 || selectedWithBoost[0].ID != 71 {
+		t.Fatalf("expected collaborative boost to promote recipe 71, got %+v", selectedWithBoost)
 	}
 }
 
@@ -247,9 +385,16 @@ func TestGenerateRankedPlans_ReturnsPlansForSmallManualPools(t *testing.T) {
 		Fat:          45,
 	}
 
-	plans := svc.generateRankedPlans(1, breakfast, lunch, dinner, snack, target, models.GoalWeightLoss)
+	plans := svc.generateRankedPlans(1, breakfast, lunch, dinner, snack, target, models.GoalWeightLoss, nil)
 	if len(plans) == 0 {
 		t.Fatalf("expected non-empty plans for small manual recipe pools")
+	}
+
+	for _, plan := range plans {
+		assertItemCountInRange(t, "breakfast", plan.BreakfastItems, breakfastComboMinItems, breakfastComboMaxItems)
+		assertItemCountInRange(t, "lunch", plan.LunchItems, lunchComboMinItems, lunchComboMaxItems)
+		assertItemCountInRange(t, "dinner", plan.DinnerItems, dinnerComboMinItems, dinnerComboMaxItems)
+		assertItemCountInRange(t, "snack", plan.SnackItems, snackComboMinItems, snackComboMaxItems)
 	}
 }
 
@@ -341,7 +486,7 @@ func TestGenerateRankedPlans_FallsBackWhenStrictMealAssemblyProducesNoPlans(t *t
 		Fat:          45,
 	}
 
-	plans := svc.generateRankedPlans(1, breakfast, lunch, dinner, snack, target, models.GoalWeightLoss)
+	plans := svc.generateRankedPlans(1, breakfast, lunch, dinner, snack, target, models.GoalWeightLoss, nil)
 	if len(plans) == 0 {
 		t.Fatalf("expected fallback plans when strict meal assembly is empty")
 	}

@@ -19,6 +19,19 @@ import (
 	"time"
 )
 
+const (
+	maxCollaborativeCandidateBoost = 15.0
+
+	breakfastComboMinItems = 1
+	breakfastComboMaxItems = 2
+	lunchComboMinItems     = 2
+	lunchComboMaxItems     = 3
+	dinnerComboMinItems    = 2
+	dinnerComboMaxItems    = 3
+	snackComboMinItems     = 1
+	snackComboMaxItems     = 2
+)
+
 // RecipeService 食谱推荐服务接口
 type RecipeService interface {
 	// RecommendRecipes 为用户推荐每日食谱计划
@@ -57,14 +70,20 @@ type RecipeService interface {
 
 	// AdoptRegeneratedMeal 采纳重构结果并仅更新目标餐次
 	AdoptRegeneratedMeal(userID uint, req ConstrainedMealAdoptRequest) (*models.DailyRecipePlan, error)
+
+	// ReplaceSelectedMealRecipe 替换已选计划中用户不喜欢的某个食谱
+	ReplaceSelectedMealRecipe(user *models.User, req SelectedMealRecipeReplaceRequest) (*models.DailyRecipePlan, error)
 }
 
 // RecipeServiceImpl 食谱推荐服务实现
 type RecipeServiceImpl struct {
-	recipeRepo   dao.RecipeRepository
-	nutriService NutriService
-	zhipuClient  client.ZhipuAIClient
-	rng          *rand.Rand
+	recipeRepo           dao.RecipeRepository
+	nutriService         NutriService
+	zhipuClient          client.ZhipuAIClient
+	rng                  *rand.Rand
+	recommendationEngine RecommendationEngine
+	behaviorRepo         BehaviorRepository
+	collaborativeFilter  CollaborativeFilter
 }
 
 type dietModeProfile struct {
@@ -108,12 +127,16 @@ func getRecipeTextConfig() recipeTextConfig {
 
 // NewRecipeService 创建食谱推荐服务实例
 func NewRecipeService(recipeRepo dao.RecipeRepository, nutriService NutriService, zhipuClient client.ZhipuAIClient) RecipeService {
-	return &RecipeServiceImpl{
+	svc := &RecipeServiceImpl{
 		recipeRepo:   recipeRepo,
 		nutriService: nutriService,
 		zhipuClient:  zhipuClient,
 		rng:          rand.New(rand.NewSource(time.Now().UnixNano())),
+		behaviorRepo: NewGormBehaviorRepository(dao.DB),
 	}
+	svc.collaborativeFilter = NewItemCollaborativeFilter(svc.behaviorRepo, recipeRepo)
+	svc.recommendationEngine = NewRuleBasedRecommendationEngine(svc)
+	return svc
 }
 
 func normalizePortionWeight(weight float64) float64 {
@@ -555,6 +578,7 @@ func (s *RecipeServiceImpl) recommendRecipesLegacy(user *models.User, count int)
 		breakfastRecipes, lunchRecipes, dinnerRecipes, snackRecipes,
 		targetNutrition,
 		user.HealthGoal,
+		nil,
 	)
 	log.Printf("generateRankedPlans returned %d plans", len(rankedPlans))
 	if len(rankedPlans) > 0 {
@@ -604,6 +628,13 @@ func (s *RecipeServiceImpl) recommendRecipesLegacy(user *models.User, count int)
 
 // NutritionTarget 营养目标
 func (s *RecipeServiceImpl) RecommendRecipes(user *models.User, count int) ([]*models.DailyRecipePlan, error) {
+	if s.recommendationEngine == nil {
+		s.recommendationEngine = NewRuleBasedRecommendationEngine(s)
+	}
+	return s.recommendationEngine.Recommend(context.Background(), user, count)
+}
+
+func (s *RecipeServiceImpl) recommendRecipesRuleBased(user *models.User, count int) ([]*models.DailyRecipePlan, error) {
 	targetCalorie := s.nutriService.DetermineTargetCalorie(user.TDEE, user.HealthGoal)
 	targetProtein, targetCarb, targetFat := s.nutriService.AllocateMacros(targetCalorie, user.HealthGoal)
 	dietMode := s.resolveDietMode(user, targetCalorie, targetFat)
@@ -635,6 +666,12 @@ func (s *RecipeServiceImpl) RecommendRecipes(user *models.User, count int) ([]*m
 	go loadMeal(models.MealTypeSnack, &snackRaw)
 	wg.Wait()
 
+	cfPools, cfScoreBoosts := s.loadCollaborativeMealCandidates(context.Background(), user.ID, 20)
+	breakfastRaw = mergeRecipesByID(breakfastRaw, cfPools.breakfast)
+	lunchRaw = mergeRecipesByID(lunchRaw, cfPools.lunch)
+	dinnerRaw = mergeRecipesByID(dinnerRaw, cfPools.dinner)
+	snackRaw = mergeRecipesByID(snackRaw, cfPools.snack)
+
 	breakfastRecipes := s.filterRecipesByUserPreferences(breakfastRaw, userTags)
 	lunchRecipes := s.filterRecipesByUserPreferences(lunchRaw, userTags)
 	dinnerRecipes := s.filterRecipesByUserPreferences(dinnerRaw, userTags)
@@ -642,12 +679,16 @@ func (s *RecipeServiceImpl) RecommendRecipes(user *models.User, count int) ([]*m
 
 	log.Printf("Base pool sizes -> Breakfast: %d, Lunch: %d, Dinner: %d, Snack: %d", len(breakfastRaw), len(lunchRaw), len(dinnerRaw), len(snackRaw))
 	log.Printf("After pref filter -> Breakfast: %d, Lunch: %d, Dinner: %d, Snack: %d", len(breakfastRecipes), len(lunchRecipes), len(dinnerRecipes), len(snackRecipes))
+	if len(cfScoreBoosts) > 0 {
+		log.Printf("Collaborative filtering injected %d boosted recipe candidate(s)", len(cfScoreBoosts))
+	}
 
 	prefPools := mealRecipePools{
-		breakfast: breakfastRecipes,
-		lunch:     lunchRecipes,
-		dinner:    dinnerRecipes,
-		snack:     snackRecipes,
+		breakfast:   breakfastRecipes,
+		lunch:       lunchRecipes,
+		dinner:      dinnerRecipes,
+		snack:       snackRecipes,
+		scoreBoosts: cfScoreBoosts,
 	}
 
 	recentPools := prefPools
@@ -662,17 +703,19 @@ func (s *RecipeServiceImpl) RecommendRecipes(user *models.User, count int) ([]*m
 	}
 
 	dietPools := mealRecipePools{
-		breakfast: s.filterRecipesByDietMode(recentPools.breakfast, modeProfile),
-		lunch:     s.filterRecipesByDietMode(recentPools.lunch, modeProfile),
-		dinner:    s.filterRecipesByDietMode(recentPools.dinner, modeProfile),
-		snack:     s.filterRecipesByDietMode(recentPools.snack, modeProfile),
+		breakfast:   s.filterRecipesByDietMode(recentPools.breakfast, modeProfile),
+		lunch:       s.filterRecipesByDietMode(recentPools.lunch, modeProfile),
+		dinner:      s.filterRecipesByDietMode(recentPools.dinner, modeProfile),
+		snack:       s.filterRecipesByDietMode(recentPools.snack, modeProfile),
+		scoreBoosts: cfScoreBoosts,
 	}
 
 	strictPools := mealRecipePools{
-		breakfast: s.filterRecipesByHealthGoal(dietPools.breakfast, user.HealthGoal),
-		lunch:     s.filterRecipesByHealthGoal(dietPools.lunch, user.HealthGoal),
-		dinner:    s.filterRecipesByHealthGoal(dietPools.dinner, user.HealthGoal),
-		snack:     s.filterRecipesByHealthGoal(dietPools.snack, user.HealthGoal),
+		breakfast:   s.filterRecipesByHealthGoal(dietPools.breakfast, user.HealthGoal),
+		lunch:       s.filterRecipesByHealthGoal(dietPools.lunch, user.HealthGoal),
+		dinner:      s.filterRecipesByHealthGoal(dietPools.dinner, user.HealthGoal),
+		snack:       s.filterRecipesByHealthGoal(dietPools.snack, user.HealthGoal),
+		scoreBoosts: cfScoreBoosts,
 	}
 
 	targetNutrition := NutritionTarget{
@@ -711,15 +754,134 @@ func (s *RecipeServiceImpl) RecommendRecipes(user *models.User, count int) ([]*m
 }
 
 type mealRecipePools struct {
-	breakfast []models.Recipe
-	lunch     []models.Recipe
-	dinner    []models.Recipe
-	snack     []models.Recipe
+	breakfast   []models.Recipe
+	lunch       []models.Recipe
+	dinner      []models.Recipe
+	snack       []models.Recipe
+	scoreBoosts map[uint]float64
 }
 
 type recommendationStage struct {
 	label string
 	pools mealRecipePools
+}
+
+func (s *RecipeServiceImpl) loadCollaborativeMealCandidates(ctx context.Context, userID uint, limit int) (mealRecipePools, map[uint]float64) {
+	if s == nil || s.collaborativeFilter == nil || userID == 0 || limit <= 0 {
+		return mealRecipePools{}, nil
+	}
+
+	type mealTarget struct {
+		mealType models.MealType
+		assign   func([]models.Recipe, *mealRecipePools)
+	}
+
+	targets := []mealTarget{
+		{mealType: models.MealTypeBreakfast, assign: func(recipes []models.Recipe, pools *mealRecipePools) { pools.breakfast = recipes }},
+		{mealType: models.MealTypeLunch, assign: func(recipes []models.Recipe, pools *mealRecipePools) { pools.lunch = recipes }},
+		{mealType: models.MealTypeDinner, assign: func(recipes []models.Recipe, pools *mealRecipePools) { pools.dinner = recipes }},
+		{mealType: models.MealTypeSnack, assign: func(recipes []models.Recipe, pools *mealRecipePools) { pools.snack = recipes }},
+	}
+
+	var pools mealRecipePools
+	allScores := make([]RecipeScore, 0, limit*len(targets))
+	for _, target := range targets {
+		scores, err := s.collaborativeFilter.RecommendRecipes(ctx, userID, target.mealType, limit)
+		if err != nil {
+			log.Printf("collaborative filtering candidate load failed: user=%d meal=%s err=%v", userID, target.mealType, err)
+			continue
+		}
+
+		recipes := make([]models.Recipe, 0, len(scores))
+		for _, score := range scores {
+			if score.Recipe.ID == 0 {
+				continue
+			}
+			recipes = append(recipes, score.Recipe)
+			allScores = append(allScores, score)
+		}
+		target.assign(recipes, &pools)
+	}
+
+	pools.scoreBoosts = normalizeCollaborativeScoreBoosts(allScores)
+	return pools, pools.scoreBoosts
+}
+
+func mergeRecipesByID(base, extras []models.Recipe) []models.Recipe {
+	if len(extras) == 0 {
+		return base
+	}
+
+	merged := make([]models.Recipe, 0, len(base)+len(extras))
+	seen := make(map[uint]struct{}, len(base)+len(extras))
+	for _, recipe := range base {
+		merged = append(merged, recipe)
+		if recipe.ID > 0 {
+			seen[recipe.ID] = struct{}{}
+		}
+	}
+
+	for _, recipe := range extras {
+		if recipe.ID == 0 {
+			continue
+		}
+		if _, ok := seen[recipe.ID]; ok {
+			continue
+		}
+		merged = append(merged, recipe)
+		seen[recipe.ID] = struct{}{}
+	}
+
+	return merged
+}
+
+func normalizeCollaborativeScoreBoosts(scores []RecipeScore) map[uint]float64 {
+	rawByRecipeID := make(map[uint]float64)
+	maxScore := 0.0
+	for _, score := range scores {
+		recipeID := score.RecipeID
+		if recipeID == 0 {
+			recipeID = score.Recipe.ID
+		}
+		if recipeID == 0 || score.Score <= 0 {
+			continue
+		}
+		if score.Score > rawByRecipeID[recipeID] {
+			rawByRecipeID[recipeID] = score.Score
+		}
+		if score.Score > maxScore {
+			maxScore = score.Score
+		}
+	}
+	if maxScore <= 0 || len(rawByRecipeID) == 0 {
+		return nil
+	}
+
+	boosts := make(map[uint]float64, len(rawByRecipeID))
+	for recipeID, rawScore := range rawByRecipeID {
+		boost := rawScore / maxScore * maxCollaborativeCandidateBoost
+		if boost > maxCollaborativeCandidateBoost {
+			boost = maxCollaborativeCandidateBoost
+		}
+		if boost > 0 {
+			boosts[recipeID] = boost
+		}
+	}
+	return boosts
+}
+
+func collaborativeCandidateBoost(recipeID uint, boosts map[uint]float64) float64 {
+	if recipeID == 0 || len(boosts) == 0 {
+		return 0
+	}
+	boost := boosts[recipeID]
+	if boost < 0 {
+		return 0
+	}
+	if boost > maxCollaborativeCandidateBoost {
+		return maxCollaborativeCandidateBoost
+	}
+	return boost
 }
 
 type planDiversityChecker func(existing []*models.DailyRecipePlan, candidate *models.DailyRecipePlan) bool
@@ -767,6 +929,7 @@ func (s *RecipeServiceImpl) buildRecommendedPlans(userID uint, pools mealRecipeP
 		pools.breakfast, pools.lunch, pools.dinner, pools.snack,
 		target,
 		goal,
+		pools.scoreBoosts,
 	)
 	log.Printf("generateRankedPlans returned %d plans", len(rankedPlans))
 	if len(rankedPlans) > 0 {
@@ -793,6 +956,12 @@ type NutritionTarget struct {
 	Protein      float64 // 蛋白质
 	Carbohydrate float64 // 碳水化合物
 	Fat          float64 // 脂肪
+}
+
+type SelectedMealRecipeReplaceRequest struct {
+	MealType          string `json:"meal_type" binding:"required"`
+	RecipeID          uint   `json:"recipe_id" binding:"required"`
+	DislikedRecipeIDs []uint `json:"disliked_recipe_ids"`
 }
 
 // mealCombo 表示“单餐组合”（可包含 1~N 道菜）。
@@ -859,7 +1028,7 @@ func buildComboKey(items []models.Recipe) (string, bool) {
 	return builder.String(), true
 }
 
-func isStapleRecipe(recipe models.Recipe) bool {
+func isConfiguredStapleRecipe(recipe models.Recipe) bool {
 	cfg := getRecipeTextConfig()
 	content := strings.ToLower(recipe.Name + " " + strings.Join(recipe.Ingredients, " "))
 	for _, keyword := range cfg.StapleKeywords {
@@ -868,6 +1037,10 @@ func isStapleRecipe(recipe models.Recipe) bool {
 		}
 	}
 	return false
+}
+
+func isStapleRecipe(recipe models.Recipe) bool {
+	return isConfiguredStapleRecipe(recipe) || isMainStapleRecipe(recipe) || isGrainStapleRecipe(recipe)
 }
 
 func isMainStapleRecipe(recipe models.Recipe) bool {
@@ -880,10 +1053,30 @@ func isMainStapleRecipe(recipe models.Recipe) bool {
 	return containsKeyword(content, keywords)
 }
 
+func isGrainStapleRecipe(recipe models.Recipe) bool {
+	content := strings.ToLower(recipe.Name + " " + strings.Join(recipe.Ingredients, " "))
+	keywords := []string{
+		"米饭", "糙米", "黑米", "小米", "藜麦", "燕麦", "全麦", "面", "粉", "粥", "馒头", "包子",
+		"面包", "吐司", "饼", "米线", "河粉", "年糕", "馄饨", "饺子", "烧麦", "玉米",
+		"rice", "oat", "quinoa", "whole wheat", "bread", "toast", "noodle", "pasta", "porridge",
+	}
+	return containsKeyword(content, keywords)
+}
+
 func countStapleRecipes(items []models.Recipe) int {
 	count := 0
 	for _, item := range items {
 		if isStapleRecipe(item) {
+			count++
+		}
+	}
+	return count
+}
+
+func countGrainStapleRecipes(items []models.Recipe) int {
+	count := 0
+	for _, item := range items {
+		if isGrainStapleRecipe(item) {
 			count++
 		}
 	}
@@ -910,7 +1103,7 @@ func mealHasStaple(items []models.Recipe) bool {
 }
 
 func buildMealCombo(items []models.Recipe, boost float64) (mealCombo, string, bool) {
-	if len(items) == 0 {
+	if len(items) == 0 || len(items) > 3 {
 		return mealCombo{}, "", false
 	}
 
@@ -1076,17 +1269,39 @@ func (s *RecipeServiceImpl) rankMealCombos(combos []mealCombo, targetE, targetP,
 	return result
 }
 
+func preferMultiItemCombos(combos []mealCombo) []mealCombo {
+	multi := make([]mealCombo, 0, len(combos))
+	for _, combo := range combos {
+		if len(combo.Items) >= 2 {
+			multi = append(multi, combo)
+		}
+	}
+	if len(multi) > 0 {
+		return multi
+	}
+	return combos
+}
+
 // buildMealCombos 通用餐次组合生成器。
 // candidateK: 先从候选池选出的菜品数量。
 // comboLimit: 最终返回的组合数量上限。
-// minItems: 单个组合最少包含的菜品数（例如午/晚餐=2）。
-// maxItems: 单个组合最多包含的菜品数（例如午/晚餐=3，加餐=2）。
-func (s *RecipeServiceImpl) buildMealCombos(recipes []models.Recipe, targetE, targetP, targetC, targetF float64, goal models.HealthGoal, candidateK, comboLimit, minItems, maxItems int, requireStaple bool) []mealCombo {
+// minItems: 单个组合最少包含的菜品数。
+// maxItems: 单个组合最多包含的菜品数；业务硬约束为 1~3 个食谱。
+func (s *RecipeServiceImpl) buildMealCombos(recipes []models.Recipe, targetE, targetP, targetC, targetF float64, goal models.HealthGoal, candidateK, comboLimit, minItems, maxItems int, requireStaple bool, scoreBoosts map[uint]float64) []mealCombo {
 	if len(recipes) == 0 {
 		return nil
 	}
+	if minItems < 1 {
+		minItems = 1
+	}
+	if maxItems > 3 {
+		maxItems = 3
+	}
+	if maxItems < minItems {
+		return nil
+	}
 
-	candidates := s.selectDiverseCandidates(recipes, targetE, targetP, targetC, targetF, candidateK, goal)
+	candidates := s.selectDiverseCandidates(recipes, targetE, targetP, targetC, targetF, candidateK, goal, scoreBoosts)
 	if len(candidates) == 0 {
 		return nil
 	}
@@ -1109,8 +1324,8 @@ func (s *RecipeServiceImpl) buildMealCombos(recipes []models.Recipe, targetE, ta
 			}
 
 			sort.Slice(staplePool, func(i, j int) bool {
-				left := s.scoreSingleRecipe(staplePool[i], targetE, targetP, targetC, targetF, goal)
-				right := s.scoreSingleRecipe(staplePool[j], targetE, targetP, targetC, targetF, goal)
+				left := s.scoreSingleRecipe(staplePool[i], targetE, targetP, targetC, targetF, goal) + collaborativeCandidateBoost(staplePool[i].ID, scoreBoosts)
+				right := s.scoreSingleRecipe(staplePool[j], targetE, targetP, targetC, targetF, goal) + collaborativeCandidateBoost(staplePool[j].ID, scoreBoosts)
 				return left > right
 			})
 
@@ -1145,10 +1360,13 @@ func (s *RecipeServiceImpl) buildMealCombos(recipes []models.Recipe, targetE, ta
 	// pushCombo 负责：
 	// 1) 汇总组合营养；2) 以菜品 ID 排序后的 key 去重；3) 构建 mealCombo。
 	pushCombo := func(items []models.Recipe, boost float64) {
+		if len(items) < minItems || len(items) > maxItems {
+			return
+		}
 		if requireStaple && stapleAvailable && !mealHasStaple(items) {
 			return
 		}
-		if requireStaple && len(items) > 1 && countMainStapleRecipes(items) > 1 {
+		if countStapleRecipes(items) > 1 {
 			return
 		}
 
@@ -1164,7 +1382,7 @@ func (s *RecipeServiceImpl) buildMealCombos(recipes []models.Recipe, targetE, ta
 		combos = append(combos, combo)
 	}
 
-	// 生成 1/2/3 道菜组合（受 maxItems 控制），并限制搜索空间避免组合爆炸。
+	// 生成 1/2/3 道食谱组合（业务硬约束），并限制搜索空间避免组合爆炸。
 	for i := 0; i < len(candidates); i++ {
 		if minItems <= 1 {
 			pushCombo([]models.Recipe{candidates[i]}, 0)
@@ -1194,12 +1412,12 @@ func (s *RecipeServiceImpl) buildMealCombos(recipes []models.Recipe, targetE, ta
 		}
 	}
 
-	return s.rankMealCombos(combos, targetE, targetP, targetC, targetF, goal, comboLimit)
+	return s.rankMealCombos(preferMultiItemCombos(combos), targetE, targetP, targetC, targetF, goal, 6)
 }
 
 // buildBreakfastCombos 早餐专用组合器。
 // 在通用评分基础上，额外优先“酸奶+鸡蛋”作为稳定命中组合。
-func (s *RecipeServiceImpl) buildBreakfastCombos(recipes []models.Recipe, targetE, targetP, targetC, targetF float64, goal models.HealthGoal) []mealCombo {
+func (s *RecipeServiceImpl) buildBreakfastCombos(recipes []models.Recipe, targetE, targetP, targetC, targetF float64, goal models.HealthGoal, scoreBoosts map[uint]float64) []mealCombo {
 	if len(recipes) == 0 {
 		return nil
 	}
@@ -1215,7 +1433,7 @@ func (s *RecipeServiceImpl) buildBreakfastCombos(recipes []models.Recipe, target
 		recipes = breakfastSource
 	}
 
-	candidates := s.selectDiverseCandidates(recipes, targetE, targetP, targetC, targetF, 24, goal)
+	candidates := s.selectDiverseCandidates(recipes, targetE, targetP, targetC, targetF, 24, goal, scoreBoosts)
 	if len(candidates) == 0 {
 		return nil
 	}
@@ -1243,6 +1461,9 @@ func (s *RecipeServiceImpl) buildBreakfastCombos(recipes []models.Recipe, target
 	// 早餐组合去重与营养汇总。
 	pushCombo := func(items []models.Recipe, boost float64) {
 		if countMainStapleRecipes(items) > 0 {
+			return
+		}
+		if len(items) < breakfastComboMinItems || len(items) > breakfastComboMaxItems {
 			return
 		}
 		if len(items) > 1 && countStapleRecipes(items) > 1 {
@@ -1365,6 +1586,7 @@ func (s *RecipeServiceImpl) generateRankedPlans(
 	userID uint,
 	breakfastRecipes, lunchRecipes, dinnerRecipes, snackRecipes []models.Recipe,
 	target NutritionTarget, userGoal models.HealthGoal,
+	scoreBoosts map[uint]float64,
 ) []*models.DailyRecipePlan {
 
 	// 1. 分配每餐的目标营养 (按比例)
@@ -1378,22 +1600,22 @@ func (s *RecipeServiceImpl) generateRankedPlans(
 
 	// 2. 优化后的初筛：传入所有营养目标
 	te, tp, tc, tf := getTarget(ratios[0])
-	breakfastCombos := s.buildBreakfastCombos(breakfastRecipes, te, tp, tc, tf, userGoal)
+	breakfastCombos := s.buildBreakfastCombos(breakfastRecipes, te, tp, tc, tf, userGoal, scoreBoosts)
 	breakfastCombos = s.filterCombosByMealProfile(models.MealTypeBreakfast, breakfastCombos, te, tp, tc, tf, userGoal)
 
 	te, tp, tc, tf = getTarget(ratios[1])
-	// 午餐使用通用组合生成：最多 3 道菜。
-	lunchCombos := s.buildMealCombos(lunchRecipes, te, tp, tc, tf, userGoal, 28, 8, 2, 3, true)
+	// 午餐使用通用组合生成：1~3 道食谱，且最多 1 份主食。
+	lunchCombos := s.buildMealCombos(lunchRecipes, te, tp, tc, tf, userGoal, 28, 8, lunchComboMinItems, lunchComboMaxItems, true, scoreBoosts)
 	lunchCombos = s.filterCombosByMealProfile(models.MealTypeLunch, lunchCombos, te, tp, tc, tf, userGoal)
 
 	te, tp, tc, tf = getTarget(ratios[2])
-	// 晚餐使用通用组合生成：最多 3 道菜。
-	dinnerCombos := s.buildMealCombos(dinnerRecipes, te, tp, tc, tf, userGoal, 28, 8, 2, 3, true)
+	// 晚餐使用通用组合生成：1~3 道食谱，且最多 1 份主食。
+	dinnerCombos := s.buildMealCombos(dinnerRecipes, te, tp, tc, tf, userGoal, 28, 8, dinnerComboMinItems, dinnerComboMaxItems, true, scoreBoosts)
 	dinnerCombos = s.filterCombosByMealProfile(models.MealTypeDinner, dinnerCombos, te, tp, tc, tf, userGoal)
 
 	te, tp, tc, tf = getTarget(ratios[3])
 	// 加餐允许小组合：最多 2 道菜。
-	snackCombos := s.buildMealCombos(snackRecipes, te, tp, tc, tf, userGoal, 16, 6, 1, 2, false)
+	snackCombos := s.buildMealCombos(snackRecipes, te, tp, tc, tf, userGoal, 16, 6, snackComboMinItems, snackComboMaxItems, false, scoreBoosts)
 	snackCombos = s.filterCombosByMealProfile(models.MealTypeSnack, snackCombos, te, tp, tc, tf, userGoal)
 	if len(snackCombos) == 0 {
 		// 兜底空加餐，保持旧流程兼容。
@@ -2041,6 +2263,283 @@ func (s *RecipeServiceImpl) GetSelectedPlan(userID uint) (*models.DailyRecipePla
 	return plan, nil
 }
 
+func mealTargetRatio(mealType models.MealType) float64 {
+	switch mealType {
+	case models.MealTypeBreakfast:
+		return 0.25
+	case models.MealTypeLunch:
+		return 0.35
+	case models.MealTypeDinner:
+		return 0.30
+	case models.MealTypeSnack:
+		return 0.10
+	default:
+		return 0
+	}
+}
+
+func idsForMeal(plan *models.DailyRecipePlan, mealType models.MealType) []uint {
+	switch mealType {
+	case models.MealTypeBreakfast:
+		if len(plan.BreakfastItemIDs) > 0 {
+			return append([]uint{}, plan.BreakfastItemIDs...)
+		}
+		return []uint{plan.BreakfastRecipeID}
+	case models.MealTypeLunch:
+		if len(plan.LunchItemIDs) > 0 {
+			return append([]uint{}, plan.LunchItemIDs...)
+		}
+		return []uint{plan.LunchRecipeID}
+	case models.MealTypeDinner:
+		if len(plan.DinnerItemIDs) > 0 {
+			return append([]uint{}, plan.DinnerItemIDs...)
+		}
+		return []uint{plan.DinnerRecipeID}
+	case models.MealTypeSnack:
+		if len(plan.SnackItemIDs) > 0 {
+			return append([]uint{}, plan.SnackItemIDs...)
+		}
+		if plan.SnackRecipeID > 0 {
+			return []uint{plan.SnackRecipeID}
+		}
+	}
+	return []uint{}
+}
+
+func replaceMealID(ids []uint, oldID, newID uint) []uint {
+	result := append([]uint{}, ids...)
+	for index, id := range result {
+		if id == oldID {
+			result[index] = newID
+			return result
+		}
+	}
+	return result
+}
+
+func containsRecipeID(ids []uint, target uint) bool {
+	for _, id := range ids {
+		if id == target {
+			return true
+		}
+	}
+	return false
+}
+
+func firstID(ids []uint) uint {
+	for _, id := range ids {
+		if id > 0 {
+			return id
+		}
+	}
+	return 0
+}
+
+func setMealIDs(plan *models.DailyRecipePlan, mealType models.MealType, ids []uint) {
+	switch mealType {
+	case models.MealTypeBreakfast:
+		plan.BreakfastItemIDs = ids
+		plan.BreakfastRecipeID = firstID(ids)
+	case models.MealTypeLunch:
+		plan.LunchItemIDs = ids
+		plan.LunchRecipeID = firstID(ids)
+	case models.MealTypeDinner:
+		plan.DinnerItemIDs = ids
+		plan.DinnerRecipeID = firstID(ids)
+	case models.MealTypeSnack:
+		plan.SnackItemIDs = ids
+		plan.SnackRecipeID = firstID(ids)
+	}
+}
+
+func recipeIDsSet(groups ...[]uint) map[uint]struct{} {
+	result := make(map[uint]struct{})
+	for _, ids := range groups {
+		for _, id := range ids {
+			if id > 0 {
+				result[id] = struct{}{}
+			}
+		}
+	}
+	return result
+}
+
+func (s *RecipeServiceImpl) loadRecipesByIDsOrdered(ids []uint) ([]models.Recipe, error) {
+	if len(ids) == 0 {
+		return []models.Recipe{}, nil
+	}
+	recipes, err := s.recipeRepo.FindByIDsFromRuntimeTable(ids)
+	if err != nil {
+		return nil, err
+	}
+	recipeByID := make(map[uint]models.Recipe, len(recipes))
+	for _, recipe := range recipes {
+		recipeByID[recipe.ID] = recipe
+	}
+	ordered := make([]models.Recipe, 0, len(ids))
+	for _, id := range ids {
+		if recipe, ok := recipeByID[id]; ok {
+			ordered = append(ordered, recipe)
+		}
+	}
+	return ordered, nil
+}
+
+func (s *RecipeServiceImpl) sumScaledNutrition(idGroups ...[]uint) (float64, float64, float64, float64, error) {
+	totalE, totalP, totalC, totalF := 0.0, 0.0, 0.0, 0.0
+	for _, ids := range idGroups {
+		recipes, err := s.loadRecipesByIDsOrdered(ids)
+		if err != nil {
+			return 0, 0, 0, 0, err
+		}
+		for _, recipe := range recipes {
+			scaled := scaleRecipeNutritionByPortion(recipe)
+			totalE += scaled.Energy
+			totalP += scaled.Protein
+			totalC += scaled.Carbohydrate
+			totalF += scaled.Fat
+		}
+	}
+	return totalE, totalP, totalC, totalF, nil
+}
+
+func (s *RecipeServiceImpl) ReplaceSelectedMealRecipe(user *models.User, req SelectedMealRecipeReplaceRequest) (*models.DailyRecipePlan, error) {
+	if user == nil {
+		return nil, fmt.Errorf("用户不能为空")
+	}
+	mealType, _, err := normalizeMealType(req.MealType)
+	if err != nil {
+		return nil, err
+	}
+	if req.RecipeID == 0 {
+		return nil, fmt.Errorf("请选择要替换的食谱")
+	}
+
+	plan, err := s.GetSelectedPlan(user.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	currentIDs := idsForMeal(plan, mealType)
+	if !containsRecipeID(currentIDs, req.RecipeID) {
+		return nil, fmt.Errorf("当前餐次不包含该食谱")
+	}
+
+	currentItems, err := s.loadRecipesByIDsOrdered(currentIDs)
+	if err != nil {
+		return nil, err
+	}
+	if len(currentItems) == 0 {
+		return nil, fmt.Errorf("当前餐次没有可替换的食谱")
+	}
+
+	excluded := recipeIDsSet(
+		plan.BreakfastItemIDs,
+		plan.LunchItemIDs,
+		plan.DinnerItemIDs,
+		plan.SnackItemIDs,
+		req.DislikedRecipeIDs,
+		[]uint{req.RecipeID},
+	)
+
+	candidates, err := s.recipeRepo.FindByMealType(mealType, user.HealthGoal, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	ratio := mealTargetRatio(mealType)
+	targetE := plan.TargetEnergy * ratio
+	targetP := plan.TargetProtein * ratio
+	targetC := plan.TargetCarbohydrate * ratio
+	targetF := plan.TargetFat * ratio
+	requireStaple := mealType == models.MealTypeLunch || mealType == models.MealTypeDinner
+
+	bestScore := math.Inf(-1)
+	var bestRecipe models.Recipe
+	bestFound := false
+	for _, candidate := range candidates {
+		if candidate.ID == 0 {
+			continue
+		}
+		if _, blocked := excluded[candidate.ID]; blocked {
+			continue
+		}
+
+		proposed := make([]models.Recipe, 0, len(currentItems))
+		for _, item := range currentItems {
+			if item.ID == req.RecipeID {
+				proposed = append(proposed, candidate)
+			} else {
+				proposed = append(proposed, item)
+			}
+		}
+		if requireStaple {
+			if !mealHasStaple(proposed) || countGrainStapleRecipes(proposed) > 1 {
+				continue
+			}
+		}
+
+		combo, _, ok := buildMealCombo(proposed, 0)
+		if !ok {
+			continue
+		}
+		score := s.calculateMatchScore(combo.Energy, combo.Protein, combo.Carbohydrate, combo.Fat, targetE, targetP, targetC, targetF, user.HealthGoal)
+		if score > bestScore {
+			bestScore = score
+			bestRecipe = candidate
+			bestFound = true
+		}
+	}
+
+	if !bestFound {
+		return nil, fmt.Errorf("暂时没有找到满足营养和主食约束的替换食谱")
+	}
+
+	breakfastIDs := idsForMeal(plan, models.MealTypeBreakfast)
+	lunchIDs := idsForMeal(plan, models.MealTypeLunch)
+	dinnerIDs := idsForMeal(plan, models.MealTypeDinner)
+	snackIDs := idsForMeal(plan, models.MealTypeSnack)
+	switch mealType {
+	case models.MealTypeBreakfast:
+		breakfastIDs = replaceMealID(breakfastIDs, req.RecipeID, bestRecipe.ID)
+	case models.MealTypeLunch:
+		lunchIDs = replaceMealID(lunchIDs, req.RecipeID, bestRecipe.ID)
+	case models.MealTypeDinner:
+		dinnerIDs = replaceMealID(dinnerIDs, req.RecipeID, bestRecipe.ID)
+	case models.MealTypeSnack:
+		snackIDs = replaceMealID(snackIDs, req.RecipeID, bestRecipe.ID)
+	}
+
+	totalE, totalP, totalC, totalF, err := s.sumScaledNutrition(breakfastIDs, lunchIDs, dinnerIDs, snackIDs)
+	if err != nil {
+		return nil, err
+	}
+	newPlan := &models.DailyRecipePlan{
+		BreakfastRecipeID:  firstID(breakfastIDs),
+		LunchRecipeID:      firstID(lunchIDs),
+		DinnerRecipeID:     firstID(dinnerIDs),
+		SnackRecipeID:      firstID(snackIDs),
+		BreakfastItemIDs:   breakfastIDs,
+		LunchItemIDs:       lunchIDs,
+		DinnerItemIDs:      dinnerIDs,
+		SnackItemIDs:       snackIDs,
+		TotalEnergy:        totalE,
+		TotalProtein:       totalP,
+		TotalCarbohydrate:  totalC,
+		TotalFat:           totalF,
+		TargetEnergy:       plan.TargetEnergy,
+		TargetProtein:      plan.TargetProtein,
+		TargetCarbohydrate: plan.TargetCarbohydrate,
+		TargetFat:          plan.TargetFat,
+		MatchScore:         s.calculateMatchScore(totalE, totalP, totalC, totalF, plan.TargetEnergy, plan.TargetProtein, plan.TargetCarbohydrate, plan.TargetFat, user.HealthGoal),
+	}
+
+	if err := s.SelectDailyPlan(user.ID, newPlan); err != nil {
+		return nil, err
+	}
+	return s.GetSelectedPlan(user.ID)
+}
+
 // SelectDailyPlan 选择每日食谱计划
 func (s *RecipeServiceImpl) SelectDailyPlan(userID uint, plan *models.DailyRecipePlan) error {
 	// 0. 先做ID归一化，避免后续清理成功但保存失败
@@ -2406,7 +2905,7 @@ func recipeVarietyKey(recipe models.Recipe) string {
 	return "name:" + strings.ToLower(strings.TrimSpace(recipe.Name))
 }
 
-func (s *RecipeServiceImpl) selectDiverseCandidates(recipes []models.Recipe, targetE, targetP, targetC, targetF float64, k int, goal models.HealthGoal) []models.Recipe {
+func (s *RecipeServiceImpl) selectDiverseCandidates(recipes []models.Recipe, targetE, targetP, targetC, targetF float64, k int, goal models.HealthGoal, scoreBoosts map[uint]float64) []models.Recipe {
 	if len(recipes) == 0 || k <= 0 {
 		return nil
 	}
@@ -2421,7 +2920,7 @@ func (s *RecipeServiceImpl) selectDiverseCandidates(recipes []models.Recipe, tar
 	for _, recipe := range recipes {
 		cs = append(cs, candidate{
 			r:     recipe,
-			score: s.scoreSingleRecipe(recipe, targetE, targetP, targetC, targetF, goal),
+			score: s.scoreSingleRecipe(recipe, targetE, targetP, targetC, targetF, goal) + collaborativeCandidateBoost(recipe.ID, scoreBoosts),
 			key:   recipeVarietyKey(recipe),
 		})
 	}

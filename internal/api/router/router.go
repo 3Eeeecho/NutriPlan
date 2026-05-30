@@ -26,7 +26,6 @@ func NewRouter(deps RouterDeps) *gin.Engine {
 
 	// 跨域中间件 (CORS) - 生产环境需严格配置
 	r.Use(gin.Recovery())
-
 	// 实例化 Handler
 	userHandler := handler.NewUserHandler(deps.UserService)
 	recipeHandler := handler.NewRecipeHandler(deps.RecipeService, deps.UserService)
@@ -88,6 +87,9 @@ func NewRouter(deps RouterDeps) *gin.Engine {
 
 			// 采纳重构单餐 (POST /api/v1/recipes/meal/adopt)
 			recipes.POST("/meal/adopt", recipeHandler.AdoptRegeneratedMeal)
+
+			// 替换已选计划中的单个食谱 (POST /api/v1/recipes/meal/replace)
+			recipes.POST("/meal/replace", recipeHandler.ReplaceSelectedMealRecipe)
 
 			// 选择食谱计划 (POST /api/v1/recipes/plan/select)
 			recipes.POST("/plan/select", recipeHandler.SelectPlan)

@@ -32,7 +32,17 @@ type RecommendRequest struct {
 
 // RecommendResponse 推荐响应
 type RecommendResponse struct {
-	Plans []DailyPlanDTO `json:"plans"`
+	Plans     []DailyPlanDTO             `json:"plans"`
+	Algorithm RecommendationAlgorithmDTO `json:"algorithm"`
+}
+
+type RecommendationAlgorithmDTO struct {
+	Name                   string   `json:"name"`
+	Label                  string   `json:"label"`
+	Strategy               string   `json:"strategy"`
+	CollaborativeFiltering bool     `json:"collaborative_filtering"`
+	ScoreBoostCap          float64  `json:"score_boost_cap"`
+	Constraints            []string `json:"constraints"`
 }
 
 type RecognizedIngredientsResponse struct {
@@ -137,8 +147,28 @@ func (h *RecipeHandler) GetRecommendations(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, RecommendResponse{
-		Plans: planDTOs,
+		Plans:     planDTOs,
+		Algorithm: buildRecommendationAlgorithmDTO(),
 	})
+}
+
+func buildRecommendationAlgorithmDTO() RecommendationAlgorithmDTO {
+	return RecommendationAlgorithmDTO{
+		Name:                   "item_cf_hybrid",
+		Label:                  "协同过滤混合推荐",
+		Strategy:               "Item-CF 召回 + 营养/健康约束混排",
+		CollaborativeFiltering: true,
+		ScoreBoostCap:          15,
+		Constraints: []string{
+			"meal_type",
+			"user_preference",
+			"recent_history",
+			"diet_mode",
+			"health_goal",
+			"nutrition_target",
+			"diversity",
+		},
+	}
 }
 
 func (h *RecipeHandler) RecognizeMealIngredients(c *gin.Context) {
@@ -231,6 +261,43 @@ func (h *RecipeHandler) AdoptRegeneratedMeal(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "单餐采纳成功",
+		"plan":    planDTO,
+	})
+}
+
+func (h *RecipeHandler) ReplaceSelectedMealRecipe(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "未授权"})
+		return
+	}
+
+	user, err := h.userService.GetUserByID(userID.(uint))
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "用户不存在"})
+		return
+	}
+
+	var req service.SelectedMealRecipeReplaceRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "请求参数错误: " + err.Error()})
+		return
+	}
+
+	plan, err := h.recipeService.ReplaceSelectedMealRecipe(user, req)
+	if err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+		return
+	}
+
+	planDTO, err := h.convertPlanToDTO(plan, userID.(uint))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "数据转换失败"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "食谱替换成功",
 		"plan":    planDTO,
 	})
 }

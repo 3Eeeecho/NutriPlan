@@ -100,3 +100,12 @@ export const adoptRegeneratedMeal = (payload) => {
     data: payload
   });
 };
+
+// 替换已选计划中的单个食谱
+export const replaceSelectedMealRecipe = (payload) => {
+  return request({
+    url: '/recipes/meal/replace',
+    method: 'post',
+    data: payload
+  });
+};

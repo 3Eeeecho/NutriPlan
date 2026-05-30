@@ -131,6 +131,70 @@ BREAKFAST_KEYWORDS = [
     "南瓜粥",
 ]
 
+STRICT_BREAKFAST_KEYWORDS = [
+    "粥",
+    "小米粥",
+    "杂粮粥",
+    "燕麦",
+    "麦片",
+    "豆浆",
+    "豆腐脑",
+    "牛奶",
+    "酸奶",
+    "水煮蛋",
+    "煎蛋",
+    "蒸蛋",
+    "茶叶蛋",
+    "蛋饼",
+    "鸡蛋饼",
+    "煎饼",
+    "三明治",
+    "吐司",
+    "面包",
+    "包子",
+    "馒头",
+    "花卷",
+    "烧麦",
+    "肠粉",
+    "馄饨",
+    "云吞",
+    "汤面",
+    "米粉",
+]
+
+BREAKFAST_INAPPROPRIATE_KEYWORDS = [
+    "小炒",
+    "热炒",
+    "炒菜",
+    "炒蛋",
+    "炒鸡蛋",
+    "炒饭",
+    "盖饭",
+    "拌饭",
+    "炒面",
+    "拌面",
+    "宫保",
+    "鱼香",
+    "麻婆",
+    "红烧",
+    "白灼",
+    "清蒸",
+    "爆炒",
+    "干锅",
+    "彩椒",
+    "青椒",
+    "芹菜",
+    "荷兰豆",
+    "菜心",
+    "西兰花",
+    "毛豆",
+    "肉丝",
+    "鸡丁",
+    "牛柳",
+    "滑鸡",
+    "虾仁滑蛋",
+]
+
 BREAKFAST_SOUP_KEYWORDS = [
     "豆浆",
     "豆腐脑",
@@ -372,22 +436,55 @@ def classify_allowed_meal_types(recipe) -> list[str]:
 
 
 def classify_allowed_meal_types_v2(recipe) -> list[str]:
+    content = build_content(recipe)
     primary = normalize_meal_type(recipe.get("meal_type"))
     breakfast = VALID_MEAL_TYPES[0]
     lunch = VALID_MEAL_TYPES[1]
     dinner = VALID_MEAL_TYPES[2]
     snack = VALID_MEAL_TYPES[3]
 
-    if primary == breakfast:
-        return [breakfast]
+    has_breakfast = contains_any(content, STRICT_BREAKFAST_KEYWORDS)
+    breakfast_inappropriate = contains_any(content, BREAKFAST_INAPPROPRIATE_KEYWORDS)
+    has_snack = contains_any(content, SNACK_KEYWORDS)
+    has_main_meal = contains_any(content, MAIN_MEAL_KEYWORDS)
+    has_soup = contains_any(content, SOUP_KEYWORDS)
+    energy = to_float(recipe.get("energy"))
+
+    allowed: set[str] = set()
+
+    if has_breakfast and not breakfast_inappropriate:
+        allowed.add(breakfast)
+        if has_snack or ("酸奶" in content or "燕麦" in content or "水果" in content) and energy <= 280:
+            allowed.add(snack)
 
     if primary == snack:
-        return [snack]
+        allowed.add(snack)
+        if has_breakfast and not breakfast_inappropriate and energy <= 260:
+            allowed.add(breakfast)
 
-    if primary in {lunch, dinner}:
-        return [lunch, dinner]
+    if primary in {lunch, dinner} or has_main_meal or has_soup or breakfast_inappropriate:
+        allowed.update({lunch, dinner})
 
-    return [lunch]
+    if has_snack and not has_main_meal and not breakfast_inappropriate and energy <= 280:
+        allowed.add(snack)
+
+    if primary == breakfast and not breakfast_inappropriate and has_breakfast:
+        allowed.add(breakfast)
+
+    if not allowed:
+        if primary == breakfast:
+            allowed.update({lunch, dinner})
+        elif primary in {lunch, dinner}:
+            allowed.update({lunch, dinner})
+        elif primary == snack:
+            allowed.add(snack)
+        else:
+            allowed.add(lunch)
+
+    if breakfast_inappropriate:
+        allowed.discard(breakfast)
+
+    return [meal_type for meal_type in VALID_MEAL_TYPES if meal_type in allowed]
 
 
 classify_allowed_meal_types = classify_allowed_meal_types_v2

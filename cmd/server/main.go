@@ -8,6 +8,8 @@ import (
 	"NutriPlan/internal/service"
 	"fmt"
 	"log"
+	"net/http"
+	_ "net/http/pprof"
 
 	"github.com/gin-gonic/gin"
 )
@@ -57,6 +59,14 @@ func main() {
 	// 根据环境设置 Gin 模式
 	if config.AppConfig.Server.Env == "production" {
 		gin.SetMode(gin.ReleaseMode)
+	}
+	if config.AppConfig.Server.Env != "production" {
+		go func() {
+			log.Println("pprof 性能分析服务启动在 127.0.0.1:6060")
+			if err := http.ListenAndServe("127.0.0.1:6060", nil); err != nil {
+				log.Printf("pprof 服务启动失败: %v", err)
+			}
+		}()
 	}
 
 	// 启动服务器
